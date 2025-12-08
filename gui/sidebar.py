@@ -59,7 +59,7 @@ def setupSidebar(layout: QVBoxLayout):
     recent_widget.setLayout(recent_layout)
 
     recent_label = QLabel("Recent Projects")
-    recent_label.setStyleSheet("color: white; font-size: 17px;")
+    recent_label.setStyleSheet("color: white; font-size: 17px; font-weight: bold")
     recent_layout.addWidget(recent_label)
 
     layout.addWidget(recent_widget)
@@ -77,7 +77,7 @@ def setupSidebar(layout: QVBoxLayout):
         project_layout.addWidget(project_icon)
 
         project_label = QLabel(project_name)
-        project_label.setStyleSheet("color: white; font-size: 15px; padding-left: 5px;")
+        project_label.setStyleSheet("color: white; font-size: 15px; padding-left: 2px;")
         project_layout.addWidget(project_label)
         project_layout.addStretch()
 
@@ -104,9 +104,10 @@ def setupSidebar(layout: QVBoxLayout):
         item_layout.addWidget(icon_label)
 
         text_label = QLabel(text)
-        text_label.setStyleSheet("color: white; font-size: 15px; padding-left: 10px;")
+        text_label.setStyleSheet("color: white; font-size: 15px; padding-left: 2px;")
         text_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
+        if text == "Home":
+            item_layout.setContentsMargins(20, 5, 0, 18)
         item_layout.addWidget(text_label)
 
         item_widget.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
@@ -114,7 +115,7 @@ def setupSidebar(layout: QVBoxLayout):
 
     btn_widget = QWidget()
     btn_layout = QHBoxLayout()
-    btn_layout.setContentsMargins(20, 5, 20, 15)  # left, top, right, bottom margins
+    btn_layout.setContentsMargins(20, 5, 20, 20)  # left, top, right, bottom margins
     btn_widget.setLayout(btn_layout)
 
     disconnect_btn = QPushButton("Disconnect All")

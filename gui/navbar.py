@@ -26,7 +26,7 @@ class NavItem(QWidget):
         self.index = index
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 5, 10, 5)
+        layout.setContentsMargins(0, 5, 10, 0)
         layout.setSpacing(8)
 
         # Icon
@@ -56,17 +56,17 @@ class NavItem(QWidget):
 def navbar():
     nb_container = QWidget()
     container_layout = QVBoxLayout(nb_container)
-    container_layout.setContentsMargins(0, 0, 0, 0)
+    container_layout.setContentsMargins(0, 0, 15, 0)
     container_layout.setSpacing(0)
 
     nb = QWidget()
     nb_layout = QHBoxLayout(nb)
-    nb_layout.setContentsMargins(0, 10, 0, 10)
+    nb_layout.setContentsMargins(0, 0, 0, 10)
     nb_layout.setSpacing(20)
 
     items = [
         ("File Tree",       "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\code-fork.png"),
-        ("cmd",             "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\command.png"),
+        ("Terminal",             "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\command.png"),
         ("Simple-SSH",      "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\loading.png"),
         ("Graphs",          "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\line-graph.png"),
         ("Settings",        "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\setting.png"),
@@ -97,7 +97,25 @@ def navbar():
 
 
 
-def filetree():
+def set_nav_label(label: ClickableLabel, selected: bool):
+    """Helper to style a label with or without bottom border"""
+    if selected:
+        label.setStyleSheet("""
+            margin-left: 0px;
+            font-size: 17px;
+            color: white;
+            border-bottom: 3px solid #4A42D4;  /* selected border */
+        """)
+    else:
+        label.setStyleSheet("""
+            margin-left: 0px;
+            font-size: 17px;
+            color: white;
+            border-bottom: none;
+        """)
+
+
+def filetree(selected=False):
     contents = QWidget()
     layout = QHBoxLayout()
     layout.setContentsMargins(10, 5, 10, 5)
@@ -112,13 +130,13 @@ def filetree():
 
     label = ClickableLabel("File Tree")
     label.setCursor(Qt.CursorShape.PointingHandCursor)
-    label.setStyleSheet("font-size: 17px; color: white;")
+    set_nav_label(label, selected)
     layout.addWidget(label)
 
     return contents
 
 
-def cmd():
+def cmd(selected=False):
     contents = QWidget()
     layout = QHBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
@@ -132,13 +150,14 @@ def cmd():
 
     label = ClickableLabel("cmd")
     label.setCursor(Qt.CursorShape.PointingHandCursor)
-    label.setStyleSheet("margin-left: 0px; font-size: 17px; color: white;")
+    set_nav_label(label, selected)
     layout.addWidget(label)
     layout.setSpacing(0)
 
     return contents
 
-def simple_ssh():
+
+def simple_ssh(selected=False):
     contents = QWidget()
     layout = QHBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
@@ -152,13 +171,14 @@ def simple_ssh():
 
     label = ClickableLabel("Simple-SSH")
     label.setCursor(Qt.CursorShape.PointingHandCursor)
-    label.setStyleSheet("margin-left: 0px; font-size: 17px; color: white;")
+    set_nav_label(label, selected)
     layout.addWidget(label)
     layout.setSpacing(0)
 
     return contents
 
-def graphs():
+
+def graphs(selected=False):
     contents = QWidget()
     layout = QHBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
@@ -172,13 +192,14 @@ def graphs():
 
     label = ClickableLabel("Graphs")
     label.setCursor(Qt.CursorShape.PointingHandCursor)
-    label.setStyleSheet("margin-left: 0px; font-size: 17px; color: white;")
+    set_nav_label(label, selected)
     layout.addWidget(label)
     layout.setSpacing(0)
 
     return contents
 
-def proj_settings():
+
+def proj_settings(selected=False):
     contents = QWidget()
     layout = QHBoxLayout()
     layout.setContentsMargins(0, 0, 0, 0)
@@ -192,8 +213,9 @@ def proj_settings():
 
     label = ClickableLabel("Project Settings")
     label.setCursor(Qt.CursorShape.PointingHandCursor)
-    label.setStyleSheet("margin-left: 0px; font-size: 17px; color: white;")
+    set_nav_label(label, selected)
     layout.addWidget(label)
     layout.setSpacing(0)
 
     return contents
+
