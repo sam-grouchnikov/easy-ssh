@@ -17,6 +17,7 @@ def setupContent(layout: QVBoxLayout):
     info_label.setStyleSheet("color: gray; font-size: 20px; padding-left: 17px;")
     layout.addWidget(info_label)
 
+
     sections = QWidget()
     sections_layout = QVBoxLayout()
     sections_layout.setContentsMargins(20, 20, 0, 0)
@@ -26,6 +27,7 @@ def setupContent(layout: QVBoxLayout):
     sections_layout.addWidget(second_widget_constructor())
 
     layout.addWidget(sections)
+
     layout.addStretch()
 
 
