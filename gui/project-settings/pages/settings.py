@@ -19,16 +19,19 @@ def projectOptions():
 
     grid_layout.setContentsMargins(0, 0, 20, 20)
     grid_layout.setHorizontalSpacing(20)
-    grid_layout.setVerticalSpacing(20)
+    grid_layout.setVerticalSpacing(10)
 
     # Shared Styles
     input_style = (
-        "border: 2px solid #474747;"
-        "font-size: 14px;"
+        "border: 1px solid #474747;"
+        "font-size: 16px;"
         "border-radius: 5px;"
-        "padding: 5px;"
+        "background: #121217;"
+        "padding: 0px 5px"
+
+
     )
-    label_style = "color: #ffffff; font-size: 18px;"
+    label_style = "color: #ffffff; font-size: 15px; margin-top: 10px"
 
     # -------------------------------------------------------------
     # ------------------- GENERAL SETTINGS CARD -------------------
@@ -40,10 +43,10 @@ def projectOptions():
     gen_settings_layout = QVBoxLayout()
     gen_settings_layout.setContentsMargins(20, 20, 20, 20)
     gen_settings.setLayout(gen_settings_layout)
-    gen_settings.setStyleSheet("background-color: #1A1631; border-radius: 10px;")
+    gen_settings.setStyleSheet("background-color: #18181F; border-radius: 10px;")
 
     gen_title = QLabel("General Settings")
-    gen_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 10px;")
+    gen_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
     gen_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
     gen_settings_layout.addWidget(gen_title)
 
@@ -54,7 +57,7 @@ def projectOptions():
 
     name_input = QLineEdit()
     name_input.setStyleSheet(input_style)
-    name_input.setFixedHeight(30)
+    name_input.setFixedHeight(33)
     gen_settings_layout.addWidget(name_input)
 
     # SSH Path
@@ -64,7 +67,7 @@ def projectOptions():
 
     ssh_path_input = QLineEdit()
     ssh_path_input.setStyleSheet(input_style)
-    ssh_path_input.setFixedHeight(30)
+    ssh_path_input.setFixedHeight(33)
     gen_settings_layout.addWidget(ssh_path_input)
 
     # SSH Password
@@ -74,7 +77,7 @@ def projectOptions():
 
     ssh_psw_input = QLineEdit()
     ssh_psw_input.setStyleSheet(input_style)
-    ssh_psw_input.setFixedHeight(30)
+    ssh_psw_input.setFixedHeight(33)
     ssh_psw_input.setEchoMode(QLineEdit.EchoMode.Password)
     gen_settings_layout.addWidget(ssh_psw_input)
 
@@ -89,10 +92,10 @@ def projectOptions():
     wandb_layout = QVBoxLayout()
     wandb_layout.setContentsMargins(20, 20, 20, 20)
     wandb_widget.setLayout(wandb_layout)
-    wandb_widget.setStyleSheet("background-color: #1A1631; border-radius: 10px;")
+    wandb_widget.setStyleSheet("background-color: #18181F; border-radius: 10px;")
 
     wandb_title = QLabel("Weights & Biases")
-    wandb_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 10px;")
+    wandb_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
     wandb_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
     wandb_layout.addWidget(wandb_title)
 
@@ -103,7 +106,7 @@ def projectOptions():
 
     wandb_api = QLineEdit()
     wandb_api.setStyleSheet(input_style)
-    wandb_api.setFixedHeight(30)
+    wandb_api.setFixedHeight(33)
     wandb_api.setEchoMode(QLineEdit.EchoMode.Password)
     wandb_layout.addWidget(wandb_api)
 
@@ -114,7 +117,7 @@ def projectOptions():
 
     wandb_user = QLineEdit()
     wandb_user.setStyleSheet(input_style)
-    wandb_user.setFixedHeight(30)
+    wandb_user.setFixedHeight(33)
     wandb_layout.addWidget(wandb_user)
 
     # Project Name
@@ -124,7 +127,7 @@ def projectOptions():
 
     wandb_proj = QLineEdit()
     wandb_proj.setStyleSheet(input_style)
-    wandb_proj.setFixedHeight(30)
+    wandb_proj.setFixedHeight(33)
     wandb_layout.addWidget(wandb_proj)
 
     grid_layout.addWidget(wandb_widget, 0, 1)
@@ -137,10 +140,10 @@ def projectOptions():
     github_layout = QVBoxLayout()
     github_layout.setContentsMargins(20, 20, 20, 20)
     github_widget.setLayout(github_layout)
-    github_widget.setStyleSheet("background-color: #1A1631; border-radius: 10px;")
+    github_widget.setStyleSheet("background-color: #18181F; border-radius: 10px;")
 
     github_title = QLabel("GitHub")
-    github_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 10px;")
+    github_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
     github_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
     github_layout.addWidget(github_title)
 
@@ -151,7 +154,7 @@ def projectOptions():
 
     github_url = QLineEdit()
     github_url.setStyleSheet(input_style)
-    github_url.setFixedHeight(30)
+    github_url.setFixedHeight(33)
     github_layout.addWidget(github_url)
 
     # Username
@@ -161,7 +164,7 @@ def projectOptions():
 
     github_user = QLineEdit()
     github_user.setStyleSheet(input_style)
-    github_user.setFixedHeight(30)
+    github_user.setFixedHeight(33)
     github_layout.addWidget(github_user)
 
     # Personal Access Token
@@ -171,7 +174,7 @@ def projectOptions():
 
     github_token = QLineEdit()
     github_token.setStyleSheet(input_style)
-    github_token.setFixedHeight(30)
+    github_token.setFixedHeight(33)
     github_token.setEchoMode(QLineEdit.EchoMode.Password)
     github_layout.addWidget(github_token)
 
@@ -181,31 +184,18 @@ def projectOptions():
 
     # ---- BUTTON ROW ----
     button_row = QHBoxLayout()
-    button_row.setContentsMargins(0, 5, 0, 0)
+    button_row.setContentsMargins(10, 5, 0, 0)
 
-    # Cancel button (left)
-    cancel_btn = QPushButton("Cancel")
-    cancel_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-    cancel_btn.setStyleSheet(
-        "background-color: #1A1631; color: white; "
-        "padding: 8px 20px; border-radius: 5px; font-size: 17px; padding: 10px"
-    )
-    button_row.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignLeft)
-    cancel_btn.setMinimumWidth(185)
-    cancel_btn.setMinimumHeight(40)
-
-    # Spacer to push the next button to the right
     button_row.addStretch()
 
     # Create Project button (right)
-    create_btn = QPushButton("Create Project")
+    create_btn = QPushButton("Save Changes")
     create_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
     create_btn.setMinimumWidth(185)
     create_btn.setMinimumHeight(40)
     create_btn.setStyleSheet(
-        "background-color: #451C4B; color: white; "
-        "padding: 8px 20px; border-radius: 5px; font-size: 17px; padding: 10px"
+        "background-color: #6F257B; color: white; "
+        "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
     )
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)
 

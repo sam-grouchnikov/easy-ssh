@@ -15,7 +15,7 @@ def setupContent(self, layout: QVBoxLayout):
     layout.addWidget(title_label)
 
     nav = navbar()
-    nav.setContentsMargins(20, 0, 0, 0)
+    nav.setContentsMargins(20, 0, 20, 0)
     nav.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     for index, item in enumerate(nav.nav_items):
         item.clicked.connect(lambda _, i=index: self.stack.setCurrentIndex(i))
@@ -24,12 +24,12 @@ def setupContent(self, layout: QVBoxLayout):
 
 
     self.stack = QStackedWidget()
-    self.stack.addWidget(FileTreePage())
+    self.stack.addWidget(FileTreePage("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\project-settings"))
     self.stack.addWidget(cmdPage())
     self.stack.addWidget(SimpleSSHPage())
     self.stack.addWidget(GraphsPage())
     self.stack.addWidget(SettingsPage())
-    self.stack.setContentsMargins(20, 0, 0, 0)
+    self.stack.setContentsMargins(20, 0, 20, 20)
     layout.addWidget(self.stack)
 
 
