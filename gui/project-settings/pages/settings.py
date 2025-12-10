@@ -194,8 +194,13 @@ def projectOptions():
     create_btn.setMinimumWidth(185)
     create_btn.setMinimumHeight(40)
     create_btn.setStyleSheet(
-        "background-color: #6F257B; color: white; "
-        "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
+        "background-color: #451C4B;"
+                "border-radius: 5px;"
+                "border: 1px solid #555555;"
+                "padding: 8px 20px;"
+                "color: white;"
+                "font-weight: bold;"
+                "font-size: 16px;"
     )
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)
 

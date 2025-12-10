@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QPropertyAnimation
 from gui.sidebar import setupSidebar
 from content import setupContent
+import pandas as pd
 
 class HomeSkeleton(QMainWindow):
     def __init__(self):
