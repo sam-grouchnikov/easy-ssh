@@ -26,7 +26,7 @@ def projectOptions():
         "border: 1px solid #474747;"
         "font-size: 16px;"
         "border-radius: 5px;"
-        "background: #121217;"
+        "background: #18181F;"
         "padding: 0px 5px"
 
 
@@ -43,7 +43,7 @@ def projectOptions():
     gen_settings_layout = QVBoxLayout()
     gen_settings_layout.setContentsMargins(20, 20, 20, 20)
     gen_settings.setLayout(gen_settings_layout)
-    gen_settings.setStyleSheet("background-color: #18181F; border-radius: 10px;")
+    gen_settings.setStyleSheet("background-color: #16161A; border-radius: 10px;")
 
     gen_title = QLabel("General Settings")
     gen_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
@@ -92,7 +92,7 @@ def projectOptions():
     wandb_layout = QVBoxLayout()
     wandb_layout.setContentsMargins(20, 20, 20, 20)
     wandb_widget.setLayout(wandb_layout)
-    wandb_widget.setStyleSheet("background-color: #18181F; border-radius: 10px;")
+    wandb_widget.setStyleSheet("background-color: #16161A; border-radius: 10px;")
 
     wandb_title = QLabel("Weights & Biases")
     wandb_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
@@ -140,7 +140,7 @@ def projectOptions():
     github_layout = QVBoxLayout()
     github_layout.setContentsMargins(20, 20, 20, 20)
     github_widget.setLayout(github_layout)
-    github_widget.setStyleSheet("background-color: #18181F; border-radius: 10px;")
+    github_widget.setStyleSheet("background-color: #16161A; border-radius: 10px;")
 
     github_title = QLabel("GitHub")
     github_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
@@ -196,7 +196,7 @@ def projectOptions():
     create_btn.setStyleSheet(
         "background-color: #451C4B;"
                 "border-radius: 5px;"
-                "border: 1px solid #555555;"
+                "border: 0px solid #555555;"
                 "padding: 8px 20px;"
                 "color: white;"
                 "font-weight: bold;"
