@@ -15,7 +15,7 @@ def make_plot(steps, values, title):
     fig.patch.set_facecolor('#202020')
     ax.set_facecolor("#202020")
 
-    ax.plot(steps, values, color="#768CEB", linewidth=1.0)
+    ax.plot(steps, values, color="#6075D4", linewidth=0.8)
 
     ax.set_xlabel("Step", color="#9E9E9E")
     ax.set_ylabel("Value", color="#9E9E9E")
