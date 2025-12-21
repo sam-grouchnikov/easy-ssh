@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QColor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QListWidget, QListWidgetItem,
@@ -139,16 +139,41 @@ class GraphsPage(QWidget):
         self.sidebar = QListWidget()
         self.sidebar.setMaximumWidth(150)
         self.sidebar.setStyleSheet("""
+            QListWidget {
+                background-color: transparent;
+                outline: 0;
+            }
+
             QListWidget::item {
-                padding: 8px;
-                font-size: 14px;
+                padding: 5px;
+                font-size: 19px;
+                color: #FFFFFF;
                 background-color: transparent;
             }
+            QListWidget::item:hover {
+                background-color: #131313;
+            }
+
+
             QListWidget::item:selected {
-                border: none;
                 background-color: #202020;
+                color: #FFFFFF;
+                border: none;
+            }
+
+            QListWidget::item:selected:!active {
+                background-color: #202020;
+                color: #FFFFFF;
+                border: none;
+            }
+
+            QListWidget::item:focus {
+                outline: 0;
             }
         """)
+
+        self.sidebar.setMouseTracking(True)
+        self.sidebar.viewport().setMouseTracking(True)
 
         self.metrics_display = MetricsDisplay()
 
@@ -161,11 +186,21 @@ class GraphsPage(QWidget):
 
         runs_title = QListWidgetItem("Runs")
         runs_title.setFlags(Qt.ItemFlag.NoItemFlags)
+        font = QFont()
+        font.setPointSize(16)
+        font.setBold(True)
+        runs_title.setFont(font)
         self.sidebar.addItem(runs_title)
+
+        self.sidebar.itemEntered.connect(self.on_item_hovered)
 
         for run in self.runs:
             item = QListWidgetItem(run.name)
             item.setData(Qt.ItemDataRole.UserRole, run)
+            item.setFont(QFont("Arial", 13))
+            item.setForeground(QColor("#FFFFFF"))
+
+
             self.sidebar.addItem(item)
 
         self.sidebar.itemClicked.connect(self.on_run_selected)
@@ -177,3 +212,8 @@ class GraphsPage(QWidget):
 
         self.metrics_display.load_run(run)
 
+    def on_item_hovered(self, item: QListWidgetItem):
+        if item.flags() & Qt.ItemFlag.ItemIsSelectable:
+            self.sidebar.viewport().setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.sidebar.viewport().setCursor(Qt.CursorShape.ArrowCursor)
