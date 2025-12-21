@@ -13,7 +13,7 @@ class cmdPage(QWidget):
     def initUI(self):
         # Main vertical layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 20, 15, 20)
+        main_layout.setContentsMargins(10, 20, 15, 20)
         main_layout.setSpacing(0)
 
         # ---- CONTAINER FOR CHAT + INPUT ----

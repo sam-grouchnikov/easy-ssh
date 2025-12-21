@@ -29,7 +29,7 @@ def setupContent(self, layout: QVBoxLayout):
     self.stack.addWidget(SimpleSSHPage())
     self.stack.addWidget(GraphsPage())
     self.stack.addWidget(SettingsPage())
-    self.stack.setContentsMargins(20, 0, 20, 20)
+    self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
 
 
