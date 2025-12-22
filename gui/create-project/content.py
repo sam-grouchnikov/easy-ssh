@@ -33,10 +33,11 @@ def projectOptions():
 
     # Shared Styles
     input_style = (
-        "border: 2px solid #474747;"
-        "font-size: 14px;"
+        "border: 1px solid #3B3B3B;"
+        "font-size: 16px;"
         "border-radius: 5px;"
-        "padding: 5px;"
+        "background: #1B1B20;"
+        "padding: 0px 5px"
     )
     label_style = "color: #ffffff; font-size: 18px;"
 
@@ -50,7 +51,7 @@ def projectOptions():
     gen_settings_layout = QVBoxLayout()
     gen_settings_layout.setContentsMargins(20, 20, 20, 20)
     gen_settings.setLayout(gen_settings_layout)
-    gen_settings.setStyleSheet("background-color: #1A1631; border-radius: 10px;")
+    gen_settings.setStyleSheet("background-color: #16161A; border-radius: 10px;")
 
     gen_title = QLabel("General Settings")
     gen_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 10px;")
@@ -99,7 +100,7 @@ def projectOptions():
     wandb_layout = QVBoxLayout()
     wandb_layout.setContentsMargins(20, 20, 20, 20)
     wandb_widget.setLayout(wandb_layout)
-    wandb_widget.setStyleSheet("background-color: #1A1631; border-radius: 10px;")
+    wandb_widget.setStyleSheet("background-color: #16161A; border-radius: 10px;")
 
     wandb_title = QLabel("Weights & Biases")
     wandb_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 10px;")
@@ -139,15 +140,11 @@ def projectOptions():
 
     grid_layout.addWidget(wandb_widget, 0, 1)
 
-
-    # -------------------------------------------------------------
-    # ------------------------- GITHUB CARD ------------------------
-    # -------------------------------------------------------------
     github_widget = QWidget()
     github_layout = QVBoxLayout()
     github_layout.setContentsMargins(20, 20, 20, 20)
     github_widget.setLayout(github_layout)
-    github_widget.setStyleSheet("background-color: #1A1631; border-radius: 10px;")
+    github_widget.setStyleSheet("background-color: #16161A; border-radius: 10px;")
 
     github_title = QLabel("GitHub")
     github_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 10px;")
@@ -199,7 +196,7 @@ def projectOptions():
 
     cancel_btn.setStyleSheet(
         "background-color: #1A1631; color: white; "
-        "padding: 8px 20px; border-radius: 5px; font-size: 17px; padding: 10px"
+        "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
     )
     button_row.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignLeft)
     cancel_btn.setMinimumWidth(185)
@@ -215,7 +212,7 @@ def projectOptions():
     create_btn.setMinimumHeight(40)
     create_btn.setStyleSheet(
         "background-color: #451C4B; color: white; "
-        "padding: 8px 20px; border-radius: 5px; font-size: 17px; padding: 10px"
+        "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
     )
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)
 

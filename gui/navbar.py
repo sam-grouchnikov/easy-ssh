@@ -21,9 +21,6 @@ class NavItem(QWidget):
         layout.setSpacing(8)
 
         icon = QLabel()
-        icon.setProperty("role", "navIcon")
-        icon.setStyleSheet("background: transparent; border: none;")
-
         pix = QPixmap(icon_path).scaled(
             22, 22,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -34,14 +31,13 @@ class NavItem(QWidget):
         layout.addWidget(icon)
 
         self.label = QLabel(text)
-        self.label.setProperty("role", "navLabel")
-        self.label.setStyleSheet(
-            "background: transparent; border: none; color: white; font-size: 17px;"
-        )
+        self.label.setStyleSheet("color: white; font-size: 17px;")
         layout.addWidget(self.label)
 
         self.setFixedHeight(52)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        # REQUIRED so background + border draw correctly
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.update_style()
@@ -54,12 +50,13 @@ class NavItem(QWidget):
         self.setStyleSheet("""
             NavItem {
                 background-color: transparent;
-                border-bottom: 3px solid transparent;
+                border-bottom: 1px solid #4A42D4;
             }
+
             NavItem[selected="true"] {
                 border-bottom: 3px solid #4A42D4;
+                background-color: transparent;
             }
-           }
         """)
         self.setProperty("selected", self._selected)
         self.style().polish(self)
@@ -68,6 +65,7 @@ class NavItem(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.index)
         super().mousePressEvent(event)
+
 
 
 def select_nav_item(items, selected_index):
@@ -84,7 +82,7 @@ def navbar():
     nb = QWidget()
     nb_layout = QHBoxLayout(nb)
     nb_layout.setContentsMargins(8, 0, 0, 10)
-    nb_layout.setSpacing(18)
+    nb_layout.setSpacing(0)
 
     items = [
         ("File Tree",  "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/code-fork.png"),

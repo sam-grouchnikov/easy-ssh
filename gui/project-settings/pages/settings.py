@@ -23,10 +23,10 @@ def projectOptions():
 
     # Shared Styles
     input_style = (
-        "border: 1px solid #474747;"
+        "border: 1px solid #3B3B3B;"
         "font-size: 16px;"
         "border-radius: 5px;"
-        "background: #18181F;"
+        "background: #1B1B20;"
         "padding: 0px 5px"
 
 
