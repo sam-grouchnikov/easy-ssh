@@ -1,15 +1,9 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QFrame, QPushButton
 from PyQt6.QtGui import QPixmap, QCursor
-from .actionButtonMenu import action_button_menu
+from .actionButtonMenu import action_button_menu, console_output
 
 
-def console_output():
-    main_widget = QWidget()
-    main_layout = QVBoxLayout(main_widget)
-    main_widget.setStyleSheet("background-color: #18181A;"
-                              "border-radius: 5px;")
-    return main_widget
 
 
 class SimpleSSHPage(QWidget):
