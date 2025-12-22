@@ -234,3 +234,32 @@ def button_row_3():
     row1_br3.addStretch()
     row1.addLayout(row1_br3)
     return row1
+
+
+
+def console_output():
+    main_widget = QWidget()
+    main_layout = QVBoxLayout(main_widget)
+    main_layout.setContentsMargins(20, 15, 20, 0)
+    main_layout.setSpacing(6)
+
+    main_widget.setStyleSheet("background-color: #15151B;"
+                              "border-radius: 5px;")
+
+    # --- TITLE + BORDER ---
+    title = QLabel("Console Output")
+    title.setContentsMargins(0, 0, 0, 0)
+    title.setStyleSheet("color: #AAAAAA;"
+                        "font-size: 21px;"
+                        "border: none;"
+                        "padding: 0px")
+    main_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
+
+    border = QFrame()
+    border.setFixedHeight(2)
+    border.setStyleSheet(
+        "background-color: #3B3B3B;"
+    )
+    main_layout.addWidget(border)
+    main_layout.addStretch(0)
+    return main_widget

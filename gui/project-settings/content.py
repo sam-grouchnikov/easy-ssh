@@ -1,5 +1,7 @@
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QSizePolicy, QStackedWidget
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (
+    QVBoxLayout, QLabel, QSizePolicy, QStackedWidget
+)
+from PyQt6.QtCore import Qt
 from gui.navbar import navbar
 from pages.FileTree import FileTreePage
 from pages.graphs import GraphsPage
@@ -7,36 +9,53 @@ from pages.settings import SettingsPage
 from pages.SimpleSSH import SimpleSSHPage
 from pages.cmd import cmdPage
 
+
+PAGE_NAMES = [
+    "File Tree",
+    "Terminal",
+    "Simple SSH",
+    "Logged Metrics",
+    "Project Settings"
+]
+
+
 def setupContent(self, layout: QVBoxLayout):
     project = "Project 1"
 
-    title_label = QLabel(f"{project}")
-    title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; padding-left: 10px;")
-    layout.addWidget(title_label)
+    self.title_label = QLabel()
+    self.title_label.setStyleSheet(
+        "color: white; font-size: 35px; font-weight: bold; padding-left: 10px;"
+    )
+    layout.addWidget(self.title_label)
 
     nav = navbar()
-    nav.setContentsMargins(20, 0, 20, 0)
+    nav.setContentsMargins(10, 0, 20, 0)
     nav.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-    for index, item in enumerate(nav.nav_items):
-        item.clicked.connect(lambda _, i=index: self.stack.setCurrentIndex(i))
-
     layout.addWidget(nav)
 
-
     self.stack = QStackedWidget()
-    self.stack.addWidget(FileTreePage("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\project-settings"))
+    self.stack.addWidget(
+        FileTreePage(
+            "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\project-settings"
+        )
+    )
     self.stack.addWidget(cmdPage())
     self.stack.addWidget(SimpleSSHPage())
     self.stack.addWidget(GraphsPage())
     self.stack.addWidget(SettingsPage())
+
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
 
+    def update_title(index: int):
+        self.title_label.setText(f"{project} - {PAGE_NAMES[index]}")
 
-class ClickableLabel(QLabel):
-    clicked = pyqtSignal()
+    for index, item in enumerate(nav.nav_items):
+        item.clicked.connect(
+            lambda _, i=index: self.stack.setCurrentIndex(i)
+        )
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.clicked.emit()
-        super().mousePressEvent(event)
+    self.stack.currentChanged.connect(update_title)
+
+    self.stack.setCurrentIndex(0)
+    update_title(0)
