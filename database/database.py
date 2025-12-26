@@ -11,35 +11,19 @@ def init_db():
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            local_path TEXT NOT NULL,
-            ssh_user TEXT NOT NULL,
-            ssh_ip TEXT NOT NULL,
-            ssh_password_encrypted TEXT NOT NULL,
-            ssh_port INTEGER NOT NULL
+            ssh_path TEXT NOT NULL,
+            ssh_psw TEXT,
+            wandb_api TEXT NOT NULL,
+            wandb_user TEXT NOT NULL,
+            wandb_project TEXT NOT NULL,
+            git_url TEXT NOT NULL,
+            git_user TEXT NOT NULL,
+            git_path TEXT NOT NULL,
+            status INTEGER NOT NULL,
+            last_update INTEGER NOT NULL
         );
     """)
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS github_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER NOT NULL,
-            repo_url TEXT,
-            branch TEXT,
-            github_token_encrypted TEXT,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        );
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS wandb_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            project_id INTEGER NOT NULL,
-            wandb_api_key_encrypted TEXT,
-            entity TEXT,
-            project_name TEXT,
-            FOREIGN KEY (project_id) REFERENCES projects(id)
-        );
-    """)
 
     conn.commit()
     conn.close()

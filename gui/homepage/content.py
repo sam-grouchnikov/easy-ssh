@@ -4,7 +4,7 @@ from PyQt6.QtGui import QCursor, QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
 
 
-def setupContent(layout: QVBoxLayout):
+def setupContent(layout: QVBoxLayout, navigate):
     title_label = QLabel("Welcome back, user!")
     title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; padding-left: 10px;")
     layout.addWidget(title_label)
@@ -97,12 +97,15 @@ def setupContent(layout: QVBoxLayout):
 
         grid_layout.addWidget(card, row, col)
 
-    create_card = QWidget()
+    create_card = QPushButton()
     create_layout = QVBoxLayout()
     create_layout.setContentsMargins(0, 15, 0, 15)
     create_layout.setSpacing(10)
     create_card.setLayout(create_layout)
-
+    create_card.setSizePolicy(
+        QSizePolicy.Policy.Preferred,
+        QSizePolicy.Policy.Expanding
+    )
     create_card.setStyleSheet(
         "background-color: #2D1631; border-radius: 10px;"
         "padding-bottom: 20px;"
@@ -124,6 +127,8 @@ def setupContent(layout: QVBoxLayout):
     create_layout.addWidget(create_icon)
 
     create_card.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    create_card.clicked.connect(lambda _, p="create": navigate(p))
 
     next_index = len(projects)
     row = next_index // columns

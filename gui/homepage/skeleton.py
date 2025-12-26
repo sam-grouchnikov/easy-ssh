@@ -62,7 +62,7 @@ class HomeSkeleton(QMainWindow):
         main_layout.addWidget(self.content)
 
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self.content_layout)
+        setupContent(self.content_layout, navigate)
 
 
 

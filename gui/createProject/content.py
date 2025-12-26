@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 
-def setupContent(layout: QVBoxLayout):
+def setupContent(layout: QVBoxLayout, navigate):
     title_label = QLabel("Create new project")
     title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; padding-left: 10px;")
     layout.addWidget(title_label)
@@ -17,12 +17,12 @@ def setupContent(layout: QVBoxLayout):
     border.setStyleSheet("color: #969696; margin-left: 20px;")
     layout.addWidget(border)
 
-    layout.addWidget(projectOptions())
+    layout.addWidget(projectOptions(navigate))
 
     layout.addStretch()
 
 
-def projectOptions():
+def projectOptions(navigate):
     grid_widget = QWidget()
     grid_layout = QGridLayout()
     grid_widget.setLayout(grid_layout)
@@ -201,6 +201,7 @@ def projectOptions():
     button_row.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignLeft)
     cancel_btn.setMinimumWidth(185)
     cancel_btn.setMinimumHeight(40)
+    cancel_btn.clicked.connect(lambda _, p="home": navigate(p))
 
     # Spacer to push the next button to the right
     button_row.addStretch()
@@ -214,6 +215,7 @@ def projectOptions():
         "background-color: #451C4B; color: white; "
         "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
     )
+    create_btn.clicked.connect(lambda _, p="project": navigate(p))
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
     # Add row to the grid widget (below cards)

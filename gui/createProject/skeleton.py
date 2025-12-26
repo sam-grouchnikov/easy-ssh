@@ -8,10 +8,10 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QPropertyAnimation
 from gui.sidebar import setupSidebar
-from content import setupContent
+from gui.createProject.content import setupContent
 
-class HomeSkeleton(QMainWindow):
-    def __init__(self):
+class CreateSkeleton(QMainWindow):
+    def __init__(self, navigate):
         super().__init__()
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
@@ -61,14 +61,14 @@ class HomeSkeleton(QMainWindow):
         main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.content)
 
-        setupSidebar(self.sidebar_layout)
-        setupContent(self.content_layout)
+        setupSidebar(self.sidebar_layout, navigate)
+        setupContent(self.content_layout, navigate)
 
 
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = HomeSkeleton()
+    window = CreateSkeleton()
     window.show()
     sys.exit(app.exec())
