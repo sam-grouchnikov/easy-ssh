@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QSpacerItem, QSize
     QHBoxLayout, QToolButton
 from PyQt6.QtGui import QCursor, QPixmap
 from PyQt6.QtCore import Qt, pyqtSignal
-from trainingControls import controls_widget_constructor
-from metricsAndSettings import second_widget_constructor
+from gui.projectDashboard.trainingControls import controls_widget_constructor
+from gui.projectDashboard.metricsAndSettings import second_widget_constructor
 
 
 def setupContent(layout: QVBoxLayout):

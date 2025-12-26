@@ -18,11 +18,12 @@ def second_widget_constructor():
     metrics_layout.addWidget(view_graphs())
 
     outer_layout.addWidget(metrics)
+    outer_layout.setSpacing(0)
 
     settings_card = QWidget()
     settings_layout = QVBoxLayout()
     settings_layout.setContentsMargins(0, 0, 0, 0)
-    settings_title = QLabel("Metric Logging")
+    settings_title = QLabel("Settings")
     settings_title.setStyleSheet("font-size: 30px")
     settings_layout.addWidget(settings_title)
     settings_card.setLayout(settings_layout)

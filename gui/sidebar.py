@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QPropertyAnimation
 
 
-def setupSidebar(layout: QVBoxLayout):
+def setupSidebar(layout: QVBoxLayout, navigate):
     top_widget = QWidget()
     top_layout = QHBoxLayout()
     top_layout.setContentsMargins(10, 10, 25, 15)
@@ -92,26 +92,39 @@ def setupSidebar(layout: QVBoxLayout):
     ]
 
     for icon_path, text in bottom_items:
-        item_widget = QWidget()
-        item_layout = QHBoxLayout()
+        button = QPushButton()
+        button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        button.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                border: none;
+                text-align: left;
+                padding: 7px;
+            }
+        """)
+
+        item_layout = QHBoxLayout(button)
         item_layout.setContentsMargins(20, 5, 0, 0)
         item_layout.setSpacing(10)
-        item_widget.setLayout(item_layout)
 
         icon_label = QLabel()
-        icon_label.setPixmap(QPixmap(icon_path).scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio,
-                                                       Qt.TransformationMode.SmoothTransformation))
-        item_layout.addWidget(icon_label)
+        icon_label.setPixmap(QPixmap(icon_path).scaled(
+            24, 24, Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        ))
 
         text_label = QLabel(text)
-        text_label.setStyleSheet("color: white; font-size: 15px; padding-left: 2px;")
-        text_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        if text == "Home":
-            item_layout.setContentsMargins(20, 5, 0, 18)
-        item_layout.addWidget(text_label)
+        text_label.setStyleSheet("color: white; font-size: 15px;")
 
-        item_widget.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        layout.addWidget(item_widget)
+        item_layout.addWidget(icon_label)
+        item_layout.addWidget(text_label)
+        item_layout.addStretch()
+
+        # Special spacing + navigation
+        if text == "Home":
+            button.clicked.connect(lambda _, p="home": navigate(p))
+
+        layout.addWidget(button)
 
     btn_widget = QWidget()
     btn_layout = QHBoxLayout()

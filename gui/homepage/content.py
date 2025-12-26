@@ -28,25 +28,25 @@ def setupContent(layout: QVBoxLayout):
     grid_layout = QGridLayout()
 
     grid_layout.setContentsMargins(20, 0, 10, 0)
-    grid_layout.setSpacing(15)
+    grid_layout.setSpacing(20)
     grid_widget.setLayout(grid_layout)
 
     columns = 3
     for i, project in enumerate(projects):
         card = QWidget()
         card_layout = QVBoxLayout()
-        card_layout.setContentsMargins(20, 15, 15, 15)
+        card_layout.setContentsMargins(30, 15, 15, 15)
 
         card.setLayout(card_layout)
         card.setStyleSheet(
             "background-color: #1A1631; border-radius: 10px;"
             "padding-bottom: 20px;"
-            "padding-left: 30px;"
+            "padding-left: 0px;"
         )
 
         title_row = QWidget()
         title_layout = QHBoxLayout()
-        title_layout.setContentsMargins(20, 0, 30, 0)
+        title_layout.setContentsMargins(30, 10, 30, 0)
         title_row.setLayout(title_layout)
 
         card_title = ClickableLabel(project["name"])
@@ -57,33 +57,34 @@ def setupContent(layout: QVBoxLayout):
 
         card_layout.addWidget(title_row)
 
-        status_row = QWidget()
-        status_layout = QHBoxLayout()
-        status_layout.setContentsMargins(0, 0, 0, 0)
-        status_layout.setSpacing(5) 
-        status_row.setLayout(status_layout)
-        status_icon = QLabel()
-        if project['status'] == "Active":
-            status_icon.setPixmap(
-                QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\green_circle.png")
-                .scaled(14, 14, Qt.AspectRatioMode.KeepAspectRatio)
-            )
-        else:
-            status_icon.setPixmap(
-                QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\red-circle.png")
-                .scaled(14, 14, Qt.AspectRatioMode.KeepAspectRatio)
-            )
 
+
+        status_row = QWidget()
+        status_layout = QHBoxLayout(status_row)
+        status_layout.setContentsMargins(30, 0, 0, 0)
+        status_layout.setSpacing(2)  # 👈 control gap between icon and text
+
+        status_icon = QLabel()
+        status_icon.setPixmap(
+            QPixmap(
+                "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\green_circle.png"
+                if project['status'] == "Active"
+                else "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\red-circle.png"
+            ).scaled(14, 14, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        )
+
+        status_icon.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         status_layout.addWidget(status_icon)
 
-        # Status text
         status_label = QLabel(f"Status: {project['status']}")
         status_label.setStyleSheet("color: #8F8F8F; font-size: 17px;")
         status_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        status_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
 
         status_layout.addWidget(status_label)
 
-        status_row.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+
+
         card_layout.addWidget(status_row)
 
         last_run_label = QLabel(f"Last run: {project['info']}")

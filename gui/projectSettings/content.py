@@ -3,11 +3,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from gui.navbar import navbar
-from pages.FileTree import FileTreePage
-from pages.graphs import GraphsPage
-from pages.settings import SettingsPage
-from pages.SimpleSSH import SimpleSSHPage
-from pages.cmd import cmdPage
+from gui.projectSettings.pages.FileTree import FileTreePage
+from gui.projectSettings.pages.graphs import GraphsPage
+from gui.projectSettings.pages.settings import SettingsPage
+from gui.projectSettings.pages.SimpleSSH import SimpleSSHPage
+from gui.projectSettings.pages.cmd import cmdPage
 
 
 PAGE_NAMES = [
@@ -36,7 +36,7 @@ def setupContent(self, layout: QVBoxLayout):
     self.stack = QStackedWidget()
     self.stack.addWidget(
         FileTreePage(
-            "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\project-settings"
+            "/gui/projectSettings"
         )
     )
     self.stack.addWidget(cmdPage())
