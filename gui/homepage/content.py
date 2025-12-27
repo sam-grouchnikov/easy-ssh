@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (
     QVBoxLayout, QLabel, QPushButton, QWidget, QGridLayout, QHBoxLayout, QSizePolicy
 )
-from PyQt6.QtGui import QCursor, QPixmap
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QCursor, QPixmap, QIcon
+from PyQt6.QtCore import Qt, pyqtSignal, QSize
 
 import database.database_crud
 
@@ -14,7 +14,6 @@ class ClickableLabel(QLabel):
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(event)
-
 
 def setupContent(layout: QVBoxLayout, navigate):
     # Clear layout first
@@ -75,32 +74,51 @@ def setup_project_grid(layout, navigate):
 
 
 def create_project_card(project, navigate):
-    card = QWidget()
-    card.setFixedHeight(190)
+    card = QPushButton()
+    card.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+    card.setMinimumHeight(200)
     card.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     card_layout = QVBoxLayout()
-    card_layout.setContentsMargins(30, 15, 15, 15)
+    card_layout.setContentsMargins(30, 20, 15, 15)
     card.setLayout(card_layout)
     card.setStyleSheet(
-        "background-color: #1A1631; border-radius: 10px; padding-bottom: 20px; padding-left: 0px;"
+        "background-color: #1A1631; border-radius: 10px; padding-bottom: 20px;"
     )
 
     # Title row
     title_row = QWidget()
-    title_layout = QHBoxLayout()
-    title_layout.setContentsMargins(30, 10, 30, 0)
-    title_row.setLayout(title_layout)
+    title_layout = QHBoxLayout(title_row)
+    title_layout.setContentsMargins(25, 0, 75, 0)
 
-    card_title = ClickableLabel(project["name"])
-    card_title.setCursor(Qt.CursorShape.PointingHandCursor)
+    card_title = QLabel(project["name"])
     card_title.setStyleSheet(
-        "color: white; font-size: 23px; font-weight: bold; padding-left: 3px; padding-right: 30px;"
+        "color: white; font-size: 25px; font-weight: bold"
     )
-    card_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    card_title.clicked.connect(lambda _, pid=project["id"]: navigate_project(pid, navigate))
+    card_title.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+    icon_path = "C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\delete.png"
+
+    delete_btn = QPushButton()
+    delete_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+    delete_btn.setIcon(QIcon(icon_path))
+    delete_btn.setIconSize(QSize(25, 25))
+
+    def delete_project(id):
+        from database.database_crud import delete_project
+        delete_project(id)
+        navigate("home")
+
+    delete_btn.clicked.connect(lambda _, p=project["id"]: (
+        delete_project(p),
+        None
+    ))
+    title_layout.addWidget(delete_btn)
+    title_layout.addSpacing(10)
     title_layout.addWidget(card_title)
+    title_layout.addStretch()
 
     card_layout.addWidget(title_row)
+
 
     # Status row
     status_row = QWidget()
@@ -119,7 +137,6 @@ def create_project_card(project, navigate):
     status_label.setStyleSheet("color: #8F8F8F; font-size: 17px;")
     status_layout.addWidget(status_label)
     status_layout.addStretch(0)
-
     card_layout.addWidget(status_row)
 
     # Last run
@@ -127,16 +144,16 @@ def create_project_card(project, navigate):
     last_run_label.setStyleSheet("color: #8F8F8F; font-size: 17px; padding-left: 30px;")
     last_run_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
     card_layout.addWidget(last_run_label)
+    card_layout.addStretch(8)
 
     return card
 
 
 def create_project_button(navigate):
     create_card = QPushButton()
-    create_card.setFixedHeight(190)
+    create_card.setFixedHeight(200)
     create_layout = QVBoxLayout()
-    create_layout.setContentsMargins(0, 15, 0, 15)
-    create_layout.setSpacing(10)
+    create_layout.setContentsMargins(0, 15, 0, 40)
     create_card.setLayout(create_layout)
     create_card.setStyleSheet("background-color: #2D1631; border-radius: 10px; padding-bottom: 20px;")
     create_card.setCursor(Qt.CursorShape.PointingHandCursor)

@@ -52,17 +52,14 @@ def run():
     window = Application()
     from gui.homepage.skeleton import HomeSkeleton
     from gui.projectSettings.skeleton import ProjectSettingsSkeleton
-    from gui.projectDashboard.skeleton import ProjectDashboardSkeleton
     from gui.createProject.skeleton import CreateSkeleton
 
     home = HomeSkeleton(window.show_page)
     project = ProjectSettingsSkeleton(window.show_page)
-    dashboard = ProjectDashboardSkeleton(window.show_page)
     create = CreateSkeleton(window.show_page)
 
     window.add_skeleton("home", home)
     window.add_skeleton("project", project)
-    window.add_skeleton("dashboard", dashboard)
     window.add_skeleton("create", create)
 
     window.show_page("home")
