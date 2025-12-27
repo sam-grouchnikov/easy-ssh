@@ -250,7 +250,7 @@ def projectOptions(navigate):
         )
         conn.close()
 
-        navigate("project")
+        navigate("project", project_id=name)
 
     create_btn.clicked.connect(create_project_and_save)
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)

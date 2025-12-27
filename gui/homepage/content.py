@@ -145,6 +145,9 @@ def create_project_card(project, navigate):
     last_run_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
     card_layout.addWidget(last_run_label)
     card_layout.addStretch(8)
+    card.clicked.connect(
+        lambda _, pid=project['name']: navigate("project", project_id=pid)
+    )
 
     return card
 
@@ -153,7 +156,7 @@ def create_project_button(navigate):
     create_card = QPushButton()
     create_card.setFixedHeight(200)
     create_layout = QVBoxLayout()
-    create_layout.setContentsMargins(0, 15, 0, 40)
+    create_layout.setContentsMargins(0, 10, 0, 40)
     create_card.setLayout(create_layout)
     create_card.setStyleSheet("background-color: #2D1631; border-radius: 10px; padding-bottom: 20px;")
     create_card.setCursor(Qt.CursorShape.PointingHandCursor)

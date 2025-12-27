@@ -1,19 +1,20 @@
 import sys
 
-from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QMainWindow,
     QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame, QSizePolicy, QSpacerItem
 )
-from PyQt6.QtCore import Qt, QPropertyAnimation
 from gui.sidebar import setupSidebar
 from gui.projectSettings.content import setupContent
-import pandas as pd
 
 class ProjectSettingsSkeleton(QMainWindow):
+    def load_project(self, project_id):
+        self.project_id = project_id
+        self.refresh()
     def __init__(self, navigate):
         super().__init__()
+        self.project_id = None
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
@@ -63,8 +64,23 @@ class ProjectSettingsSkeleton(QMainWindow):
         main_layout.addWidget(self.content)
 
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self, self.content_layout)
+        setupContent(self, self.content_layout, self.project_id)
 
+    def set_project(self, project_id):
+        self.project_id = project_id
+        self.refresh()
+
+    def refresh(self):
+        if self.project_id is None:
+            return
+
+        while self.content_layout.count():
+            item = self.content_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+        setupContent(self, self.content_layout, self.project_id)
 
 
 

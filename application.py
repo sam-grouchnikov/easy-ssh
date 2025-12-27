@@ -29,15 +29,23 @@ class Application(QMainWindow):
         central.setParent(None)
 
         self._pages[name] = central
+
+        if not hasattr(self, "_skeletons"):
+            self._skeletons = {}
         self._skeletons[name] = skeleton
+
         self._stack.addWidget(central)
 
-    def show_page(self, name: str):
+    def show_page(self, name: str, **kwargs):
         if name not in self._pages:
             raise ValueError(f"Page '{name}' not found")
 
-        if name == "home":
-            skeleton = self._skeletons.get("home")
+        skeleton = self._skeletons.get(name)
+
+        if name == "project" and skeleton and "project_id" in kwargs:
+            skeleton.set_project(kwargs["project_id"])
+
+        if skeleton and hasattr(skeleton, "refresh"):
             skeleton.refresh()
 
         self._stack.setCurrentWidget(self._pages[name])

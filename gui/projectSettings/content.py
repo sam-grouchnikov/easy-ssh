@@ -19,9 +19,7 @@ PAGE_NAMES = [
 ]
 
 
-def setupContent(self, layout: QVBoxLayout):
-    project = "Project 1"
-
+def setupContent(self, layout: QVBoxLayout, project_id):
     self.title_label = QLabel()
     self.title_label.setStyleSheet(
         "color: white; font-size: 35px; font-weight: bold; padding-left: 10px;"
@@ -47,8 +45,10 @@ def setupContent(self, layout: QVBoxLayout):
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
 
+
+
     def update_title(index: int):
-        self.title_label.setText(f"{project} - {PAGE_NAMES[index]}")
+        self.title_label.setText(f"{project_id} - {PAGE_NAMES[index]}")
 
     for index, item in enumerate(nav.nav_items):
         item.clicked.connect(
