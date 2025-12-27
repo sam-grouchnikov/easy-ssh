@@ -5,12 +5,9 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QWidget
 )
+from database.database_crud import delete_all_projects
 
 class Application(QMainWindow):
-    """
-    Application that stacks full-page skeletons.
-    Each skeleton manages its own sidebar/layout.
-    """
 
     def __init__(self):
         super().__init__()
@@ -22,25 +19,26 @@ class Application(QMainWindow):
         self.setCentralWidget(self._stack)
 
         self._pages = {}
+        self._skeletons = {}
 
     def add_skeleton(self, name: str, skeleton: QMainWindow):
-        """
-        Add a full-page skeleton to the app.
-
-        We steal its central widget and embed it.
-        """
         central = skeleton.centralWidget()
         if central is None:
             raise ValueError("Skeleton has no central widget")
 
-        central.setParent(None)  # detach safely
+        central.setParent(None)
 
         self._pages[name] = central
+        self._skeletons[name] = skeleton
         self._stack.addWidget(central)
 
     def show_page(self, name: str):
         if name not in self._pages:
             raise ValueError(f"Page '{name}' not found")
+
+        if name == "home":
+            skeleton = self._skeletons.get("home")
+            skeleton.refresh()
 
         self._stack.setCurrentWidget(self._pages[name])
 
@@ -49,9 +47,9 @@ class Application(QMainWindow):
 
 def run():
     app = QApplication(sys.argv)
-
+    import database.database as db
+    db.init_db()
     window = Application()
-
     from gui.homepage.skeleton import HomeSkeleton
     from gui.projectSettings.skeleton import ProjectSettingsSkeleton
     from gui.projectDashboard.skeleton import ProjectDashboardSkeleton

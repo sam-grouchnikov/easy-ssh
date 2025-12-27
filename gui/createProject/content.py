@@ -4,17 +4,20 @@ from PyQt6.QtWidgets import (
     QGridLayout, QHBoxLayout, QToolButton, QFrame, QLineEdit
 )
 from PyQt6.QtCore import Qt
+import database.database_crud
+from database.database import get_connection
+import time
 
 
 def setupContent(layout: QVBoxLayout, navigate):
     title_label = QLabel("Create new project")
-    title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; padding-left: 10px;")
+    title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; padding-left: 10px")
     layout.addWidget(title_label)
 
     border = QFrame()
     border.setFrameShape(QFrame.Shape.HLine)
     border.setFixedHeight(1)
-    border.setStyleSheet("color: #969696; margin-left: 20px;")
+    border.setStyleSheet("color: #969696; margin-left: 20px")
     layout.addWidget(border)
 
     layout.addWidget(projectOptions(navigate))
@@ -27,7 +30,7 @@ def projectOptions(navigate):
     grid_layout = QGridLayout()
     grid_widget.setLayout(grid_layout)
 
-    grid_layout.setContentsMargins(20, 0, 20, 20)
+    grid_layout.setContentsMargins(20, 5, 20, 20)
     grid_layout.setHorizontalSpacing(20)
     grid_layout.setVerticalSpacing(20)
 
@@ -215,7 +218,41 @@ def projectOptions(navigate):
         "background-color: #451C4B; color: white; "
         "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
     )
-    create_btn.clicked.connect(lambda _, p="project": navigate(p))
+
+    def create_project_and_save():
+        # Get all values from inputs
+        name = name_input.text()
+        ssh_path = ssh_path_input.text()
+        ssh_psw = ssh_psw_input.text()  # optionally encrypt
+        wandb_api_text = wandb_api.text()  # optionally encrypt
+        wandb_user_val = wandb_user.text()
+        wandb_project_val = wandb_proj.text()
+        github_url_val = github_url.text()
+        github_user_val = github_user.text()
+        git_path_val = ""  # or add an input for local git path
+        status_val = 1  # let's say 1 = Active
+        last_update = int(time.time())  # current timestamp
+
+        # Add to DB
+        conn = get_connection()
+        database.database_crud.add_project(
+            name=name,
+            ssh_path=ssh_path,
+            ssh_password=ssh_psw,
+            wandb_api_key=wandb_api_text,
+            wandb_user=wandb_user_val,
+            wandb_project=wandb_project_val,
+            github_repo_url=github_url_val,
+            github_user=github_user_val,
+            git_local_path=git_path_val,
+            status=status_val,
+            last_time=last_update
+        )
+        conn.close()
+
+        navigate("project")
+
+    create_btn.clicked.connect(create_project_and_save)
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
     # Add row to the grid widget (below cards)

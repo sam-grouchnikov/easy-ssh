@@ -1,5 +1,4 @@
 import sys
-
 from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QMainWindow,
@@ -17,6 +16,8 @@ class HomeSkeleton(QMainWindow):
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
 
+        self.navigate = navigate  # store navigate function
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         central_widget.setStyleSheet("background-color: #151515;")
@@ -26,15 +27,7 @@ class HomeSkeleton(QMainWindow):
         main_layout.setSpacing(0)
         central_widget.setLayout(main_layout)
 
-        self.sidebar_width = 200
-        self.sidebar = QWidget()
-        self.sidebar.setStyleSheet("background-color: #18181F;")
-        self.sidebar.setFixedWidth(self.sidebar_width)
-        self.sidebar.setSizePolicy(
-            self.sidebar.sizePolicy().horizontalPolicy(),
-            QSizePolicy.Policy.Expanding
-        )
-
+        # Sidebar
         self.sidebar_width = 250
         self.sidebar = QWidget()
         self.sidebar.setStyleSheet("background-color: #12121A;")
@@ -50,6 +43,7 @@ class HomeSkeleton(QMainWindow):
         self.sidebar_layout.setSpacing(10)
         self.sidebar.setLayout(self.sidebar_layout)
 
+        # Content
         self.content = QWidget()
         self.content.setStyleSheet("background-color: #0D0C12;")
         self.content.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -61,14 +55,25 @@ class HomeSkeleton(QMainWindow):
         main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.content)
 
+        # Initialize sidebar
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self.content_layout, navigate)
+        # Initialize content
+        self.refresh()
 
+    def refresh(self):
+        # Clear old widgets
+        while self.content_layout.count():
+            item = self.content_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.setParent(None)
 
+        # Rebuild content
+        setupContent(self.content_layout, self.navigate)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = HomeSkeleton()
+    window = HomeSkeleton(lambda p: print(f"Navigate to: {p}"))
     window.show()
     sys.exit(app.exec())
