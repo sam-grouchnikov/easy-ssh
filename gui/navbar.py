@@ -37,7 +37,6 @@ class NavItem(QWidget):
         self.setFixedHeight(52)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        # REQUIRED so background + border draw correctly
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.update_style()
@@ -99,7 +98,6 @@ def navbar():
         nb_layout.addWidget(item)
         nav_items.append(item)
 
-        # Safe connection (no late-binding bug)
         item.clicked.connect(
             lambda _, i=index: select_nav_item(nav_items, i)
         )
@@ -107,7 +105,6 @@ def navbar():
     nb_layout.addStretch()
     container_layout.addWidget(nb)
 
-    # Default selection
     select_nav_item(nav_items, 0)
 
     nb_container.nav_items = nav_items

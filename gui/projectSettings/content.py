@@ -19,7 +19,7 @@ PAGE_NAMES = [
 ]
 
 
-def setupContent(self, layout: QVBoxLayout, project_id):
+def setupContent(self, layout: QVBoxLayout, project_name):
     self.title_label = QLabel()
     self.title_label.setStyleSheet(
         "color: white; font-size: 35px; font-weight: bold; padding-left: 10px;"
@@ -40,7 +40,7 @@ def setupContent(self, layout: QVBoxLayout, project_id):
     self.stack.addWidget(cmdPage())
     self.stack.addWidget(SimpleSSHPage())
     self.stack.addWidget(GraphsPage())
-    self.stack.addWidget(SettingsPage())
+    self.stack.addWidget(SettingsPage(project_name))
 
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
@@ -48,7 +48,7 @@ def setupContent(self, layout: QVBoxLayout, project_id):
 
 
     def update_title(index: int):
-        self.title_label.setText(f"{project_id} - {PAGE_NAMES[index]}")
+        self.title_label.setText(f"{project_name} - {PAGE_NAMES[index]}")
 
     for index, item in enumerate(nav.nav_items):
         item.clicked.connect(

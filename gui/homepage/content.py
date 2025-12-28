@@ -108,7 +108,7 @@ def create_project_card(project, navigate):
         delete_project(id)
         navigate("home")
 
-    delete_btn.clicked.connect(lambda _, p=project["id"]: (
+    delete_btn.clicked.connect(lambda _, p=project["name"]: (
         delete_project(p),
         None
     ))
@@ -146,7 +146,7 @@ def create_project_card(project, navigate):
     card_layout.addWidget(last_run_label)
     card_layout.addStretch(8)
     card.clicked.connect(
-        lambda _, pid=project['name']: navigate("project", project_id=pid)
+        lambda _, p_name=project['name']: navigate("project",project_name=p_name)
     )
 
     return card

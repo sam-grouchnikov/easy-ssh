@@ -5,15 +5,13 @@ def get_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS projects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            name TEXT PRIMARY KEY,
             ssh_path TEXT NOT NULL,
             ssh_psw TEXT,
             wandb_api TEXT NOT NULL,
@@ -22,15 +20,14 @@ def init_db():
             git_url TEXT NOT NULL,
             git_user TEXT NOT NULL,
             git_path TEXT NOT NULL,
-            status INTEGER NOT NULL,
-            last_update INTEGER NOT NULL
+            status INTEGER NOT NULL DEFAULT 0,
+            last_update TEXT NOT NULL
         );
     """)
-
 
     conn.commit()
     conn.close()
 
 if __name__ == '__main__':
     init_db()
-    print("Database initialized.")
+    print("Database initialized with Name as Primary Key.")

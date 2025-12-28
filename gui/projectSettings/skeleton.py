@@ -9,12 +9,12 @@ from gui.sidebar import setupSidebar
 from gui.projectSettings.content import setupContent
 
 class ProjectSettingsSkeleton(QMainWindow):
-    def load_project(self, project_id):
-        self.project_id = project_id
+    def load_project(self, project_name):
+        self.project_name = project_name
         self.refresh()
     def __init__(self, navigate):
         super().__init__()
-        self.project_id = None
+        self.project_name = None
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
@@ -64,14 +64,14 @@ class ProjectSettingsSkeleton(QMainWindow):
         main_layout.addWidget(self.content)
 
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self, self.content_layout, self.project_id)
+        setupContent(self, self.content_layout, self.project_name)
 
     def set_project(self, project_id):
-        self.project_id = project_id
+        self.project_name = project_id
         self.refresh()
 
     def refresh(self):
-        if self.project_id is None:
+        if self.project_name is None:
             return
 
         while self.content_layout.count():
@@ -80,7 +80,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             if widget:
                 widget.deleteLater()
 
-        setupContent(self, self.content_layout, self.project_id)
+        setupContent(self, self.content_layout, self.project_name)
 
 
 

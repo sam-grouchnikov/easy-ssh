@@ -52,11 +52,11 @@ def add_project(
 
 
 # -------- READ --------
-def get_project(project_id):
+def get_project(project_name):
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+        cursor.execute("SELECT * FROM projects WHERE name = ?", (project_name,))
         return cursor.fetchone()
     finally:
         conn.close()
@@ -72,29 +72,35 @@ def get_all_projects():
         conn.close()
 
 
-# -------- UPDATE --------
-def update_project(project_id, **kwargs):
+# database/database_crud.py
+
+def update_project(project_name, **kwargs):
     if not kwargs:
-        return  # prevent invalid SQL
+        return
 
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        fields = ", ".join(f"{key} = ?" for key in kwargs.keys())
-        values = list(kwargs.values()) + [project_id]
 
-        cursor.execute(f"UPDATE projects SET {fields} WHERE id = ?", values)
+        fields = ", ".join(f"{key} = ?" for key in kwargs.keys())
+
+        values = list(kwargs.values())
+
+        values.append(project_name)
+
+        cursor.execute(f"UPDATE projects SET {fields} WHERE name = ?", values)
+
         conn.commit()
     finally:
         conn.close()
 
 
 # -------- DELETE --------
-def delete_project(project_id):
+def delete_project(project_name):
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+        cursor.execute("DELETE FROM projects WHERE name = ?", (project_name,))
         conn.commit()
     finally:
         conn.close()

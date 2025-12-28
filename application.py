@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QWidget
 )
-from database.database_crud import delete_all_projects
 
 class Application(QMainWindow):
 
@@ -42,8 +41,8 @@ class Application(QMainWindow):
 
         skeleton = self._skeletons.get(name)
 
-        if name == "project" and skeleton and "project_id" in kwargs:
-            skeleton.set_project(kwargs["project_id"])
+        if name == "project" and skeleton and "project_name" in kwargs:
+            skeleton.set_project(kwargs["project_name"])
 
         if skeleton and hasattr(skeleton, "refresh"):
             skeleton.refresh()

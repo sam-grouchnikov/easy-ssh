@@ -1,211 +1,138 @@
 from PyQt6.QtGui import QCursor
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QGridLayout
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QLineEdit,
+    QPushButton, QHBoxLayout, QGridLayout, QMessageBox
+)
 from PyQt6.QtCore import Qt
+import database.database_crud as db_crud
 
 
 class SettingsPage(QWidget):
-    def __init__(self):
+    def __init__(self, project_name):
         super().__init__()
+        self.project_name = project_name
+        self.inputs = {}
+
         layout = QVBoxLayout()
-        layout.addWidget(projectOptions())
+        layout.addWidget(self.init_ui())
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)
 
+        self.load_project_data()
 
-def projectOptions():
-    grid_widget = QWidget()
-    grid_layout = QGridLayout()
-    grid_widget.setLayout(grid_layout)
+    def load_project_data(self):
+        project = db_crud.get_project(self.project_name)
+        if project:
+            self.inputs['name'].setText(project['name'])
+            self.inputs['ssh_path'].setText(project['ssh_path'])
+            self.inputs['ssh_psw'].setText(project['ssh_psw'])
+            self.inputs['wandb_api'].setText(project['wandb_api'])
+            self.inputs['wandb_user'].setText(project['wandb_user'])
+            self.inputs['wandb_proj'].setText(project['wandb_project'])
+            self.inputs['github_url'].setText(project['git_url'])
+            self.inputs['github_user'].setText(project['git_user'])
+            self.inputs['github_token'].setText(project['git_path'])  # Adjust if column name differs
 
-    grid_layout.setContentsMargins(0, 0, 20, 20)
-    grid_layout.setHorizontalSpacing(20)
-    grid_layout.setVerticalSpacing(10)
+    def save_changes(self):
+        updated_data = {
+            "ssh_path": self.inputs['ssh_path'].text(),
+            "ssh_psw": self.inputs['ssh_psw'].text(),
+            "wandb_api": self.inputs['wandb_api'].text(),
+            "wandb_user": self.inputs['wandb_user'].text(),
+            "wandb_project": self.inputs['wandb_proj'].text(),
+            "git_url": self.inputs['github_url'].text(),
+            "git_user": self.inputs['github_user'].text(),
+            "git_path": self.inputs['github_token'].text(),
+        }
 
-    # Shared Styles
-    input_style = (
-        "border: 1px solid #3B3B3B;"
-        "font-size: 16px;"
-        "border-radius: 5px;"
-        "background: #1B1B20;"
-        "padding: 0px 5px"
+        try:
+            db_crud.update_project(self.project_name, **updated_data)
+            QMessageBox.information(self, "Success", "Project settings updated successfully!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to update project: {str(e)}")
 
+    def init_ui(self):
+        grid_widget = QWidget()
+        grid_layout = QGridLayout(grid_widget)
+        grid_layout.setContentsMargins(0, 0, 20, 20)
+        grid_layout.setHorizontalSpacing(20)
+        grid_layout.setVerticalSpacing(10)
 
-    )
-    label_style = "color: #ffffff; font-size: 15px; margin-top: 10px"
+        input_style = ("border: 1px solid #3B3B3B; font-size: 16px; border-radius: 5px; "
+                       "background: #1B1B20; padding: 0px 5px")
+        label_style = "color: #ffffff; font-size: 15px; margin-top: 10px"
 
-    # -------------------------------------------------------------
-    # ------------------- GENERAL SETTINGS CARD -------------------
-    # -------------------------------------------------------------
-    gen_settings = QWidget()
-    gen_settings.setMinimumWidth(300)
-    gen_settings.setMinimumHeight(300)
+        # --- Helper to create labeled inputs ---
+        def add_input(layout, label_text, key, password=False):
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet(label_style)
+            layout.addWidget(lbl)
 
-    gen_settings_layout = QVBoxLayout()
-    gen_settings_layout.setContentsMargins(20, 20, 20, 20)
-    gen_settings.setLayout(gen_settings_layout)
-    gen_settings.setStyleSheet("background-color: #16161A; border-radius: 10px;")
+            edit = QLineEdit()
+            edit.setStyleSheet(input_style)
+            edit.setFixedHeight(33)
+            if password:
+                edit.setEchoMode(QLineEdit.EchoMode.Password)
+            layout.addWidget(edit)
+            self.inputs[key] = edit
+            return edit
 
-    gen_title = QLabel("General Settings")
-    gen_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
-    gen_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    gen_settings_layout.addWidget(gen_title)
+        # --- General Settings Card ---
+        gen_card = QWidget()
+        gen_card.setStyleSheet("background-color: #16161A; border-radius: 10px;")
+        gen_vbox = QVBoxLayout(gen_card)
 
-    # Name
-    lbl = QLabel("Project Name")
-    lbl.setStyleSheet(label_style)
-    gen_settings_layout.addWidget(lbl)
+        gen_title = QLabel("General Settings")
+        gen_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold;")
+        gen_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        gen_vbox.addWidget(gen_title)
 
-    name_input = QLineEdit()
-    name_input.setStyleSheet(input_style)
-    name_input.setFixedHeight(33)
-    gen_settings_layout.addWidget(name_input)
+        add_input(gen_vbox, "Project Name", "name").setReadOnly(True)  # PK shouldn't be edited easily
+        add_input(gen_vbox, "SSH Connection Path", "ssh_path")
+        add_input(gen_vbox, "SSH Password", "ssh_psw", True)
+        grid_layout.addWidget(gen_card, 0, 0)
 
-    # SSH Path
-    lbl = QLabel("SSH Connection Path")
-    lbl.setStyleSheet(label_style)
-    gen_settings_layout.addWidget(lbl)
+        # --- Weights & Biases Card ---
+        wandb_card = QWidget()
+        wandb_card.setStyleSheet("background-color: #16161A; border-radius: 10px;")
+        wandb_vbox = QVBoxLayout(wandb_card)
 
-    ssh_path_input = QLineEdit()
-    ssh_path_input.setStyleSheet(input_style)
-    ssh_path_input.setFixedHeight(33)
-    gen_settings_layout.addWidget(ssh_path_input)
+        wandb_title = QLabel("Weights & Biases")
+        wandb_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold;")
+        wandb_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        wandb_vbox.addWidget(wandb_title)
 
-    # SSH Password
-    lbl = QLabel("SSH Password")
-    lbl.setStyleSheet(label_style)
-    gen_settings_layout.addWidget(lbl)
+        add_input(wandb_vbox, "API Key", "wandb_api", True)
+        add_input(wandb_vbox, "User / Team Name", "wandb_user")
+        add_input(wandb_vbox, "Project Name", "wandb_proj")
+        grid_layout.addWidget(wandb_card, 0, 1)
 
-    ssh_psw_input = QLineEdit()
-    ssh_psw_input.setStyleSheet(input_style)
-    ssh_psw_input.setFixedHeight(33)
-    ssh_psw_input.setEchoMode(QLineEdit.EchoMode.Password)
-    gen_settings_layout.addWidget(ssh_psw_input)
+        # --- GitHub Card ---
+        git_card = QWidget()
+        git_card.setStyleSheet("background-color: #16161A; border-radius: 10px;")
+        git_vbox = QVBoxLayout(git_card)
 
-    # Add card to grid
-    grid_layout.addWidget(gen_settings, 0, 0)
+        git_title = QLabel("GitHub")
+        git_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold;")
+        git_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        git_vbox.addWidget(git_title)
 
+        add_input(git_vbox, "Repository URL", "github_url")
+        add_input(git_vbox, "GitHub Username", "github_user")
+        add_input(git_vbox, "Personal Access Token", "github_token", True)
+        grid_layout.addWidget(git_card, 0, 2)
 
-    # -------------------------------------------------------------
-    # ------------------ WEIGHTS & BIASES CARD --------------------
-    # -------------------------------------------------------------
-    wandb_widget = QWidget()
-    wandb_layout = QVBoxLayout()
-    wandb_layout.setContentsMargins(20, 20, 20, 20)
-    wandb_widget.setLayout(wandb_layout)
-    wandb_widget.setStyleSheet("background-color: #16161A; border-radius: 10px;")
+        # --- Button Row ---
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
 
-    wandb_title = QLabel("Weights & Biases")
-    wandb_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
-    wandb_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    wandb_layout.addWidget(wandb_title)
+        save_btn = QPushButton("Save Changes")
+        save_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        save_btn.setFixedSize(185, 40)
+        save_btn.setStyleSheet("background-color: #451C4B; border-radius: 5px; color: white; "
+                               "font-weight: bold; font-size: 16px;")
+        save_btn.clicked.connect(self.save_changes)
+        btn_row.addWidget(save_btn)
 
-    # API Key
-    lbl = QLabel("API Key")
-    lbl.setStyleSheet(label_style)
-    wandb_layout.addWidget(lbl)
-
-    wandb_api = QLineEdit()
-    wandb_api.setStyleSheet(input_style)
-    wandb_api.setFixedHeight(33)
-    wandb_api.setEchoMode(QLineEdit.EchoMode.Password)
-    wandb_layout.addWidget(wandb_api)
-
-    # User/Team Name
-    lbl = QLabel("User / Team Name")
-    lbl.setStyleSheet(label_style)
-    wandb_layout.addWidget(lbl)
-
-    wandb_user = QLineEdit()
-    wandb_user.setStyleSheet(input_style)
-    wandb_user.setFixedHeight(33)
-    wandb_layout.addWidget(wandb_user)
-
-    # Project Name
-    lbl = QLabel("Project Name")
-    lbl.setStyleSheet(label_style)
-    wandb_layout.addWidget(lbl)
-
-    wandb_proj = QLineEdit()
-    wandb_proj.setStyleSheet(input_style)
-    wandb_proj.setFixedHeight(33)
-    wandb_layout.addWidget(wandb_proj)
-
-    grid_layout.addWidget(wandb_widget, 0, 1)
-
-
-    # -------------------------------------------------------------
-    # ------------------------- GITHUB CARD ------------------------
-    # -------------------------------------------------------------
-    github_widget = QWidget()
-    github_layout = QVBoxLayout()
-    github_layout.setContentsMargins(20, 20, 20, 20)
-    github_widget.setLayout(github_layout)
-    github_widget.setStyleSheet("background-color: #16161A; border-radius: 10px;")
-
-    github_title = QLabel("GitHub")
-    github_title.setStyleSheet("color: white; font-size: 23px; font-weight: bold; margin-bottom: 0px;")
-    github_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-    github_layout.addWidget(github_title)
-
-    # Repo URL
-    lbl = QLabel("Repository URL")
-    lbl.setStyleSheet(label_style)
-    github_layout.addWidget(lbl)
-
-    github_url = QLineEdit()
-    github_url.setStyleSheet(input_style)
-    github_url.setFixedHeight(33)
-    github_layout.addWidget(github_url)
-
-    # Username
-    lbl = QLabel("GitHub Username")
-    lbl.setStyleSheet(label_style)
-    github_layout.addWidget(lbl)
-
-    github_user = QLineEdit()
-    github_user.setStyleSheet(input_style)
-    github_user.setFixedHeight(33)
-    github_layout.addWidget(github_user)
-
-    # Personal Access Token
-    lbl = QLabel("Personal Access Token")
-    lbl.setStyleSheet(label_style)
-    github_layout.addWidget(lbl)
-
-    github_token = QLineEdit()
-    github_token.setStyleSheet(input_style)
-    github_token.setFixedHeight(33)
-    github_token.setEchoMode(QLineEdit.EchoMode.Password)
-    github_layout.addWidget(github_token)
-
-    # Add to grid
-    grid_layout.addWidget(github_widget, 0, 2)
-
-
-    # ---- BUTTON ROW ----
-    button_row = QHBoxLayout()
-    button_row.setContentsMargins(10, 5, 0, 0)
-
-    button_row.addStretch()
-
-    # Create Project button (right)
-    create_btn = QPushButton("Save Changes")
-    create_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    create_btn.setMinimumWidth(185)
-    create_btn.setMinimumHeight(40)
-    create_btn.setStyleSheet(
-        "background-color: #451C4B;"
-                "border-radius: 5px;"
-                "border: 0px solid #555555;"
-                "padding: 8px 20px;"
-                "color: white;"
-                "font-weight: bold;"
-                "font-size: 16px;"
-    )
-    button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)
-
-    # Add row to the grid widget (below cards)
-    grid_layout.addLayout(button_row, grid_layout.rowCount(), 0, 1, -1)
-
-
-    return grid_widget
+        grid_layout.addLayout(btn_row, 1, 0, 1, 3)
+        return grid_widget

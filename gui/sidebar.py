@@ -120,7 +120,6 @@ def setupSidebar(layout: QVBoxLayout, navigate):
         item_layout.addWidget(text_label)
         item_layout.addStretch()
 
-        # Special spacing + navigation
         if text == "Home":
             button.clicked.connect(lambda _, p="home": navigate(p))
 
