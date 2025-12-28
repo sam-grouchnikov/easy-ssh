@@ -260,4 +260,3 @@ def projectOptions(navigate):
 
 
     return grid_widget
-
