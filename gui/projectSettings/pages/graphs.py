@@ -130,7 +130,7 @@ class MetricsDisplay(QScrollArea):
 
 
 class GraphsPage(QWidget):
-    def __init__(self):
+    def __init__(self, project_name):
         super().__init__()
 
         main_layout = QHBoxLayout(self)
@@ -180,9 +180,24 @@ class GraphsPage(QWidget):
         main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.metrics_display, stretch=1)
 
-        api = wandb.Api()
-        project = "sam-grouchnikov-kennesaw-state-university/sudoku-featureless"
-        self.runs = list(api.runs(project))
+        from database.database_crud import get_project
+        self.runs = []
+        project = get_project(project_name)
+        if project is not None:
+            print("Project is not none")
+            user = project['wandb_user']
+            proj = project['wandb_project']
+            api_key = project['wandb_api']
+            print(f"USER: {user}, PROJECT: {proj}, API_KEY: {api_key}")
+            api = wandb.Api()
+            wandb_project = f"{user}/{proj}"
+            self.runs = list(api.runs(wandb_project))
+            print("Finished wandb")
+        else:
+            user, proj, api_key = None, None, None
+
+
+
 
         runs_title = QListWidgetItem("Runs")
         runs_title.setFlags(Qt.ItemFlag.NoItemFlags)

@@ -3,14 +3,15 @@ from PyQt6.QtWidgets import (
     QPushButton, QScrollArea, QFrame, QSizePolicy
 )
 from PyQt6.QtCore import Qt
-
+from backend.ssh.sshManager import SSHManager
 
 class cmdPage(QWidget):
-    def __init__(self):
+    def __init__(self, project_name):
         super().__init__()
-        self.initUI()
+        self.manager = SSHManager("10.80.10.96", "sam", "vera1986", 2023)
+        self.initUI(project_name)
 
-    def initUI(self):
+    def initUI(self, project_name):
         # Main vertical layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 20, 15, 20)
@@ -25,6 +26,7 @@ class cmdPage(QWidget):
             background-color: #18181F;
             border: 1px solid #555555;
             border-radius: 10px;
+            font-size: 16px;
         """)
         main_layout.addWidget(container)
 
@@ -93,9 +95,56 @@ class cmdPage(QWidget):
         """)
         self.clear_btn.setFixedHeight(42)
 
+        self.end_btn = QPushButton("Ctrl + C")
+        self.end_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.end_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #540F0F;
+                        border-radius: 5px;
+                        padding: 8px 20px;
+                        color: white;
+                        font-weight: bold;
+                        font-size: 16px;
+                    }
+                    QPushButton:hover {
+                        background-color: #5B1111;
+                    }
+                """)
+        self.end_btn.setFixedHeight(42)
+        def interrupt():
+            self.manager.send_interrupt()
+            self.add_message(f"Successfully ended process")
+
+        self.end_btn.clicked.connect(interrupt)
+
+        self.connect_btn = QPushButton("Connect")
+        self.connect_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.connect_btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #134419;
+                        border-radius: 5px;
+                        padding: 8px 20px;
+                        color: white;
+                        font-weight: bold;
+                        font-size: 16px;
+                    }
+                    QPushButton:hover {
+                        background-color: #164E1D;
+                    }
+                """)
+        self.connect_btn.setFixedHeight(42)
+        def connect_ssh():
+            self.manager.connect()
+            from database.database_crud import get_project
+            proj = get_project(project_name)
+            self.add_message(f"Successfully connected to {proj['ssh_path']}")
+        self.connect_btn.clicked.connect(connect_ssh)
+
         input_bar.addWidget(self.input_field)
         input_bar.addWidget(self.send_btn)
+        input_bar.addWidget(self.connect_btn)
         input_bar.addWidget(self.clear_btn)
+        input_bar.addWidget(self.end_btn)
 
         container_layout.addLayout(input_bar)
 
@@ -105,8 +154,7 @@ class cmdPage(QWidget):
 
         self.input_field.returnPressed.connect(self.handle_send)
 
-    # ---- Add message to chat ----
-    def add_message(self, text, sender):
+    def add_message(self, text):
         bubble = QLabel(text)
         bubble.setWordWrap(True)
         bubble.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
@@ -116,7 +164,6 @@ class cmdPage(QWidget):
             color: white;
             padding: 0px;
             margin-left: 0px;
-            font-size: 14px;
         """)
 
         # Wrap in HBoxLayout, left-aligned
@@ -137,24 +184,100 @@ class cmdPage(QWidget):
         line.setStyleSheet("color: #555555; margin-top: 4px; margin-bottom: 4px;")
         self.chat_layout.addWidget(line)
 
-
-    # ---- Handle user sending a message ----
     def handle_send(self):
         text = self.input_field.text().strip()
-        if not text:
+        if not text: return
+        self.input_field.clear()
+
+        if not self.manager.is_active():
+            self.add_message("Error: SSH connection not active.")
             return
 
-        self.add_message(text, "user")
+        # Add the "User command" bubble first
+        self.add_message(f"$ {text}")
 
-        self.add_message("Simulated output for: " + text, "system")
+        # Create a new bubble for the server's response
+        self.current_bubble = QLabel("")
+        self.current_bubble.setWordWrap(True)
+        self.chat_layout.addWidget(self.current_bubble)
 
-        spacer = QWidget()
-        spacer.setFixedHeight(5)
-        self.chat_layout.addWidget(spacer)
-        self.input_field.clear()
+        # Start the background worker
+        self.worker = SSHStreamWorker(self.manager, text)
+        self.worker.output_received.connect(self.update_live_output)
+        self.worker.finished.connect(self.on_command_finished)
+        self.worker.start()
+
+        self.send_btn.setEnabled(False)
+
+    def update_live_output(self, raw_text):
+        # Clean ANSI (colors) and trailing prompts
+        text = self.strip_ansi_codes(raw_text)
+        self.current_bubble.setText(text)
+
+
+    def on_command_finished(self):
+        self.send_btn.setEnabled(True)
+        self.add_separator()
+        if self.current_bubble:
+            current_text = self.current_bubble.text()
+            self.current_bubble.setText(current_text + "\n--- Command Finished---")
+
+    def strip_ansi_codes(self, text):
+        import re
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        return ansi_escape.sub('', text)
+
+    def add_separator(self):
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet("color: #555555; margin: 5px 0px;")
+        self.chat_layout.addWidget(line)
 
     def clear_console(self):
         while self.chat_layout.count():
             item = self.chat_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+
+    def get_clean_output(raw_output, command_sent):
+        # 1. Split into lines
+        lines = raw_output.splitlines()
+
+        # 2. Remove the First Line (The Echo)
+        # We check if the first line starts with our command to be safe
+        if lines and command_sent in lines[0]:
+            lines.pop(0)
+
+        # 3. Remove the Last Line (The Prompt)
+        # Most Linux prompts end with $ or #
+        if lines and (lines[-1].strip().endswith('$') or lines[-1].strip().endswith('#')):
+            lines.pop(-1)
+
+        return "\n".join(lines).strip()
+
+
+from PyQt6.QtCore import QThread, pyqtSignal
+
+
+class SSHStreamWorker(QThread):
+    # Signal to send new text to the UI
+    output_received = pyqtSignal(str)
+    finished = pyqtSignal()
+
+    def __init__(self, manager, command):
+        super().__init__()
+        self.manager = manager
+        self.command = command
+        self._is_running = True
+
+    def run(self):
+        for chunk in self.manager.stream_command(self.command):
+            if not self._is_running:
+                break
+            if chunk:
+                self.output_received.emit(chunk)
+
+        self.finished.emit()
+
+    def stop(self):
+        self._is_running = False

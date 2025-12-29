@@ -145,9 +145,7 @@ def create_project_card(project, navigate):
     last_run_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
     card_layout.addWidget(last_run_label)
     card_layout.addStretch(8)
-    card.clicked.connect(
-        lambda _, p_name=project['name']: navigate("project",project_name=p_name)
-    )
+    card.clicked.connect(lambda: navigate("project", project_name=project['name']))
 
     return card
 

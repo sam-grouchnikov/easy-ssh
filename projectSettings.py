@@ -5,3 +5,4 @@ projects = get_all_projects()
 for item in projects:
     print(dict(item))
 
+# delete_all_projects()
