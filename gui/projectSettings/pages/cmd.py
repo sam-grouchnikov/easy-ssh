@@ -3,12 +3,12 @@ from PyQt6.QtWidgets import (
     QPushButton, QScrollArea, QFrame, QSizePolicy
 )
 from PyQt6.QtCore import Qt
-from backend.ssh.sshManager import SSHManager
+from backend.ssh.sshManager import SSHManager, SSHStreamWorker
 
 class cmdPage(QWidget):
     def __init__(self, project_name):
         super().__init__()
-        self.manager = SSHManager("10.80.10.96", "sam", "vera1986", 2023)
+        self.manager = SSHManager("10.80.10.96", "sam", "", 2023)
         self.initUI(project_name)
 
     def initUI(self, project_name):
@@ -220,7 +220,7 @@ class cmdPage(QWidget):
         self.add_separator()
         if self.current_bubble:
             current_text = self.current_bubble.text()
-            self.current_bubble.setText(current_text + "\n--- Command Finished---")
+            self.current_bubble.setText(current_text + "\n--- Command Finished---\n")
 
     def strip_ansi_codes(self, text):
         import re
@@ -254,30 +254,3 @@ class cmdPage(QWidget):
             lines.pop(-1)
 
         return "\n".join(lines).strip()
-
-
-from PyQt6.QtCore import QThread, pyqtSignal
-
-
-class SSHStreamWorker(QThread):
-    # Signal to send new text to the UI
-    output_received = pyqtSignal(str)
-    finished = pyqtSignal()
-
-    def __init__(self, manager, command):
-        super().__init__()
-        self.manager = manager
-        self.command = command
-        self._is_running = True
-
-    def run(self):
-        for chunk in self.manager.stream_command(self.command):
-            if not self._is_running:
-                break
-            if chunk:
-                self.output_received.emit(chunk)
-
-        self.finished.emit()
-
-    def stop(self):
-        self._is_running = False
