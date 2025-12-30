@@ -1,6 +1,10 @@
+import re
+
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QFrame, QPushButton
-from PyQt6.QtGui import QPixmap, QCursor
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QFrame, QPushButton, QScrollArea, \
+    QPlainTextEdit
+from PyQt6.QtGui import QPixmap, QCursor, QTextCursor
+
 
 def action_button_menu():
     main_widget = QWidget()
@@ -124,7 +128,6 @@ def button_row_1():
     return row1
 
 def button_row_2():
-    # --- ROW 1: Connection + Environment
     row1 = QVBoxLayout()
 
     row1_title = QLabel("Quick Navigation")
@@ -160,7 +163,6 @@ def button_row_2():
     return row1
 
 def button_row_3():
-    # --- ROW 1: Connection + Environment
     row1 = QVBoxLayout()
     row1_title = QLabel("Quick Commands")
     row1_title.setStyleSheet("color: #A0A0A0;"
@@ -236,30 +238,107 @@ def button_row_3():
     return row1
 
 
+class ConsoleOutput(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
 
-def console_output():
-    main_widget = QWidget()
-    main_layout = QVBoxLayout(main_widget)
-    main_layout.setContentsMargins(20, 15, 20, 0)
-    main_layout.setSpacing(6)
+    def initUI(self):
+        outer_layout = QVBoxLayout(self)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
 
-    main_widget.setStyleSheet("background-color: #15151B;"
-                              "border-radius: 5px;")
+        self.main_container = QWidget()
+        self.main_container.setObjectName("ConsoleBackground")
+        self.main_container.setStyleSheet("""
+            QWidget#ConsoleBackground {
+                background-color: #18181F;
+                border: 1px solid #555555;
+                border-radius: 10px;
+                font-size: 16px;
+            }
+        """)
 
-    # --- TITLE + BORDER ---
-    title = QLabel("Console Output")
-    title.setContentsMargins(0, 0, 0, 0)
-    title.setStyleSheet("color: #AAAAAA;"
-                        "font-size: 21px;"
-                        "border: none;"
-                        "padding: 0px")
-    main_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
+        content_layout = QVBoxLayout(self.main_container)
+        content_layout.setContentsMargins(20, 15, 20, 15)
+        content_layout.setSpacing(6)
 
-    border = QFrame()
-    border.setFixedHeight(2)
-    border.setStyleSheet(
-        "background-color: #3B3B3B;"
-    )
-    main_layout.addWidget(border)
-    main_layout.addStretch(0)
-    return main_widget
+        title = QLabel("Console Output")
+        title.setStyleSheet("color: #AAAAAA; font-size: 21px; border: none; background: transparent;")
+        content_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
+
+        border = QFrame()
+        border.setFixedHeight(2)
+        border.setStyleSheet("background-color: #3B3B3B; border: none;")
+        content_layout.addWidget(border)
+
+        self.text_display = QPlainTextEdit()
+        self.text_display.setReadOnly(True)
+        self.text_display.setStyleSheet("background: transparent; border: none; color: #AAAAAA;")
+        content_layout.addWidget(self.text_display)
+
+        outer_layout.addWidget(self.main_container)
+
+    def apply_line_spacing(self):
+        """Helper to ensure all text in the widget uses 150% line height."""
+        cursor = self.text_display.textCursor()
+        cursor.select(QTextCursor.SelectionType.Document)
+        block_format = cursor.blockFormat()
+        block_format.setLineHeight(150, 1)
+        cursor.setBlockFormat(block_format)
+
+    def add_command_line(self, command):
+        """Adds the command with a $ prefix without excessive spacing."""
+        cursor = self.text_display.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+
+        if self.text_display.toPlainText() == "Waiting for command...":
+            self.text_display.setPlainText("")
+
+        cursor.insertText(f"$ {command}\n")
+
+        self.apply_line_spacing()
+
+    def update_output(self, raw_text):
+        """Appends output and handles \r without creating empty space."""
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        clean_text = ansi_escape.sub('', raw_text)
+
+        if not clean_text:
+            return
+
+        cursor = self.text_display.textCursor()
+        v_scroll = self.text_display.verticalScrollBar().value()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+
+        if '\r' in clean_text:
+            parts = clean_text.split('\r')
+            final_text = parts[-1]
+
+            # Check if current line is empty before deleting
+            # (Prevents deleting the command line if data comes in too fast)
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfLine, QTextCursor.MoveMode.KeepAnchor)
+            line_content = cursor.selectedText().strip()
+
+            # If the line has content (like an old progress bar), replace it.
+            # If it's empty, just insert.
+            if line_content:
+                cursor.removeSelectedText()
+
+            cursor.insertText(final_text)
+        else:
+            # Standard append
+            cursor.insertText(clean_text)
+
+        self.apply_line_spacing()
+        self.text_display.verticalScrollBar().setValue(v_scroll)
+
+    def finish_command(self):
+        """Appends the finish marker quietly."""
+        cursor = self.text_display.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        cursor.insertText(f"\n[Command Finished]\n{'-' * 40}")
+        self.apply_line_spacing()
+        # Removed: self.text_display.ensureCursorVisible()
+
+    def clear(self):
+        self.text_display.setPlainText("")
