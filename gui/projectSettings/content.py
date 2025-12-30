@@ -24,8 +24,41 @@ def setupContent(self, layout: QVBoxLayout, project_name):
     self.ssh_manager = SSHManager("10.80.10.96", "sam", "vera1986", 2023)
 
     # 2. Define the SHARED Logic for running commands
+    def global_handle_connect():
+        success, msg = self.ssh_manager.connect()
+
+        # Update Terminal Page
+        self.cmd_page.add_message(f"System: {msg}")
+
+        # Update Simple SSH Page (Icon and Status Label)
+        self.simple_ssh_page.update_connection_status(success)
+        self.cmd_page.update_connection_status(success)
+
+        # If successful, sync the initial directory
+        if success:
+            new_path = self.ssh_manager.get_pwd_silently()
+            self.simple_ssh_page.update_directory_display(new_path)
+            self.cmd_page.update_directory_display(new_path)
+
     def global_run_command(command):
         # 1. Don't run if already busy
+
+        if command == "exit":
+            self.cmd_page.add_message("$ exit")
+            self.cmd_page.add_message("System: Closing connection...")
+
+            # 1. Close the backend connection
+            self.ssh_manager.close()
+
+            # 2. Update the UI Status
+            self.simple_ssh_page.update_connection_status(False)
+            self.cmd_page.update_connection_status(False)
+            self.cmd_page.add_message("System: Disconnected.")
+
+            self.simple_ssh_page.update_directory_display("None")
+            self.cmd_page.update_directory_display("None")
+            return
+
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
             return
 
@@ -54,6 +87,7 @@ def setupContent(self, layout: QVBoxLayout, project_name):
 
         self.worker.start()
 
+
     def global_finished():
         self.cmd_page.on_command_finished()
 
@@ -62,6 +96,7 @@ def setupContent(self, layout: QVBoxLayout, project_name):
 
         new_path = self.ssh_manager.get_pwd_silently()
         self.simple_ssh_page.update_directory_display(new_path)
+        self.cmd_page.update_directory_display(new_path)
 
     # ---- UI Setup ----
     self.title_label = QLabel()
@@ -78,7 +113,8 @@ def setupContent(self, layout: QVBoxLayout, project_name):
     self.stack = QStackedWidget(self)
 
     # 3. Create the pages with the shared dependencies
-    self.cmd_page = cmdPage(project_name, self.ssh_manager, global_run_command)
+    self.cmd_page = cmdPage(project_name, self.ssh_manager, global_run_command, global_handle_connect)
+
     self.simple_ssh_page = SimpleSSHPage(global_run_command)
 
     # Add pages to the stack

@@ -60,6 +60,8 @@ class SSHManager:
                 temp_chunk = chunk.rstrip()
                 if temp_chunk.endswith(("$", "#", ">")):
                     last_nl = chunk.rfind('\n')
+                    if command.startswith("cd"):
+                        yield "Changed directory successfully"
                     if last_nl != -1:
                         # Yield everything up to the prompt line, then stop
                         yield chunk[:last_nl].rstrip()

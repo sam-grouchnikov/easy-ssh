@@ -19,18 +19,20 @@ class SimpleSSHPage(QWidget):
         )
         top_tab_layout = QHBoxLayout(top_bar)
 
-        self.dir_label = QLabel("Current Directory: Fetching...")
+        self.dir_label = QLabel("Current Directory: None")
         top_tab_layout.addWidget(self.dir_label)
 
         status_container = QWidget()
         status_layout = QHBoxLayout(status_container)
         status_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.status_label = QLabel("Status: Connected")
+        self.status_label = QLabel("Status: Disconnected")
         self.icon_label = QLabel()
-        pixmap = QPixmap("gui/icons/green_circle.png")  # Ensure path is correct
-        pixmap = pixmap.scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        self.icon_label.setPixmap(pixmap)
+        self.green_icon = QPixmap("gui/icons/green_circle.png").scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio,
+                                                                       Qt.TransformationMode.SmoothTransformation)
+        self.red_icon = QPixmap("gui/icons/red-circle.png").scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio,
+                                                                   Qt.TransformationMode.SmoothTransformation)
+        self.icon_label.setPixmap(self.red_icon)
 
         status_layout.addWidget(self.status_label)
         status_layout.addWidget(self.icon_label)
@@ -62,6 +64,14 @@ class SimpleSSHPage(QWidget):
     def update_directory_display(self, path):
         clean_path = path.strip()
         self.dir_label.setText(f"Current Directory: {clean_path}")
+
+    def update_connection_status(self, connected: bool):
+        if connected:
+            self.status_label.setText("Status: Connected")
+            self.icon_label.setPixmap(self.green_icon)
+        else:
+            self.status_label.setText("Status: Disconnected")
+            self.icon_label.setPixmap(self.red_icon)
 
     def set_busy(self, busy: bool):
         """
