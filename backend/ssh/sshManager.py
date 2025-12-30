@@ -74,6 +74,34 @@ class SSHManager:
                 break
             time.sleep(0.01)
 
+    def get_pwd_silently(self):
+        """Fetches directory without using the streaming loop logic."""
+        if not self.channel or self.channel.closed:
+            return ""
+
+        try:
+            # 1. Clear any leftover characters from the previous command
+            while self.channel.recv_ready():
+                self.channel.recv(1024)
+
+            # 2. Send pwd and a newline
+            self.channel.send("pwd\n")
+
+            # 3. Wait just enough for a small text response
+            time.sleep(0.1)
+
+            if self.channel.recv_ready():
+                resp = self.channel.recv(4096).decode('utf-8', errors='replace')
+                # The response will contain: pwd\n/your/path\n[prompt]
+                lines = resp.splitlines()
+                # We want the line that looks like a path and isn't 'pwd'
+                for line in lines:
+                    if line.startswith('/') and 'pwd' not in line:
+                        return line.strip()
+            return ""
+        except Exception:
+            return ""
+
     def send_interrupt(self):
         if self.channel and not self.channel.closed:
             self.channel.send('\x03')

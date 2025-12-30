@@ -19,9 +19,8 @@ class SimpleSSHPage(QWidget):
         )
         top_tab_layout = QHBoxLayout(top_bar)
 
-        current_dir = "sudoku/sudoku-cp-ai/model/"
-        l1 = QLabel(f"Current Directory: {current_dir}")
-        l1.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.dir_label = QLabel("Current Directory: Fetching...")
+        top_tab_layout.addWidget(self.dir_label)
 
         status_container = QWidget()
         status_layout = QHBoxLayout(status_container)
@@ -36,7 +35,6 @@ class SimpleSSHPage(QWidget):
         status_layout.addWidget(self.status_label)
         status_layout.addWidget(self.icon_label)
 
-        top_tab_layout.addWidget(l1)
         top_tab_layout.addStretch()
         top_tab_layout.addWidget(status_container)
         layout.addWidget(top_bar)
@@ -52,13 +50,18 @@ class SimpleSSHPage(QWidget):
         self.action_menu.setMaximumWidth(425)
         self.action_menu.setMaximumHeight(650)
 
+
         self.console = ConsoleOutput()
 
-        row2_layout.addWidget(self.action_menu)
+        row2_layout.addWidget(self.action_menu, alignment=Qt.AlignmentFlag.AlignTop)
         row2_layout.addWidget(self.console)
         layout.addWidget(row2)
 
         self.setLayout(layout)
+
+    def update_directory_display(self, path):
+        clean_path = path.strip()
+        self.dir_label.setText(f"Current Directory: {clean_path}")
 
     def set_busy(self, busy: bool):
         """

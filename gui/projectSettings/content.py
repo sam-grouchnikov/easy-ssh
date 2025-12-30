@@ -60,6 +60,9 @@ def setupContent(self, layout: QVBoxLayout, project_name):
         self.simple_ssh_page.console.finish_command()
         self.simple_ssh_page.on_command_finished()
 
+        new_path = self.ssh_manager.get_pwd_silently()
+        self.simple_ssh_page.update_directory_display(new_path)
+
     # ---- UI Setup ----
     self.title_label = QLabel()
     self.title_label.setStyleSheet(
