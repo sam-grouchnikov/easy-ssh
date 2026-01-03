@@ -8,9 +8,8 @@ import database.database_crud as db_crud
 
 
 class SettingsPage(QWidget):
-    def __init__(self, project_name):
+    def __init__(self, config):
         super().__init__()
-        self.project_name = project_name
         self.inputs = {}
 
         layout = QVBoxLayout()
@@ -18,23 +17,22 @@ class SettingsPage(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)
 
-        self.load_project_data()
+        self.load_project_data(config)
 
-    def load_project_data(self):
-        project = db_crud.get_project(self.project_name)
-        if project:
-            self.inputs['name'].setText(project['name'])
-            self.inputs['ssh_path'].setText(project['ssh_path'])
-            self.inputs['ssh_psw'].setText(project['ssh_psw'])
-            self.inputs['wandb_api'].setText(project['wandb_api'])
-            self.inputs['wandb_user'].setText(project['wandb_user'])
-            self.inputs['wandb_proj'].setText(project['wandb_project'])
-            self.inputs['github_url'].setText(project['git_url'])
-            self.inputs['github_user'].setText(project['git_user'])
-            self.inputs['github_token'].setText(project['git_path'])  # Adjust if column name differs
+    def load_project_data(self, config):
+            self.inputs['name'].setText(config.get("user"))
+            self.inputs['ssh_path'].setText(config.get("sshcon"))
+            self.inputs['ssh_psw'].setText(config.get("sshpsw"))
+            self.inputs['wandb_api'].setText(config.get("wandbapi"))
+            self.inputs['wandb_user'].setText(config.get("wandbuser"))
+            self.inputs['wandb_proj'].setText(config.get("wandbproj"))
+            self.inputs['github_url'].setText(config.get("giturl"))
+            self.inputs['github_user'].setText(config.get("gituser"))
+            self.inputs['github_token'].setText(config.get("gitpat"))
 
     def save_changes(self):
         updated_data = {
+            "user": self.inputs['name'].text(),
             "ssh_path": self.inputs['ssh_path'].text(),
             "ssh_psw": self.inputs['ssh_psw'].text(),
             "wandb_api": self.inputs['wandb_api'].text(),
@@ -45,16 +43,11 @@ class SettingsPage(QWidget):
             "git_path": self.inputs['github_token'].text(),
         }
 
-        try:
-            db_crud.update_project(self.project_name, **updated_data)
-            QMessageBox.information(self, "Success", "Project settings updated successfully!")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to update project: {str(e)}")
 
     def init_ui(self):
         grid_widget = QWidget()
         grid_layout = QGridLayout(grid_widget)
-        grid_layout.setContentsMargins(0, 0, 20, 20)
+        grid_layout.setContentsMargins(0, 0, 0, 20)
         grid_layout.setHorizontalSpacing(20)
         grid_layout.setVerticalSpacing(10)
 

@@ -8,15 +8,15 @@ import re
 
 
 class cmdPage(QWidget):
-    def __init__(self, project_name, shared_manager, run_func, connect_func):
+    def __init__(self, shared_manager, run_func, connect_func):
         super().__init__()
         # Use the manager and function passed from content.py
         self.manager = shared_manager
         self.run_func = run_func
         self.connect_func = connect_func
-        self.initUI(project_name)
+        self.initUI()
 
-    def initUI(self, project_name):
+    def initUI(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 0, 15, 20)
         main_layout.setSpacing(10)

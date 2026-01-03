@@ -9,19 +9,31 @@ from gui.projectSettings.pages.settings import SettingsPage
 from gui.projectSettings.pages.SimpleSSH import SimpleSSHPage
 from gui.projectSettings.pages.cmd import cmdPage
 from backend.ssh.sshManager import SSHStreamWorker, SSHManager
+from gui.projectSettings.pages.dashboard import Dashboard
 
 PAGE_NAMES = [
+    "Dashboard",
     "File Tree",
     "Terminal",
     "Simple SSH",
     "Logged Metrics",
-    "Project Settings"
+    "Project Settings",
 ]
 
 
-def setupContent(self, layout: QVBoxLayout, project_name):
+def setupContent(self, layout: QVBoxLayout, config):
+
     # 1. Initialize the SHARED SSH Manager
-    self.ssh_manager = SSHManager("10.80.10.96", "sam", "vera1986", 2023)
+    if config.is_complete():
+        path = config.get("sshcon")
+        user = path.split('@')[0]
+        server = path.split('@')[1]
+        psw = config.get("sshpsw")
+        port = config.get("sshport")
+        self.ssh_manager = SSHManager(server, user, port, psw)
+    else:
+        self.ssh_manager = None
+    print("Manager created")
 
     # 2. Define the SHARED Logic for running commands
     def global_handle_connect():
@@ -33,6 +45,8 @@ def setupContent(self, layout: QVBoxLayout, project_name):
         # Update Simple SSH Page (Icon and Status Label)
         self.simple_ssh_page.update_connection_status(success)
         self.cmd_page.update_connection_status(success)
+        self.dashboard.conn_card.update_connection_status(success)
+
 
         # If successful, sync the initial directory
         if success:
@@ -53,10 +67,15 @@ def setupContent(self, layout: QVBoxLayout, project_name):
             # 2. Update the UI Status
             self.simple_ssh_page.update_connection_status(False)
             self.cmd_page.update_connection_status(False)
+            self.dashboard.conn_card.update_connection_status(False)
             self.cmd_page.add_message("System: Disconnected.")
 
             self.simple_ssh_page.update_directory_display("None")
             self.cmd_page.update_directory_display("None")
+            return
+
+        if command == "Ctrl+C":
+            self.ssh_manager.send_interrupt()
             return
 
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
@@ -64,7 +83,6 @@ def setupContent(self, layout: QVBoxLayout, project_name):
 
         # 2. Basic UI Updates
         self.cmd_page.set_busy(True)
-        self.simple_ssh_page.set_busy(True)
         self.cmd_page.add_message(f"$ {command}")
         self.cmd_page.create_new_output_bubble()
         self.simple_ssh_page.console.add_command_line(command)
@@ -92,7 +110,6 @@ def setupContent(self, layout: QVBoxLayout, project_name):
         self.cmd_page.on_command_finished()
 
         self.simple_ssh_page.console.finish_command()
-        self.simple_ssh_page.on_command_finished()
 
         new_path = self.ssh_manager.get_pwd_silently()
         self.simple_ssh_page.update_directory_display(new_path)
@@ -106,30 +123,36 @@ def setupContent(self, layout: QVBoxLayout, project_name):
     layout.addWidget(self.title_label)
 
     nav = navbar()
-    nav.setContentsMargins(10, 0, 20, 0)
+    nav.setContentsMargins(10, 0, 0, 0)
     nav.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
     layout.addWidget(nav)
 
     self.stack = QStackedWidget(self)
 
     # 3. Create the pages with the shared dependencies
-    self.cmd_page = cmdPage(project_name, self.ssh_manager, global_run_command, global_handle_connect)
+    self.cmd_page = cmdPage(self.ssh_manager, global_run_command, global_handle_connect)
 
-    self.simple_ssh_page = SimpleSSHPage(global_run_command)
+    self.simple_ssh_page = SimpleSSHPage(global_run_command, global_handle_connect)
+    self.dashboard = Dashboard(config)
 
     # Add pages to the stack
+    self.stack.addWidget(self.dashboard)
     self.stack.addWidget(FileTreePage("/gui/projectSettings"))  # Index 0
     self.stack.addWidget(self.cmd_page)  # Index 1
     self.stack.addWidget(self.simple_ssh_page)  # Index 2
-    self.stack.addWidget(GraphsPage(project_name))  # Index 3
-    self.stack.addWidget(SettingsPage(project_name))  # Index 4
+    self.stack.addWidget(GraphsPage())  # Index 3
+    self.stack.addWidget(SettingsPage(config))  # Index 4
 
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
 
     # ---- Navigation Logic ----
     def update_title(index: int):
-        self.title_label.setText(f"{project_name} - {PAGE_NAMES[index]}")
+        user = config.get("user")
+        if user == "":
+            self.title_label.setText("Welcome to Easy-SSH!")
+        else:
+            self.title_label.setText(f"Welcome back, {config.get("user")}")
 
     for index, item in enumerate(nav.nav_items):
         item.clicked.connect(

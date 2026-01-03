@@ -1,13 +1,14 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QPushButton
 from PyQt6.QtGui import QPixmap
-from .actionButtonMenu import action_button_menu, ConsoleOutput
+from .actionButtonMenu import ActionButtonMenu, ConsoleOutput
 
 
 class SimpleSSHPage(QWidget):
-    def __init__(self, run_func):  # Receives the 'chauffeur' function from content.py
+    def __init__(self, run_func, connect_func):
         super().__init__()
         self.run_func = run_func
+        self.connect_func = connect_func
 
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -48,7 +49,7 @@ class SimpleSSHPage(QWidget):
         row2_layout.setSpacing(20)
 
         # Pass the run_func into the menu so buttons can trigger commands
-        self.action_menu = action_button_menu()
+        self.action_menu = ActionButtonMenu(self.run_func, self.connect_func)
         self.action_menu.setMaximumWidth(425)
         self.action_menu.setMaximumHeight(650)
 
@@ -73,18 +74,5 @@ class SimpleSSHPage(QWidget):
             self.status_label.setText("Status: Disconnected")
             self.icon_label.setPixmap(self.red_icon)
 
-    def set_busy(self, busy: bool):
-        """
-        Locks/Unlocks the shortcut buttons.
-        Called by global_run_command in content.py
-        """
-        self.action_menu.setEnabled(not busy)
-        if busy:
-            self.action_menu.setGraphicsEffect(None)
 
-    def on_command_finished(self):
-        """
-        Re-enables the UI once the SSH worker is done.
-        """
-        self.set_busy(False)
 

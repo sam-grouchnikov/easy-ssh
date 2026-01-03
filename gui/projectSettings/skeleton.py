@@ -9,10 +9,9 @@ from gui.sidebar import setupSidebar
 from gui.projectSettings.content import setupContent
 
 class ProjectSettingsSkeleton(QMainWindow):
-    def load_project(self, project_name):
-        self.project_name = project_name
+    def load_project(self):
         self.refresh()
-    def __init__(self, navigate):
+    def __init__(self, navigate, config):
         super().__init__()
         self.project_name = None
         self.setWindowTitle("Homepage")
@@ -56,15 +55,15 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.content.setStyleSheet("background-color: #0D0C12;")
         self.content.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.content_layout = QVBoxLayout()
-        self.content_layout.setContentsMargins(20, 20, 20, 20)
+        self.content_layout.setContentsMargins(75, 35, 75, 20)
         self.content_layout.setSpacing(15)
         self.content.setLayout(self.content_layout)
 
-        main_layout.addWidget(self.sidebar)
+        # main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.content)
 
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self, self.content_layout, self.project_name)
+        setupContent(self, self.content_layout, config)
 
     def set_project(self, project_id):
         self.project_name = project_id

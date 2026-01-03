@@ -10,7 +10,7 @@ from gui.sidebar import setupSidebar
 from gui.homepage.content import setupContent
 
 class HomeSkeleton(QMainWindow):
-    def __init__(self, navigate):
+    def __init__(self, navigate, config):
         super().__init__()
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)

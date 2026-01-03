@@ -5,7 +5,7 @@ from PyQt6.QtCore import pyqtSignal, QThread
 
 
 class SSHManager:
-    def __init__(self, host, user, password=None, port=22):
+    def __init__(self, host, user, port, password=None):
         self.host = host
         self.user = user
         self.password = password
@@ -25,7 +25,7 @@ class SSHManager:
             time.sleep(1)
             if self.channel.recv_ready():
                 self.channel.recv(9999)
-            return True, "Success"
+            return True, "Successfully connected"
         except Exception as e:
             return False, str(e)
 
@@ -61,7 +61,10 @@ class SSHManager:
                 if temp_chunk.endswith(("$", "#", ">")):
                     last_nl = chunk.rfind('\n')
                     if command.startswith("cd"):
-                        yield "Changed directory successfully"
+                        if chunk == "":
+                            yield "Changed directory successfully"
+                        else:
+                            yield
                     if last_nl != -1:
                         # Yield everything up to the prompt line, then stop
                         yield chunk[:last_nl].rstrip()

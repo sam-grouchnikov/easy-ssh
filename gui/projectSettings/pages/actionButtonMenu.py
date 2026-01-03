@@ -2,240 +2,201 @@ import re
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QFrame, QPushButton, QScrollArea, \
-    QPlainTextEdit
+    QPlainTextEdit, QInputDialog
 from PyQt6.QtGui import QPixmap, QCursor, QTextCursor
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QFrame, QPushButton
+from PyQt6.QtGui import QCursor
 
-def action_button_menu():
-    main_widget = QWidget()
-    main_layout = QVBoxLayout(main_widget)
-    main_layout.setContentsMargins(20, 15, 20, 0)
-    main_layout.setSpacing(6)
 
-    main_widget.setStyleSheet("border: 3px solid #3B3B3B;"
-                              "border-radius: 5px;")
+class ActionButtonMenu(QWidget):
+    def __init__(self, run_func=None, connect_func=None):
+        super().__init__()
+        self.run_func = run_func
+        self.connect_func = connect_func
+        self.init_ui()
 
-    # --- TITLE + BORDER ---
-    title = QLabel("Actions")
-    title.setContentsMargins(0, 0, 0, 0)
-    title.setStyleSheet("color: #AAAAAA;"
-                        "font-size: 21px;"
-                        "border: none;"
-                        "padding: 0px")
-    main_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
+    def init_ui(self):
+        # Main Layout & Styling
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(20, 15, 20, 15)
+        self.main_layout.setSpacing(6)
+        self.setStyleSheet("border: 3px solid #3B3B3B; border-radius: 5px;")
 
-    border = QFrame()
-    border.setFixedHeight(2)
-    border.setStyleSheet(
-        "background-color: #FFFFFF;"
-    )
-    main_layout.addWidget(border)
+        # --- TITLE ---
+        title = QLabel("Actions")
+        title.setStyleSheet("color: #AAAAAA; font-size: 21px; border: none; padding: 0px")
+        self.main_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
 
-    main_layout.addLayout(button_row_1())
-    main_layout.addLayout(button_row_2())
-    main_layout.addLayout(button_row_3())
+        self.add_divider("#FFFFFF", 2)
 
-    border2 = QFrame()
-    border2.setFixedHeight(2)
-    border2.setStyleSheet(
-        "background-color: #FFFFFF;"
-    )
-    main_layout.addSpacing(10)
-    main_layout.addWidget(border2)
-    main_layout.addSpacing(2)
-    selected = "model_cnn.py"
-    selected_label = QLabel(f"Selected file to run: {selected}")
-    selected_label.setStyleSheet("color: #A0A0A0; font-size: 17px; border: none; margin-bottom: 15px;")
-    main_layout.addWidget(selected_label)
+        # --- SECTIONS ---
+        self.main_layout.addLayout(self.create_connection_section())
+        self.main_layout.addLayout(self.create_navigation_section())
+        self.main_layout.addLayout(self.create_commands_section())
 
-    main_layout.addStretch(0)
-    return main_widget
+        self.main_layout.addStretch()
 
-def button_row_1():
-    # --- ROW 1: Connection + Environment
-    row1 = QVBoxLayout()
-    row1_title = QLabel("Connection/Environment")
-    row1_title.setStyleSheet("color: #A0A0A0;"
-                             "font-size: 17px;"
-                             "border: none")
-    row1.setSpacing(10)
-    row1_title.setAlignment(Qt.AlignmentFlag.AlignTop)
-    row1.addWidget(row1_title)
+    def add_divider(self, color, height, top_spacing=0, bottom_spacing=0):
+        if top_spacing: self.main_layout.addSpacing(top_spacing)
+        line = QFrame()
+        line.setFixedHeight(height)
+        line.setStyleSheet(f"background-color: {color}; border: none;")
+        self.main_layout.addWidget(line)
+        if bottom_spacing: self.main_layout.addSpacing(bottom_spacing)
 
-    # button row 1
-    row1_br1 = QHBoxLayout()
-    ssh_con = QPushButton("Connect to SSH")
-    ssh_con.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D5F1F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    ssh_con.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    ssh_con.setFixedHeight(35)
-    row1_br1.addWidget(ssh_con)
-    row1_br1.addSpacing(5)
-    con_settings = QPushButton("Update Connection Settings")
-    con_settings.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    con_settings.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    con_settings.setFixedHeight(35)
-    row1_br1.addWidget(con_settings)
-    row1_br1.addStretch()
-    row1.addLayout(row1_br1)
-    # button row 2
-    row1_br2 = QHBoxLayout()
-    term_con = QPushButton("Terminate Connection")
-    term_con.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #5F1D1D; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    term_con.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    term_con.setFixedHeight(35)
-    row1_br2.addWidget(term_con)
-    row1_br2.addSpacing(5)
-    term_run = QPushButton("Terminate Run")
-    term_run.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #5F1D1D; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    term_run.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    term_run.setFixedHeight(35)
-    row1_br2.addWidget(term_run)
-    row1_br2.addStretch()
-    row1.addLayout(row1_br2)
-    # button row 3
-    row1_br3 = QHBoxLayout()
-    create_venv = QPushButton("Create Virtual Environment")
-    create_venv.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    create_venv.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    create_venv.setFixedHeight(35)
-    row1_br3.addWidget(create_venv)
-    row1_br3.addSpacing(5)
-    run_curr = QPushButton("Run Current File")
-    run_curr.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D5F1F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    run_curr.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    run_curr.setFixedHeight(35)
-    row1_br3.addWidget(run_curr)
-    row1_br3.addStretch()
-    row1.addLayout(row1_br3)
-    return row1
+    def create_connection_section(self):
+        layout = QVBoxLayout()
+        layout.setSpacing(10)
 
-def button_row_2():
-    row1 = QVBoxLayout()
+        title = QLabel("Connection/Environment")
+        title.setStyleSheet("color: #A0A0A0; font-size: 17px; border: none")
+        layout.addWidget(title)
 
-    row1_title = QLabel("Quick Navigation")
-    row1_title.setStyleSheet("color: #A0A0A0;"
-                             "font-size: 17px;"
-                             "border: none")
-    row1.setSpacing(10)
-    row1_title.setAlignment(Qt.AlignmentFlag.AlignTop)
-    row1.addWidget(row1_title)
+        # Buttons
+        row1 = QHBoxLayout()
+        self.ssh_con_btn = self.make_btn("Connect to SSH", "#1D5F1F")
+        self.ssh_con_btn.clicked.connect(self.connect_func)
+        self.update_settings_btn = self.make_btn("Update Connection Settings", "#1D405F")
+        row1.addWidget(self.ssh_con_btn)
+        row1.addWidget(self.update_settings_btn)
+        row1.addStretch()
 
-    # button row 1
-    row1_br1 = QHBoxLayout()
-    change_dir = QPushButton("Change Directory")
-    change_dir.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    change_dir.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    change_dir.setFixedHeight(35)
-    row1_br1.addWidget(change_dir)
-    row1_br1.addSpacing(5)
-    reset_dir = QPushButton("Reset Directory")
-    reset_dir.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    reset_dir.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    reset_dir.setFixedHeight(35)
-    row1_br1.addWidget(reset_dir)
-    row1_br1.addStretch()
-    row1.addLayout(row1_br1)
+        row2 = QHBoxLayout()
+        self.term_con_btn = self.make_btn("Terminate Connection", "#5F1D1D")
+        self.term_con_btn.clicked.connect(lambda: self.run_func("exit"))
+        self.term_run_btn = self.make_btn("Terminate Run", "#5F1D1D")
+        self.term_con_btn.clicked.connect(lambda: self.run_func("Ctrl+C"))
+        row2.addWidget(self.term_con_btn)
+        row2.addWidget(self.term_run_btn)
+        row2.addStretch()
 
-    return row1
+        row3 = QHBoxLayout()
+        self.create_venv_btn = self.make_btn("Create Virtual Environment", "#1D405F")
+        def create_venv():
+            self.run_func("python3 -m venv venv")
+            self.run_func(". venv/bin/activate")
+        self.create_venv_btn.clicked.connect(create_venv)
 
-def button_row_3():
-    row1 = QVBoxLayout()
-    row1_title = QLabel("Quick Commands")
-    row1_title.setStyleSheet("color: #A0A0A0;"
-                             "font-size: 17px;"
-                             "border: none")
-    row1.setSpacing(10)
-    row1_title.setAlignment(Qt.AlignmentFlag.AlignTop)
-    row1.addWidget(row1_title)
+        self.run_curr_btn = self.make_btn("Run Current File", "#1D5F1F")
+        self.run_curr_btn.clicked.connect(self.open_run_dialog)
+        row3.addWidget(self.create_venv_btn)
+        row3.addWidget(self.run_curr_btn)
+        row3.addStretch()
 
-    # button row 1
-    row1_br1 = QHBoxLayout()
-    install_reqs = QPushButton("Install requirements-txt")
-    install_reqs.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    install_reqs.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    install_reqs.setFixedHeight(35)
-    row1_br1.addWidget(install_reqs)
-    row1_br1.addSpacing(5)
-    install_packages = QPushButton("Install Packages")
-    install_packages.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    install_packages.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    install_packages.setFixedHeight(35)
-    row1_br1.addWidget(install_packages)
-    row1_br1.addStretch()
-    row1.addLayout(row1_br1)
-    # button row 2
-    row1_br2 = QHBoxLayout()
-    dir_files = QPushButton("Directory Files List")
-    dir_files.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    dir_files.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    dir_files.setFixedHeight(35)
-    row1_br2.addWidget(dir_files)
-    row1_br2.addSpacing(5)
-    gpu_status = QPushButton("GPU Status")
-    gpu_status.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    gpu_status.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    gpu_status.setFixedHeight(35)
-    row1_br2.addWidget(gpu_status)
-    row1_br2.addStretch()
-    row1.addLayout(row1_br2)
-    # button row 3
-    row1_br3 = QHBoxLayout()
-    pull_latest = QPushButton("Pull Latest Changes")
-    pull_latest.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #1D405F; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    pull_latest.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    pull_latest.setFixedHeight(35)
-    row1_br3.addWidget(pull_latest)
-    row1_br3.addSpacing(5)
-    clear_console = QPushButton("Clear Console")
-    clear_console.setStyleSheet(
-        "color: #808080; background: none; border: 1px solid #5F1D1D; padding: 4px 20px; border-radius: 10px;"
-        "font-size: 14px;"
-    )
-    clear_console.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    clear_console.setFixedHeight(35)
-    row1_br3.addWidget(clear_console)
-    row1_br3.addStretch()
-    row1.addLayout(row1_br3)
-    return row1
+        layout.addLayout(row1)
+        layout.addLayout(row2)
+        layout.addLayout(row3)
+        return layout
+
+    def open_run_dialog(self):
+        file, ok = QInputDialog.getText(
+            self,
+            "Run File",
+            "Enter file name:",
+        )
+
+        if ok and file:
+            command = f"python3 {file}"
+            print(f"Running command (1): {command}")
+            if not file.endswith(".py") and not '.' in file:
+                command += f".py"
+            print("Running command:", command)
+            self.run_func(command)
+
+    def create_navigation_section(self):
+        layout = QVBoxLayout()
+        layout.setSpacing(10)
+        title = QLabel("Quick Navigation")
+        title.setStyleSheet("color: #A0A0A0; font-size: 17px; border: none")
+        layout.addWidget(title)
+
+        row = QHBoxLayout()
+        self.cd_btn = self.make_btn("Change Directory", "#1D405F")
+        self.cd_btn.clicked.connect(self.open_cd_dialog)
+        self.rd_btn = self.make_btn("Reset Directory", "#1D405F")
+        self.rd_btn.clicked.connect(lambda: self.run_func("cd ~"))
+        row.addWidget(self.cd_btn)
+        row.addWidget(self.rd_btn)
+        row.addStretch()
+        layout.addLayout(row)
+        return layout
+
+    def open_cd_dialog(self):
+
+        path, ok = QInputDialog.getText(
+            self,
+            "Change Directory",
+            "Enter remote path:",
+        )
+
+        if ok and path:
+            command = f"cd {path}"
+            self.run_func(command)
+
+    def open_packages_dialog(self):
+
+        packages, ok = QInputDialog.getText(
+            self,
+            "Install Packages",
+            "Enter package names (seperated by a single space):",
+        )
+
+        if ok and packages:
+            command = f"pip install {packages}"
+            self.run_func(command)
+
+    def create_commands_section(self):
+        layout = QVBoxLayout()
+        layout.setSpacing(10)
+        title = QLabel("Quick Commands")
+        title.setStyleSheet("color: #A0A0A0; font-size: 17px; border: none")
+        layout.addWidget(title)
+
+        r1 = QHBoxLayout()
+        self.inst_pack_btn = self.make_btn("Install Packages", "#1D405F")
+        self.inst_pack_btn.clicked.connect(self.open_packages_dialog)
+        r1.addWidget(self.inst_pack_btn)
+
+        r1.addStretch()
+
+        r2 = QHBoxLayout()
+        r2.addWidget(self.make_btn("Directory Files List", "#1D405F"))
+        r2.addWidget(self.make_btn("GPU Status", "#1D405F"))
+        r2.addStretch()
+
+        r3 = QHBoxLayout()
+        r3.addWidget(self.make_btn("Pull Latest Changes", "#1D405F"))
+        r3.addWidget(self.make_btn("Clear Console", "#5F1D1D"))
+        r3.addStretch()
+
+        layout.addLayout(r1)
+        layout.addLayout(r2)
+        layout.addLayout(r3)
+        return layout
+
+    def make_btn(self, text, border_color):
+        btn = QPushButton(text)
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                color: #808080; 
+                background: none; 
+                border: 1px solid {border_color}; 
+                padding: 4px 20px; 
+                border-radius: 10px;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {border_color};
+                color: white;
+            }}
+        """)
+        btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        btn.setFixedHeight(35)
+
+        return btn
+
 
 
 class ConsoleOutput(QWidget):
@@ -336,9 +297,8 @@ class ConsoleOutput(QWidget):
         """Appends the finish marker quietly."""
         cursor = self.text_display.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
-        cursor.insertText(f"\n[Command Finished]\n{'-' * 40}")
+        cursor.insertText(f"\n[Command Finished]\n{'-' * 40}\n")
         self.apply_line_spacing()
-        # Removed: self.text_display.ensureCursorVisible()
 
     def clear(self):
         self.text_display.setPlainText("")

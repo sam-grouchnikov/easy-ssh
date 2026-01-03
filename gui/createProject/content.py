@@ -9,23 +9,28 @@ from database.database import get_connection
 import time
 
 
-def setupContent(layout: QVBoxLayout, navigate):
-    title_label = QLabel("Create new project")
-    title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; padding-left: 10px")
+def setupContent(layout: QVBoxLayout, navigate, config):
+    title_label = QLabel("Welcome to Easy-SSH!")
+    title_label.setStyleSheet("color: white; font-size: 40px; font-weight: bold; margin-left: 13px; padding-left: 0px")
     layout.addWidget(title_label)
+
+    secondary_label = QLabel("Enter your details below")
+    secondary_label.setStyleSheet("color: gray; font-size: 19px; margin-left: 20px")
+    layout.addWidget(secondary_label)
+
 
     border = QFrame()
     border.setFrameShape(QFrame.Shape.HLine)
-    border.setFixedHeight(1)
+    border.setFixedHeight(3)
     border.setStyleSheet("color: #969696; margin-left: 20px")
     layout.addWidget(border)
 
-    layout.addWidget(projectOptions(navigate))
+    layout.addWidget(projectOptions(navigate, config))
 
     layout.addStretch()
 
 
-def projectOptions(navigate):
+def projectOptions(navigate, config):
     grid_widget = QWidget()
     grid_layout = QGridLayout()
     grid_widget.setLayout(grid_layout)
@@ -62,7 +67,7 @@ def projectOptions(navigate):
     gen_settings_layout.addWidget(gen_title)
 
     # Name
-    lbl = QLabel("Project Name")
+    lbl = QLabel("Username")
     lbl.setStyleSheet(label_style)
     gen_settings_layout.addWidget(lbl)
 
@@ -72,14 +77,39 @@ def projectOptions(navigate):
     gen_settings_layout.addWidget(name_input)
 
     # SSH Path
-    lbl = QLabel("SSH Connection Path")
-    lbl.setStyleSheet(label_style)
-    gen_settings_layout.addWidget(lbl)
+    # 1. Create a horizontal container and layout
+    ssh_conn_container = QWidget()
+    ssh_conn_layout = QHBoxLayout(ssh_conn_container)
+    ssh_conn_layout.setContentsMargins(0, 0, 0, 0)
+    ssh_conn_layout.setSpacing(10)
 
-    ssh_path_input = QLineEdit()
-    ssh_path_input.setStyleSheet(input_style)
-    ssh_path_input.setFixedHeight(30)
-    gen_settings_layout.addWidget(ssh_path_input)
+    # 2. Connection Path Section (VBox to keep label over input)
+    path_vbox = QVBoxLayout()
+    path_lbl = QLabel("SSH Connection Path")
+    path_lbl.setStyleSheet(label_style)
+    path_input = QLineEdit()
+    path_input.setStyleSheet(input_style)
+    path_input.setFixedHeight(30)
+    path_vbox.addWidget(path_lbl)
+    path_vbox.addWidget(path_input)
+
+    # 3. Port Section (VBox to keep label over input)
+    port_vbox = QVBoxLayout()
+    port_lbl = QLabel("Port")
+    port_lbl.setStyleSheet(label_style)
+    port_input = QLineEdit()
+    port_input.setFixedWidth(80)  # Ports are small
+    port_input.setStyleSheet(input_style)
+    port_input.setFixedHeight(30)
+    port_vbox.addWidget(port_lbl)
+    port_vbox.addWidget(port_input)
+
+    # 4. Add VBoxes to the HBox
+    ssh_conn_layout.addLayout(path_vbox, stretch=4)  # Path gets more space
+    ssh_conn_layout.addLayout(port_vbox, stretch=1)  # Port stays small
+
+    # 5. Add the container to your main settings layout
+    gen_settings_layout.addWidget(ssh_conn_container)
 
     # SSH Password
     lbl = QLabel("SSH Password")
@@ -194,63 +224,68 @@ def projectOptions(navigate):
     button_row.setContentsMargins(0, 5, 0, 0)
 
     # Cancel button (left)
-    cancel_btn = QPushButton("Cancel")
-    cancel_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-    cancel_btn.setStyleSheet(
-        "background-color: #1A1631; color: white; "
-        "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
-    )
-    button_row.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignLeft)
-    cancel_btn.setMinimumWidth(185)
-    cancel_btn.setMinimumHeight(40)
-    cancel_btn.clicked.connect(lambda _, p="home": navigate(p))
+    # cancel_btn = QPushButton("Cancel")
+    # cancel_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+    #
+    # cancel_btn.setStyleSheet(
+    #     "background-color: #1A1631; color: white; "
+    #     "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
+    # )
+    # button_row.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+    # cancel_btn.setMinimumWidth(185)
+    # cancel_btn.setMinimumHeight(40)
+    # cancel_btn.clicked.connect(lambda _, p="home": navigate(p))
 
     # Spacer to push the next button to the right
     button_row.addStretch()
 
     # Create Project button (right)
-    create_btn = QPushButton("Create Project")
+    create_btn = QPushButton("Get Started")
     create_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
     create_btn.setMinimumWidth(185)
     create_btn.setMinimumHeight(40)
     create_btn.setStyleSheet(
-        "background-color: #451C4B; color: white; "
+        "background-color: #183C86; color: white; "
         "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
     )
 
+    name_input.setText(config.get("user"))
+    path_input.setText(config.get("sshcon"))
+    port_input.setText(config.get("sshport"))
+    ssh_psw_input.setText(config.get("sshpsw"))
+    wandb_api.setText(config.get("wandbapi"))
+    wandb_user.setText(config.get("wandbuser"))
+    wandb_proj.setText(config.get("wandbproj"))
+    github_url.setText(config.get("giturl"))
+    github_user.setText(config.get("gituser"))
+    github_token.setText(config.get("gitpat"))
+
     def create_project_and_save():
-        # Get all values from inputs
         name = name_input.text()
-        ssh_path = ssh_path_input.text()
+        ssh_path = path_input.text()
+        ssh_port = port_input.text()
         ssh_psw = ssh_psw_input.text()  # optionally encrypt
         wandb_api_text = wandb_api.text()  # optionally encrypt
         wandb_user_val = wandb_user.text()
         wandb_project_val = wandb_proj.text()
         github_url_val = github_url.text()
         github_user_val = github_user.text()
-        git_path_val = ""  # or add an input for local git path
-        status_val = 1  # let's say 1 = Active
-        last_update = int(time.time())  # current timestamp
+        git_pat = github_token.text()  # or add an input for local git path
 
-        # Add to DB
-        conn = get_connection()
-        database.database_crud.add_project(
-            name=name,
-            ssh_path=ssh_path,
-            ssh_password=ssh_psw,
-            wandb_api_key=wandb_api_text,
-            wandb_user=wandb_user_val,
-            wandb_project=wandb_project_val,
-            github_repo_url=github_url_val,
-            github_user=github_user_val,
-            git_local_path=git_path_val,
-            status=status_val,
-            last_time=last_update
-        )
-        conn.close()
+        config.set("user", name)
+        config.set("sshcon", ssh_path)
+        config.set("sshport", ssh_port)
+        config.set("sshpsw", ssh_psw)
+        config.set("wandbapi", wandb_api_text)
+        config.set("wandbuser", wandb_user_val)
+        config.set("wandbproj", wandb_project_val)
+        config.set("giturl", github_url_val)
+        config.set("gituser", github_user_val)
+        config.set("gitpat", git_pat)
+        config.set("lastrun", "N/A")
 
-        navigate("project", project_name=name)
+        print("Config set, moving to project")
+        navigate("project")
 
     create_btn.clicked.connect(create_project_and_save)
     button_row.addWidget(create_btn, alignment=Qt.AlignmentFlag.AlignRight)

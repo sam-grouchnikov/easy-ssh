@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QWidget
 )
+from backend.config.ConfigWiring import AppConfig
 
 class Application(QMainWindow):
 
@@ -41,9 +42,6 @@ class Application(QMainWindow):
 
         skeleton = self._skeletons.get(name)
 
-        if name == "project" and skeleton and "project_name" in kwargs:
-            skeleton.set_project(kwargs["project_name"])
-
         if skeleton and hasattr(skeleton, "refresh"):
             skeleton.refresh()
 
@@ -54,22 +52,22 @@ class Application(QMainWindow):
 
 def run():
     app = QApplication(sys.argv)
-    import database.database as db
-    db.init_db()
     window = Application()
-    from gui.homepage.skeleton import HomeSkeleton
+    config = AppConfig("user_data.json")
     from gui.projectSettings.skeleton import ProjectSettingsSkeleton
+
     from gui.createProject.skeleton import CreateSkeleton
+    create = CreateSkeleton(window.show_page, config)
+    project = ProjectSettingsSkeleton(window.show_page, config)
 
-    home = HomeSkeleton(window.show_page)
-    project = ProjectSettingsSkeleton(window.show_page)
-    create = CreateSkeleton(window.show_page)
-
-    window.add_skeleton("home", home)
     window.add_skeleton("project", project)
     window.add_skeleton("create", create)
 
-    window.show_page("home")
+    if config.is_complete():
+
+        window.show_page("project")
+    else:
+        window.show_page("create")
     window.show()
 
     sys.exit(app.exec())

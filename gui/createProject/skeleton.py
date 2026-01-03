@@ -11,7 +11,7 @@ from gui.sidebar import setupSidebar
 from gui.createProject.content import setupContent
 
 class CreateSkeleton(QMainWindow):
-    def __init__(self, navigate):
+    def __init__(self, navigate, config):
         super().__init__()
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
@@ -58,11 +58,10 @@ class CreateSkeleton(QMainWindow):
         self.content_layout.setSpacing(15)
         self.content.setLayout(self.content_layout)
 
-        main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.content)
 
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self.content_layout, navigate)
+        setupContent(self.content_layout, navigate, config)
 
 
 

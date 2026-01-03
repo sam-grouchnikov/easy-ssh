@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QWidget,
-    QVBoxLayout, QHBoxLayout, QLabel
+    QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 
@@ -53,7 +53,7 @@ class NavItem(QWidget):
             }
 
             NavItem[selected="true"] {
-                border-bottom: 3px solid #4A42D4;
+                border-bottom: 4px solid #4A42D4;
                 background-color: transparent;
             }
         """)
@@ -75,20 +75,22 @@ def select_nav_item(items, selected_index):
 def navbar():
     nb_container = QWidget()
     container_layout = QVBoxLayout(nb_container)
-    container_layout.setContentsMargins(0, 0, 16, 0)
+    container_layout.setContentsMargins(0, 0, 0, 0)
     container_layout.setSpacing(0)
 
     nb = QWidget()
     nb_layout = QHBoxLayout(nb)
-    nb_layout.setContentsMargins(8, 0, 0, 10)
+    nb_layout.setContentsMargins(8, 0, 30, 0)
     nb_layout.setSpacing(0)
 
     items = [
+        ("Dashboard", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/layout.png"),
         ("File Tree",  "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/code-fork.png"),
         ("Terminal",   "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/command.png"),
         ("Simple-SSH", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/loading.png"),
         ("Graphs",     "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/line-graph.png"),
-        ("Settings",   "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/setting.png"),
+        ("Project Settings",   "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/setting.png"),
+
     ]
 
     nav_items = []
@@ -102,7 +104,15 @@ def navbar():
             lambda _, i=index: select_nav_item(nav_items, i)
         )
 
-    nb_layout.addStretch()
+    filler = QWidget()
+    filler.setFixedHeight(52)
+    filler.setStyleSheet("""
+            background-color: transparent;
+            border-bottom: 1px solid #4A42D4;
+    """)
+    filler.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+    nb_layout.addWidget(filler)
+
     container_layout.addWidget(nb)
 
     select_nav_item(nav_items, 0)
