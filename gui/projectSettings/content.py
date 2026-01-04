@@ -56,6 +56,8 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     self.tree_data_accumulator = ""
 
+    def accumulate_tree_data(text):
+        self.tree_data_accumulator += text
     def global_run_command(command, is_tree_update=False):
         # 1. Don't run if already busy
 
@@ -83,25 +85,33 @@ def setupContent(self, layout: QVBoxLayout, config):
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
             return
 
-        # 2. Basic UI Updates
-        self.cmd_page.set_busy(True)
-        self.cmd_page.add_message(f"$ {command}")
-        self.cmd_page.create_new_output_bubble()
-        self.simple_ssh_page.console.add_command_line(command)
-
-        # 3. Create Worker (Assigned to self to prevent crash)
+            # 3. Create Worker
         self.worker = SSHStreamWorker(self.ssh_manager, command)
 
         if is_tree_update:
-            self.worker.output_received.connect(self.file_tree_page.rebuild_tree)
+            print("Ckpt1")
+            self.tree_data_accumulator = ""
+
+            self.worker.output_received.connect(accumulate_tree_data)
+            print("Ckpt2")
+
+            self.worker.finished.connect(
+                lambda: self.file_tree_page.rebuild_tree(self.tree_data_accumulator),
+                Qt.ConnectionType.QueuedConnection
+            )
+            print("Ckpt3")
+
         else:
+            # Normal terminal behavior
             self.worker.output_received.connect(self.cmd_page.update_live_output)
             self.worker.output_received.connect(self.simple_ssh_page.console.update_output)
 
+        print("Ckpt4")
         self.worker.finished.connect(global_finished)
-        self.worker.start()
+        print("Ckpt5")
 
         self.worker.start()
+        print("Ckpt6")
 
     def global_finished():
         self.cmd_page.on_command_finished()

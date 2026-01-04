@@ -1,42 +1,47 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
-    QLabel, QPushButton, QSizePolicy, QLineEdit
+    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit
 )
-from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem
+from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem, QFont
 from PyQt6.QtCore import Qt, QSize
 
 
-def build_nested_dict(self, paths):
+def build_nested_dict(paths):
+
     tree = {}
+
+    # 'paths' is the list ['/dir/file1', '/dir/file2']
     for path in paths:
-        # 1. Clean the string
+        # 1. Clean the individual string
+        # This is where the error was likely happening (calling .strip on the list)
         clean_path = path.strip()
 
         # 2. Skip useless entries
         if not clean_path or clean_path == ".":
             continue
 
-        # 3. Remove leading './' properly
+        # 3. Standardize paths
         if clean_path.startswith("./"):
             clean_path = clean_path[2:]
-        elif clean_path.startswith("."):  # Case for just '.'
+        elif clean_path.startswith("."):
             clean_path = clean_path[1:]
 
         parts = clean_path.split('/')
         current_level = tree
 
         for part in parts:
-            if not part: continue  # Skip double slashes //
+            if not part:
+                continue
 
-            # 4. The "Merge" Logic
-            # If the folder doesn't exist, create it.
-            # If it DOES exist, we just move 'current_level' into it.
+            # 4. Use setdefault to merge folders
             if part not in current_level:
                 current_level[part] = {}
 
             current_level = current_level[part]
 
     return tree
+
+
 
 
 class FileTreePage(QWidget):
@@ -46,11 +51,12 @@ class FileTreePage(QWidget):
 
 
         # UI Setup
-        main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(0, 10, 15, 10)
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 10, 15, 10)
 
         # 1. Initialize Model and Tree
         self.model = QStandardItemModel()
+
         self.tree = QTreeView()
         self.tree.setModel(self.model)
 
@@ -58,66 +64,81 @@ class FileTreePage(QWidget):
         self.tree.setHeaderHidden(True)
         self.tree.setIndentation(25)
         self.tree.setIconSize(QSize(22, 22))
-        self.tree.setStyleSheet("QTreeView { color: white; font-size: 16px; border: none; }")
+        self.tree.setMinimumWidth(500)
+        self.tree.setMaximumWidth(1000)
+
+
+        self.tree.setStyleSheet("""
+                        QTreeView {
+                            color: white; font-size: 16px; border: none;
+                        }
+                        QTreeView::item {
+                        padding-top: 4px;
+                        padding-bottom: 4px;
+                        }
+                    """)
 
         # 2. Wire the double-click event
         self.tree.doubleClicked.connect(self.on_item_double_clicked)
 
-        main_layout.addWidget(self.tree)
+        self.editor = QPlainTextEdit()
+        self.editor.setReadOnly(True)  # Start as read-only until a file is loaded
+        self.editor.setPlaceholderText("Select a file to view its content...")
+
+        # Professional Monospace Font for code
+        font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
+        self.editor.setFont(font)
+
+        self.editor.setStyleSheet("""
+                    QPlainTextEdit {
+                        color: #d4d4d4;
+                        background-color: #1e1e1e;
+                        border: 1px solid #333;
+                        padding: 10px;
+                    }
+                """)
+
+        # Add widgets to layout
+        self.main_layout.addWidget(self.tree)
+        self.main_layout.addWidget(self.editor)
+
+        # --- 3. Connections ---
+        # Triggered when clicking an item
+        self.tree.clicked.connect(self.on_file_selected)
+
+    def on_file_selected(self, index):
+        item = self.model.itemFromIndex(index)
+        if not item.hasChildren():
+            file_path = item.data(Qt.ItemDataRole.UserRole)
+            self.load_remote_file(file_path)
+
+    def load_remote_file(self, path):
+        self.editor.setPlainText(f"Loading {path}...")
+        cmd = f"cat '{path}'"
+        self.run_func(cmd, is_file_read=True)
+
+    def display_file_content(self, content):
+        self.editor.setPlainText(content)
+        self.editor.setReadOnly(False)
 
     def rebuild_tree(self, raw_find_output):
-        print(raw_find_output)
-        """
-        Call this every time you want to refresh the tree.
-        It clears everything and rebuilds from the new 'find' string.
-        """
+
+        print("Rebuild tree started")
         # Completely clear the existing items
         self.model.clear()
+        print("Ckpt1")
 
         # Parse the raw SSH string into a nested dict
-        paths = [p for p in raw_find_output.strip().split('\n') if p.strip()]
-        nested_data = self.build_nested_dict(paths)
+        paths = [p for p in raw_find_output.split('\n')]
+        print("Ckpt1.5")
+
+        nested_data = build_nested_dict(paths)
+        print("Ckpt2")
+
 
         # Populate the model starting from the invisible root
         self.populate_tree(self.model.invisibleRootItem(), nested_data)
-
-        # Optional: Auto-expand the first level for better UX
-        self.tree.expandToDepth(0)
-
-    def build_nested_dict(self, paths):
-        """
-        Transforms flat path strings into a nested dictionary structure.
-        Expected input: ['./models/cnn.py', './data/train.csv', 'utils.py']
-        """
-        tree = {}
-        for path in paths:
-            # Clean the path: remove leading './', strip whitespace
-            clean_path = path.strip()
-            if clean_path.startswith("./"):
-                clean_path = clean_path[2:]
-
-            # Skip if it's just the root dot or empty
-            if not clean_path or clean_path == ".":
-                continue
-
-            parts = clean_path.split('/')
-            current_level = tree
-
-            for i, part in enumerate(parts):
-                # If we are at the last part, it's a file (unless it was already a folder)
-                if i == len(parts) - 1:
-                    if part not in current_level:
-                        current_level[part] = {}  # Mark as leaf (empty dict)
-                else:
-                    # It's a directory
-                    if part not in current_level:
-                        current_level[part] = {}
-                    elif not isinstance(current_level[part], dict):
-                        # Safety check: if a file and folder share a name (rare in Linux)
-                        current_level[part] = {}
-
-                    current_level = current_level[part]
-        return tree
+        print("rebuild tree ended")
 
     def populate_tree(self, parent_item, data_dict, current_full_path=""):
         # Sort: Folders first, then Alphabetical
