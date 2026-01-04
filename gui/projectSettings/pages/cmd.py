@@ -172,28 +172,33 @@ class cmdPage(QWidget):
         self.chat_layout.addWidget(self.current_bubble)
 
     def update_live_output(self, raw_text):
-        # 1. Safety Check: If the bubble was deleted or doesn't exist, stop.
         if not hasattr(self, 'current_bubble') or self.current_bubble is None:
             return
 
         try:
-            # 2. Strip ANSI codes (colors/formatting)
             clean_text = self.strip_ansi_codes(raw_text)
+            if not clean_text:
+                return
 
-            # 3. Handle Carriage Return (\r) for progress bars
-            if '\r' in clean_text:
-                # Get the part after the LAST \r in this chunk
+            # Check if this is a progress bar situation
+            # We only want to overwrite (\r) if it's a known progress bar type
+            is_progress_bar = any(word in clean_text.lower() for word in ["epoch", "step", "%", "it/s"])
+
+            if '\r' in clean_text and is_progress_bar:
+                # OVERWRITE MODE (Progress bars)
                 parts = clean_text.split('\r')
                 latest_update = parts[-1]
-
-                # If there's actual text after the \r, replace the bubble content
                 if latest_update.strip():
                     self.current_bubble.setText(latest_update)
             else:
+                # APPEND MODE (nvidia-smi, ls, cat, etc.)
                 current = self.current_bubble.text()
+
+                # If the current bubble is empty and we are starting a table,
+                # make sure we use a monospace font for nvidia-smi alignment
                 self.current_bubble.setText(current + clean_text)
 
-            # 5. Auto-scroll to bottom
+            # Force scroll to bottom
             self.scroll.verticalScrollBar().setValue(
                 self.scroll.verticalScrollBar().maximum()
             )

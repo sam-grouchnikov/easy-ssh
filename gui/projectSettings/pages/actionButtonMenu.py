@@ -11,10 +11,11 @@ from PyQt6.QtGui import QCursor
 
 
 class ActionButtonMenu(QWidget):
-    def __init__(self, run_func=None, connect_func=None):
+    def __init__(self, console, run_func=None, connect_func=None):
         super().__init__()
         self.run_func = run_func
         self.connect_func = connect_func
+        self.console = console
         self.init_ui()
 
     def init_ui(self):
@@ -147,6 +148,18 @@ class ActionButtonMenu(QWidget):
             command = f"pip install {packages}"
             self.run_func(command)
 
+    def open_git_dialogue(self):
+
+        branch, ok = QInputDialog.getText(
+            self,
+            "Pull Latest Changes",
+            "Enter active branch name (ex. main, master):",
+        )
+
+        if ok and branch:
+            command = f"git pull origin {branch}"
+            self.run_func(command)
+
     def create_commands_section(self):
         layout = QVBoxLayout()
         layout.setSpacing(10)
@@ -162,13 +175,21 @@ class ActionButtonMenu(QWidget):
         r1.addStretch()
 
         r2 = QHBoxLayout()
-        r2.addWidget(self.make_btn("Directory Files List", "#1D405F"))
-        r2.addWidget(self.make_btn("GPU Status", "#1D405F"))
+        self.dir_btn = self.make_btn("Directory Files List", "#1D405F")
+        self.dir_btn.clicked.connect(lambda: self.run_func("ls"))
+        r2.addWidget(self.dir_btn)
+        self.status_btn=self.make_btn("GPU Status", "#1D405F")
+        self.status_btn.clicked.connect(lambda: self.run_func("nvidia-smi"))
+        r2.addWidget(self.status_btn)
         r2.addStretch()
 
         r3 = QHBoxLayout()
-        r3.addWidget(self.make_btn("Pull Latest Changes", "#1D405F"))
-        r3.addWidget(self.make_btn("Clear Console", "#5F1D1D"))
+        self.pull_btn = self.make_btn("Pull Latest Changes", "#1D405F")
+        self.pull_btn.clicked.connect(self.open_git_dialogue)
+        r3.addWidget(self.pull_btn)
+        self.clear_btn = self.make_btn("Clear Console", "#5F1D1D")
+        self.clear_btn.clicked.connect(self.console.clear)
+        r3.addWidget(self.clear_btn)
         r3.addStretch()
 
         layout.addLayout(r1)
@@ -234,7 +255,8 @@ class ConsoleOutput(QWidget):
 
         self.text_display = QPlainTextEdit()
         self.text_display.setReadOnly(True)
-        self.text_display.setStyleSheet("background: transparent; border: none; color: #AAAAAA;")
+        self.text_display.setStyleSheet("background: transparent; border: none; color: #AAAAAA;"
+                                        "font-family: 'Consolas', 'Monospace', 'Courier New';")
         content_layout.addWidget(self.text_display)
 
         outer_layout.addWidget(self.main_container)
@@ -260,7 +282,7 @@ class ConsoleOutput(QWidget):
         self.apply_line_spacing()
 
     def update_output(self, raw_text):
-        """Appends output and handles \r without creating empty space."""
+        """Appends output and handles \r only for progress bars."""
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
         clean_text = ansi_escape.sub('', raw_text)
 
@@ -271,26 +293,30 @@ class ConsoleOutput(QWidget):
         v_scroll = self.text_display.verticalScrollBar().value()
         cursor.movePosition(QTextCursor.MoveOperation.End)
 
-        if '\r' in clean_text:
+        # 1. Check if this chunk is a progress bar (Epoch/Step)
+        # We only want to use the '\r' overwrite logic for these.
+        is_progress = any(x in clean_text.lower() for x in ["epoch", "step", "it/s", "%"])
+
+        if '\r' in clean_text and is_progress:
             parts = clean_text.split('\r')
             final_text = parts[-1]
 
-            # Check if current line is empty before deleting
-            # (Prevents deleting the command line if data comes in too fast)
+            # Move to start of line and delete only for progress updates
             cursor.movePosition(QTextCursor.MoveOperation.StartOfLine, QTextCursor.MoveMode.KeepAnchor)
             line_content = cursor.selectedText().strip()
 
-            # If the line has content (like an old progress bar), replace it.
-            # If it's empty, just insert.
             if line_content:
                 cursor.removeSelectedText()
-
             cursor.insertText(final_text)
         else:
-            # Standard append
-            cursor.insertText(clean_text)
+            # 2. For everything else (nvidia-smi, ls, etc.), use standard append.
+            # We treat \r as a standard newline if it's not a progress bar.
+            standard_text = clean_text.replace('\r\n', '\n').replace('\r', '\n')
+            cursor.insertText(standard_text)
 
-        self.apply_line_spacing()
+        # OPTIMIZATION: Don't call apply_line_spacing() here.
+        # It selects the whole document and will freeze your app during fast output.
+        # Set the line height once in initUI instead.
         self.text_display.verticalScrollBar().setValue(v_scroll)
 
     def finish_command(self):

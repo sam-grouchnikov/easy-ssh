@@ -47,14 +47,14 @@ class SimpleSSHPage(QWidget):
         row2_layout = QHBoxLayout(row2)
         row2_layout.setContentsMargins(0, 15, 0, 0)
         row2_layout.setSpacing(20)
+        self.console = ConsoleOutput()
 
         # Pass the run_func into the menu so buttons can trigger commands
-        self.action_menu = ActionButtonMenu(self.run_func, self.connect_func)
+        self.action_menu = ActionButtonMenu(self.console, self.run_func, self.connect_func)
         self.action_menu.setMaximumWidth(425)
         self.action_menu.setMaximumHeight(650)
 
 
-        self.console = ConsoleOutput()
 
         row2_layout.addWidget(self.action_menu, alignment=Qt.AlignmentFlag.AlignTop)
         row2_layout.addWidget(self.console)
