@@ -4,7 +4,42 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem, QFont
 from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+from PyQt6.QtCore import QRegularExpression
 
+
+class PythonHighlighter(QSyntaxHighlighter):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.rules = []
+
+        # Keyword Format (e.g., def, class, if, else)
+        keyword_format = QTextCharFormat()
+        keyword_format.setForeground(QColor("#569CD6"))  # Light Blue
+        keyword_format.setFontWeight(QFont.Weight.Bold)
+        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with"]
+
+        for word in keywords:
+            pattern = QRegularExpression(f"\\b{word}\\b")
+            self.rules.append((pattern, keyword_format))
+
+        # String Format (anything between quotes)
+        string_format = QTextCharFormat()
+        string_format.setForeground(QColor("#CE9178"))  # Salmon/Orange
+        self.rules.append((QRegularExpression("\".*\""), string_format))
+        self.rules.append((QRegularExpression("'.*'"), string_format))
+
+        # Comment Format (# text)
+        comment_format = QTextCharFormat()
+        comment_format.setForeground(QColor("#6A9955"))  # Green
+        self.rules.append((QRegularExpression("#.*"), comment_format))
+
+    def highlightBlock(self, text):
+        for pattern, format in self.rules:
+            iterator = pattern.globalMatch(text)
+            while iterator.hasNext():
+                match = iterator.next()
+                self.setFormat(match.capturedStart(), match.capturedLength(), format)
 
 def build_nested_dict(paths):
 
@@ -65,7 +100,7 @@ class FileTreePage(QWidget):
         self.tree.setIndentation(25)
         self.tree.setIconSize(QSize(22, 22))
         self.tree.setMinimumWidth(500)
-        self.tree.setMaximumWidth(1000)
+        self.tree.setMaximumWidth(750)
 
 
         self.tree.setStyleSheet("""
@@ -80,6 +115,15 @@ class FileTreePage(QWidget):
 
         # 2. Wire the double-click event
         self.tree.doubleClicked.connect(self.on_item_double_clicked)
+
+        self.editor_widget = QWidget()
+        self.editor_layout = QVBoxLayout(self.editor_widget)
+
+        self.save_button = QPushButton("Save Changes")
+        self.save_button.setFixedWidth(120)
+        self.save_button.clicked.connect(self.save_remote_file)
+        self.save_button.setEnabled(False)
+        self.editor_layout.addWidget(self.save_button)
 
         self.editor = QPlainTextEdit()
         self.editor.setReadOnly(True)  # Start as read-only until a file is loaded
@@ -97,10 +141,12 @@ class FileTreePage(QWidget):
                         padding: 10px;
                     }
                 """)
-
+        self.editor_layout.addWidget(self.editor)
+        self.highlighter = PythonHighlighter(self.editor.document())
         # Add widgets to layout
         self.main_layout.addWidget(self.tree)
-        self.main_layout.addWidget(self.editor)
+        self.main_layout.addWidget(self.editor_widget)
+        self.current_open_path = None
 
         # --- 3. Connections ---
         # Triggered when clicking an item
@@ -110,16 +156,44 @@ class FileTreePage(QWidget):
         item = self.model.itemFromIndex(index)
         if not item.hasChildren():
             file_path = item.data(Qt.ItemDataRole.UserRole)
+            self.current_open_path = file_path
             self.load_remote_file(file_path)
 
     def load_remote_file(self, path):
+        print("Loading remote file")
         self.editor.setPlainText(f"Loading {path}...")
         cmd = f"cat '{path}'"
         self.run_func(cmd, is_file_read=True)
+        print("Finished load")
 
     def display_file_content(self, content):
         self.editor.setPlainText(content)
         self.editor.setReadOnly(False)
+        self.save_button.setEnabled(True)
+
+    def save_remote_file(self):
+        print("Saving remote file")
+        if not self.current_open_path:
+            return
+
+        content = self.editor.toPlainText()
+
+        # We use a 'heredoc' to write the file.
+        # 'EOF' is quoted to prevent the shell from evaluating variables like $HOME
+        command = f"cat << 'EOF' > {self.current_open_path}\n{content}\nEOF"
+
+        self.save_button.setText("Saving...")
+        self.save_button.setEnabled(False)
+
+        # Run the command. We don't need a special flag here unless
+        # you want to capture the 'Success' message specifically.
+        self.run_func(command)
+
+        # Reset button after a short delay or via the 'finished' signal
+        self.save_button.setText("Save Changes")
+        self.save_button.setEnabled(True)
+        print("Saved")
+
 
     def rebuild_tree(self, raw_find_output):
 

@@ -58,7 +58,7 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     def accumulate_tree_data(text):
         self.tree_data_accumulator += text
-    def global_run_command(command, is_tree_update=False):
+    def global_run_command(command, is_tree_update=False, is_file_read=False):
         # 1. Don't run if already busy
 
         if command == "exit":
@@ -100,7 +100,11 @@ def setupContent(self, layout: QVBoxLayout, config):
                 Qt.ConnectionType.QueuedConnection
             )
             print("Ckpt3")
-
+        elif is_file_read:
+            # Clear the editor first
+            self.file_tree_page.editor.clear()
+            # Connect output DIRECTLY to the editor's append function
+            self.worker.output_received.connect(self.file_tree_page.display_file_content)
         else:
             # Normal terminal behavior
             self.worker.output_received.connect(self.cmd_page.update_live_output)
