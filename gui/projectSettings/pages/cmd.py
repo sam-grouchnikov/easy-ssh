@@ -18,25 +18,37 @@ class cmdPage(QWidget):
 
     def initUI(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 0, 15, 20)
+        # 1. Remove the top margin of the main layout to let the bar touch the top
+        main_layout.setContentsMargins(10, 0, 10, 20)
         main_layout.setSpacing(10)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         # ---- TOP BAR -----
         top_bar = QWidget()
+        # 2. Match the background color (#1F1F1F) and font
         top_bar.setStyleSheet(
-            "background-color: #1F1F1F; font-size: 18px; color: #7D7D7D; border-radius: 5px"
+            "background-color: #1B1A24; font-size: 18px; color: #7D7D7D; border-radius: 5px"
         )
-        top_bar.setContentsMargins(0, 0, 0, 0)
+        top_bar.setFixedHeight(40)
+
+        # 3. Fix the internal layout margins (Remove the bottom 10px margin)
         top_tab_layout = QHBoxLayout(top_bar)
+        top_tab_layout.setContentsMargins(15, 0, 15, 0)  # Match the 15px side padding
+        top_tab_layout.setSpacing(10)
 
         self.dir_label = QLabel("Current Directory: None")
         top_tab_layout.addWidget(self.dir_label)
 
+        # Status Container
         status_container = QWidget()
         status_layout = QHBoxLayout(status_container)
         status_layout.setContentsMargins(0, 0, 0, 0)
+        status_layout.setSpacing(5)
 
         self.status_label = QLabel("Status: Disconnected")
         self.icon_label = QLabel()
+
+        # Icons (Keep your existing icon logic)
         self.green_icon = QPixmap("gui/icons/green_circle.png").scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio,
                                                                        Qt.TransformationMode.SmoothTransformation)
         self.red_icon = QPixmap("gui/icons/red-circle.png").scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio,
@@ -48,12 +60,13 @@ class cmdPage(QWidget):
 
         top_tab_layout.addStretch()
         top_tab_layout.addWidget(status_container)
+
         main_layout.addWidget(top_bar)
 
         # ---- CONTAINER ----
         container = QWidget()
         container_layout = QVBoxLayout(container)
-        container_layout.setContentsMargins(10, 10, 10, 10)
+        container_layout.setContentsMargins(10, 20, 10, 10)
         container_layout.setSpacing(10)
         container.setStyleSheet("""
             background-color: #18181F;

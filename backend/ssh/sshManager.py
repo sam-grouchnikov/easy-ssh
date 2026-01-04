@@ -80,31 +80,23 @@ class SSHManager:
             time.sleep(0.01)
 
     def get_pwd_silently(self):
-        """Fetches directory without using the streaming loop logic."""
-        if not self.channel or self.channel.closed:
+        """Fetches directory using a separate exec session to stay truly silent."""
+        if not self.client:  # The paramiko.SSHClient object
             return ""
 
         try:
-            # 1. Clear any leftover characters from the previous command
-            while self.channel.recv_ready():
-                self.channel.recv(1024)
+            # exec_command creates a brand new, temporary channel
+            # that doesn't share stdout with your main interactive shell.
+            stdin, stdout, stderr = self.client.exec_command("pwd")
 
-            # 2. Send pwd and a newline
-            self.channel.send("pwd\n")
+            # Read the output and strip newlines
+            path = stdout.read().decode('utf-8').strip()
 
-            # 3. Wait just enough for a small text response
-            time.sleep(0.1)
-
-            if self.channel.recv_ready():
-                resp = self.channel.recv(4096).decode('utf-8', errors='replace')
-                # The response will contain: pwd\n/your/path\n[prompt]
-                lines = resp.splitlines()
-                # We want the line that looks like a path and isn't 'pwd'
-                for line in lines:
-                    if line.startswith('/') and 'pwd' not in line:
-                        return line.strip()
+            if path.startswith('/'):
+                return path
             return ""
-        except Exception:
+        except Exception as e:
+            print(f"Silent PWD Error: {e}")
             return ""
 
     def send_interrupt(self):

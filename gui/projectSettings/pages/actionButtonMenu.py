@@ -19,31 +19,47 @@ class ActionButtonMenu(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Main Layout & Styling
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(20, 15, 20, 15)
+        self.outer_layout = QVBoxLayout(self)
+        self.outer_layout.setContentsMargins(0, 0, 0, 0)
+        self.outer_layout.setSpacing(0)
+
+        self.wrapper = QFrame()
+        self.wrapper.setObjectName("MainWrapper")  # Use an ID for specific styling
+        self.wrapper.setStyleSheet("""
+            #MainWrapper {
+                border: 2px solid #3B3B3B; 
+                border-radius: 10px;
+            }
+        """)
+
+        self.main_layout = QVBoxLayout(self.wrapper)
+        self.main_layout.setContentsMargins(15, 15, 15, 15)  # Internal padding
         self.main_layout.setSpacing(6)
-        self.setStyleSheet("border: 3px solid #3B3B3B; border-radius: 5px;")
 
         # --- TITLE ---
         title = QLabel("Actions")
         title.setStyleSheet("color: #AAAAAA; font-size: 21px; border: none; padding: 0px")
         self.main_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self.add_divider("#FFFFFF", 2)
+        self.add_divider("#FFFFFF", 1)
 
         # --- SECTIONS ---
         self.main_layout.addLayout(self.create_connection_section())
+        self.main_layout.addSpacing(3)
         self.main_layout.addLayout(self.create_navigation_section())
+        self.main_layout.addSpacing(3)
         self.main_layout.addLayout(self.create_commands_section())
 
         self.main_layout.addStretch()
+
+        # 4. Finalize: Add the wrapper to the actual widget layout
+        self.outer_layout.addWidget(self.wrapper)
 
     def add_divider(self, color, height, top_spacing=0, bottom_spacing=0):
         if top_spacing: self.main_layout.addSpacing(top_spacing)
         line = QFrame()
         line.setFixedHeight(height)
-        line.setStyleSheet(f"background-color: {color}; border: none;")
+        line.setStyleSheet(f"background-color: #3B3B3B; border: none;")
         self.main_layout.addWidget(line)
         if bottom_spacing: self.main_layout.addSpacing(bottom_spacing)
 
@@ -59,9 +75,10 @@ class ActionButtonMenu(QWidget):
         row1 = QHBoxLayout()
         self.ssh_con_btn = self.make_btn("Connect to SSH", "#1D5F1F")
         self.ssh_con_btn.clicked.connect(self.connect_func)
-        self.update_settings_btn = self.make_btn("Update Connection Settings", "#1D405F")
+        self.run_curr_btn = self.make_btn("Run Select File", "#1D5F1F")
+        self.run_curr_btn.clicked.connect(self.open_run_dialog)
         row1.addWidget(self.ssh_con_btn)
-        row1.addWidget(self.update_settings_btn)
+        row1.addWidget(self.run_curr_btn)
         row1.addStretch()
 
         row2 = QHBoxLayout()
@@ -80,11 +97,10 @@ class ActionButtonMenu(QWidget):
             self.run_func(". venv/bin/activate")
         self.create_venv_btn.clicked.connect(create_venv)
 
-        self.run_curr_btn = self.make_btn("Run Current File", "#1D5F1F")
-        self.run_curr_btn.clicked.connect(self.open_run_dialog)
         row3.addWidget(self.create_venv_btn)
-        row3.addWidget(self.run_curr_btn)
         row3.addStretch()
+
+
 
         layout.addLayout(row1)
         layout.addLayout(row2)
@@ -192,9 +208,10 @@ class ActionButtonMenu(QWidget):
         r3.addWidget(self.clear_btn)
         r3.addStretch()
 
-        layout.addLayout(r1)
         layout.addLayout(r2)
         layout.addLayout(r3)
+        layout.addLayout(r1)
+
         return layout
 
     def make_btn(self, text, border_color):
@@ -209,8 +226,7 @@ class ActionButtonMenu(QWidget):
                 font-size: 14px;
             }}
             QPushButton:hover {{
-                background-color: {border_color};
-                color: white;
+                background-color: #1E1E1E;
             }}
         """)
         btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))

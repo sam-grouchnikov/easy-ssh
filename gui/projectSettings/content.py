@@ -39,22 +39,24 @@ def setupContent(self, layout: QVBoxLayout, config):
     def global_handle_connect():
         success, msg = self.ssh_manager.connect()
 
-        # Update Terminal Page
         self.cmd_page.add_message(f"System: {msg}")
-
-        # Update Simple SSH Page (Icon and Status Label)
         self.simple_ssh_page.update_connection_status(success)
         self.cmd_page.update_connection_status(success)
         self.dashboard.conn_card.update_connection_status(success)
 
-
-        # If successful, sync the initial directory
         if success:
+            # THREADED: This won't freeze the app anymore
+            find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
+            global_run_command(find_cmd, is_tree_update=True)
+
+            # Keep directory sync silent
             new_path = self.ssh_manager.get_pwd_silently()
             self.simple_ssh_page.update_directory_display(new_path)
             self.cmd_page.update_directory_display(new_path)
 
-    def global_run_command(command):
+    self.tree_data_accumulator = ""
+
+    def global_run_command(command, is_tree_update=False):
         # 1. Don't run if already busy
 
         if command == "exit":
@@ -90,30 +92,25 @@ def setupContent(self, layout: QVBoxLayout, config):
         # 3. Create Worker (Assigned to self to prevent crash)
         self.worker = SSHStreamWorker(self.ssh_manager, command)
 
-        self.worker.output_received.connect(
-            self.cmd_page.update_live_output,
-            Qt.ConnectionType.QueuedConnection
-        )
-        self.worker.output_received.connect(
-            self.simple_ssh_page.console.update_output,
-            Qt.ConnectionType.QueuedConnection
-        )
-        self.worker.finished.connect(
-            global_finished,
-            Qt.ConnectionType.QueuedConnection
-        )
+        if is_tree_update:
+            self.worker.output_received.connect(self.file_tree_page.rebuild_tree)
+        else:
+            self.worker.output_received.connect(self.cmd_page.update_live_output)
+            self.worker.output_received.connect(self.simple_ssh_page.console.update_output)
+
+        self.worker.finished.connect(global_finished)
+        self.worker.start()
 
         self.worker.start()
 
-
     def global_finished():
         self.cmd_page.on_command_finished()
-
         self.simple_ssh_page.console.finish_command()
 
-        new_path = self.ssh_manager.get_pwd_silently()
-        self.simple_ssh_page.update_directory_display(new_path)
-        self.cmd_page.update_directory_display(new_path)
+        if self.ssh_manager:
+            new_path = self.ssh_manager.get_pwd_silently()
+            self.simple_ssh_page.update_directory_display(new_path)
+            self.cmd_page.update_directory_display(new_path)
 
     # ---- UI Setup ----
     self.title_label = QLabel()
@@ -134,10 +131,11 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     self.simple_ssh_page = SimpleSSHPage(global_run_command, global_handle_connect)
     self.dashboard = Dashboard(config)
+    self.file_tree_page = FileTreePage(global_run_command)
 
     # Add pages to the stack
     self.stack.addWidget(self.dashboard)
-    self.stack.addWidget(FileTreePage("/gui/projectSettings"))  # Index 0
+    self.stack.addWidget(self.file_tree_page)  # Index 0
     self.stack.addWidget(self.cmd_page)  # Index 1
     self.stack.addWidget(self.simple_ssh_page)  # Index 2
     self.stack.addWidget(GraphsPage())  # Index 3

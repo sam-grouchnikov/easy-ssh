@@ -11,14 +11,17 @@ class SimpleSSHPage(QWidget):
         self.connect_func = connect_func
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(10, 0, 10, 0)  # This removes the outer padding
+        layout.setSpacing(10)  # This removes gaps between the top bar and row2
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # ---- TOP BAR (Status & Directory) ----
         top_bar = QWidget()
         top_bar.setStyleSheet(
-            "background-color: #1F1F1F; font-size: 18px; color: #7D7D7D; border-radius: 5px"
+            "background-color: #1B1A24; font-size: 18px; color: #7D7D7D; border-radius: 5px"
         )
         top_tab_layout = QHBoxLayout(top_bar)
+        top_tab_layout.setContentsMargins(15, 0, 15, 0)
 
         self.dir_label = QLabel("Current Directory: None")
         top_tab_layout.addWidget(self.dir_label)
@@ -39,14 +42,15 @@ class SimpleSSHPage(QWidget):
         status_layout.addWidget(self.icon_label)
 
         top_tab_layout.addStretch()
+        top_bar.setFixedHeight(40)
         top_tab_layout.addWidget(status_container)
         layout.addWidget(top_bar)
 
         # ---- MAIN CONTENT ROW (Buttons + Mini Console) ----
         row2 = QWidget()
         row2_layout = QHBoxLayout(row2)
-        row2_layout.setContentsMargins(0, 15, 0, 0)
-        row2_layout.setSpacing(20)
+        row2_layout.setContentsMargins(0, 0, 0, 0)
+        row2_layout.setSpacing(15)
         self.console = ConsoleOutput()
 
         # Pass the run_func into the menu so buttons can trigger commands
