@@ -16,8 +16,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         # Keyword Format (e.g., def, class, if, else)
         keyword_format = QTextCharFormat()
         keyword_format.setForeground(QColor("#569CD6"))  # Light Blue
-        keyword_format.setFontWeight(QFont.Weight.Bold)
-        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with"]
+        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with", "len", "with"]
 
         for word in keywords:
             pattern = QRegularExpression(f"\\b{word}\\b")
@@ -100,7 +99,7 @@ class FileTreePage(QWidget):
         self.tree.setIndentation(25)
         self.tree.setIconSize(QSize(22, 22))
         self.tree.setMinimumWidth(500)
-        self.tree.setMaximumWidth(750)
+        self.tree.setMaximumWidth(600)
 
 
         self.tree.setStyleSheet("""

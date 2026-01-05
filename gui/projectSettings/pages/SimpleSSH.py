@@ -79,4 +79,3 @@ class SimpleSSHPage(QWidget):
             self.icon_label.setPixmap(self.red_icon)
 
 
-

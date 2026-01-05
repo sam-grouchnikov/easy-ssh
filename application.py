@@ -57,17 +57,20 @@ def run():
     from gui.projectSettings.skeleton import ProjectSettingsSkeleton
 
     from gui.createProject.skeleton import CreateSkeleton
+    from gui.welcomePage.skeleton import HomepageSkeleton
+    home = HomepageSkeleton(window.show_page)
     create = CreateSkeleton(window.show_page, config)
     project = ProjectSettingsSkeleton(window.show_page, config)
 
     window.add_skeleton("project", project)
     window.add_skeleton("create", create)
+    window.add_skeleton("home", home)
 
     if config.is_complete():
 
         window.show_page("project")
     else:
-        window.show_page("create")
+        window.show_page("home")
     window.show()
 
     sys.exit(app.exec())

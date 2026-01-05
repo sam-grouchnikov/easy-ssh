@@ -98,7 +98,7 @@ def projectOptions(navigate, config):
     port_lbl = QLabel("Port")
     port_lbl.setStyleSheet(label_style)
     port_input = QLineEdit()
-    port_input.setFixedWidth(80)  # Ports are small
+    port_input.setFixedWidth(120)  # Ports are small
     port_input.setStyleSheet(input_style)
     port_input.setFixedHeight(30)
     port_vbox.addWidget(port_lbl)
@@ -223,20 +223,7 @@ def projectOptions(navigate, config):
     button_row = QHBoxLayout()
     button_row.setContentsMargins(0, 5, 0, 0)
 
-    # Cancel button (left)
-    # cancel_btn = QPushButton("Cancel")
-    # cancel_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-    #
-    # cancel_btn.setStyleSheet(
-    #     "background-color: #1A1631; color: white; "
-    #     "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
-    # )
-    # button_row.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignLeft)
-    # cancel_btn.setMinimumWidth(185)
-    # cancel_btn.setMinimumHeight(40)
-    # cancel_btn.clicked.connect(lambda _, p="home": navigate(p))
 
-    # Spacer to push the next button to the right
     button_row.addStretch()
 
     # Create Project button (right)
@@ -244,10 +231,30 @@ def projectOptions(navigate, config):
     create_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
     create_btn.setMinimumWidth(185)
     create_btn.setMinimumHeight(40)
-    create_btn.setStyleSheet(
-        "background-color: #183C86; color: white; "
-        "padding: 8px 20px; border-radius: 10px; font-size: 17px; padding: 10px"
-    )
+    create_btn.setStyleSheet("""
+                QPushButton {
+                    /* Left to Right: Blue (#00dbde) to Purple (#fc00ff) */
+                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                                      stop:0 #0068C3, stop:1 #6F00B9);
+                    color: white;
+                    font-size: 18px;
+                    border-radius: 10px;
+                    border: none;
+                }
+
+                QPushButton:hover {
+                    /* Slightly shift the colors or brighten on hover */
+                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                                      stop:0 #0075DB, stop:1 #0022CD);
+                                                      cursor: pointer;
+                }
+
+                QPushButton:pressed {
+                    /* Darken slightly when clicked to give feedback */
+                    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                                      stop:0 #0068C3, stop:1 #6F00B9);
+                }
+            """)
 
     name_input.setText(config.get("user"))
     path_input.setText(config.get("sshcon"))

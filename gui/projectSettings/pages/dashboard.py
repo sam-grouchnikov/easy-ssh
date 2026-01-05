@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt6.QtGui import QCursor, QPixmap
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit,
@@ -33,7 +35,7 @@ class Dashboard(QWidget):
 
         row1.addWidget(self.conn_card)
         row1.addWidget(ClusterInfo())
-        row1.addWidget(RecentlyEdited())
+        row1.addWidget(RecentlyEdited(config))
 
         main_layout.addLayout(row1)
 
@@ -86,7 +88,15 @@ class ConnectionCard(QWidget):
         layout.addSpacing(4)
 
         # Last Run
-        self.last_run_label = QLabel(f"Last run: {config.get("lastrun")}")
+        recent_runs = config.get("recentruns")
+        if not recent_runs:
+            self.last_run_label = QLabel(f"Last run: N/A")
+        else:
+            now = datetime.now()
+            date = now.strftime("%B %d, %Y")
+            time = now.strftime("%I:%M %p")
+            self.last_run_label = QLabel(f"Last run: {date} at {time}")
+
         self.last_run_label.setStyleSheet("font-size: 14px; color: #D0D0D0")
         layout.addWidget(self.last_run_label)
         main_layout.addWidget(self.wrapper)
@@ -146,20 +156,12 @@ class ClusterInfo(QWidget):
         main_layout.addWidget(self.wrapper)
 
 class RecentlyEdited(QWidget):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
-        self.init_ui()
+        self.init_ui(config)
 
-    def init_ui(self):
-        recent_runs = [
-            ["model.py", "12/30/25", "10:30pm"],
-            ["train.py", "12/30/25", "9:30pm"],
-            ["model.py", "12/30/25", "7:30pm"],
-            ["model.py", "12/30/25", "6:30pm"],
-            ["model.py", "12/30/25", "5:30pm"],
-            ["model.py", "12/30/25", "4:30pm"],
-
-        ]
+    def init_ui(self, config):
+        recent_runs = config.get("recentruns")
 
         main_layout = QVBoxLayout(self)
 
@@ -182,11 +184,16 @@ class RecentlyEdited(QWidget):
         self.recent_runs_layout = QVBoxLayout(self.recent_runs_widget)
         self.recent_runs_layout.setContentsMargins(0, 0, 0, 0)
 
-        for item in recent_runs[:3]:
-            label = QLabel(f"{item[0]} on {item[1]} at {item[2]}")
-            label.setStyleSheet("font-size: 15px; color: #BDBDBD")
+        if recent_runs:
+            for item in recent_runs[:3]:
+                label = QLabel(f"{item[0]} on {item[1]} at {item[2]}")
+                label.setStyleSheet("font-size: 15px; color: #BDBDBD")
+                self.recent_runs_layout.addWidget(label)
+                self.recent_runs_layout.addSpacing(3)
+        else:
+            label = QLabel("No Recent Runs")
             self.recent_runs_layout.addWidget(label)
-            self.recent_runs_layout.addSpacing(3)
+            label.setStyleSheet("font-size: 15px; color: #BDBDBD")
 
         self.recent_runs_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 

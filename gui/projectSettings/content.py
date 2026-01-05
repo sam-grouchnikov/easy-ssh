@@ -10,6 +10,7 @@ from gui.projectSettings.pages.SimpleSSH import SimpleSSHPage
 from gui.projectSettings.pages.cmd import cmdPage
 from backend.ssh.sshManager import SSHStreamWorker, SSHManager
 from gui.projectSettings.pages.dashboard import Dashboard
+from datetime import datetime
 
 PAGE_NAMES = [
     "Dashboard",
@@ -77,6 +78,17 @@ def setupContent(self, layout: QVBoxLayout, config):
             self.simple_ssh_page.update_directory_display("None")
             self.cmd_page.update_directory_display("None")
             return
+
+        if command.startswith("python") or command.startswith("python3"):
+            now = datetime.now()
+            date = now.strftime("%B %d, %Y")
+            time = now.strftime("%I:%M %p")
+            if "-m" in command:
+                file = command.split(" ")[2].split(".")[1] + ".py"
+            else:
+                file = command.split(" ")[1]
+
+            config.add_run([file, date, time])
 
         if command == "Ctrl+C":
             self.ssh_manager.send_interrupt()
