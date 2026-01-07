@@ -267,4 +267,4 @@ class FileTreePage(QWidget):
 
         # Trigger the load via SSH
         # We wrap in quotes to handle paths with spaces
-        self.run_func(f"cat '{file_path}'")
+        self.run_func(f"cat 'home/sam/{file_path}'")
