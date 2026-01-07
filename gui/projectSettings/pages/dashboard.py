@@ -32,9 +32,9 @@ class Dashboard(QWidget):
         # --- ROW 1 ---
         row1 = QHBoxLayout()
 
-
+        self.cluster_info = ClusterInfo()
         row1.addWidget(self.conn_card)
-        row1.addWidget(ClusterInfo())
+        row1.addWidget(self.cluster_info)
         row1.addWidget(RecentlyEdited(config))
 
         main_layout.addLayout(row1)
@@ -116,44 +116,69 @@ class ClusterInfo(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        main_layout = QVBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
 
         self.wrapper = QWidget()
         self.wrapper.setStyleSheet("background-color: #16161A; border-radius: 12px")
 
         # Set card style
-        layout = QVBoxLayout(self.wrapper)
-        layout.setSpacing(8)
-        layout.setContentsMargins(35, 15, 35, 20)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout = QVBoxLayout(self.wrapper)
+        self.layout.setSpacing(8)
+        self.layout.setContentsMargins(35, 15, 35, 20)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
 
 
         # Title
-        title = QLabel("GPU Info")
-        title.setStyleSheet("font-size: 22px; font-weight: bold;")
-        layout.addWidget(title)
-        layout.addSpacing(4)
+        self.title = QLabel("GPU Info")
+        self.title.setStyleSheet("font-size: 22px; font-weight: bold;")
+        self.layout.addWidget(self.title)
+        self.layout.addSpacing(4)
 
         # SSH Destination Header
-        type_title = QLabel("GPU Type : Nvidia RTX 3090")
-        type_title.setStyleSheet("font-size: 15px; color: #BDBDBD")
-        layout.addWidget(type_title)
-        layout.addSpacing(4)
+        self.type_title = QLabel("GPU Type : Fetched on connect")
+        self.type_title.setStyleSheet("font-size: 15px; color: #BDBDBD")
+        self.layout.addWidget(self.type_title)
+        self.layout.addSpacing(4)
 
 
         # Status Label
-        self.gpu_count = QLabel("GPU Count: 3")
+        self.gpu_count = QLabel("GPU Count: Fetched on connect")
         self.gpu_count.setStyleSheet("font-size: 15px; color: #BDBDBD")
-        layout.addWidget(self.gpu_count)
-        layout.addSpacing(4)
+        self.layout.addWidget(self.gpu_count)
+        self.layout.addSpacing(4)
 
 
         # Last Run
-        self.available_memory = QLabel("Memory Available: 91GB")
+        self.available_memory = QLabel("Memory Available: Fetched on connect")
         self.available_memory.setStyleSheet("font-size: 15px; color: #BDBDBD")
-        layout.addWidget(self.available_memory)
-        main_layout.addWidget(self.wrapper)
+        self.layout.addWidget(self.available_memory)
+        self.main_layout.addWidget(self.wrapper)
+
+    def handle_gpu_info(self, output):
+        print(output)
+        gpus = [line.strip() for line in output.strip().split('\n') if line.strip()]
+        count = len(gpus)
+        type = gpus[0]
+        self.cluster_info.type_title.setText(f"GPU Type: {type}")
+        self.cluster_info.gpu_count.setText(f"GPU Count: {count}")
+
+    def handle_gpu_mem(self, output):
+        print("Getting output in function")
+        print("Output:", output)
+        if not output.strip() or "not found" in output.lower():
+            return
+
+        try:
+            mem_values = [int(line.strip()) for line in output.strip().split('\n') if line.strip().isdigit()]
+
+            total_free_mib = sum(mem_values)
+            total_free_gb = total_free_mib / 1024
+
+            self.cluster_info.available_memory.setText(f"Memory available: {total_free_gb:.2f} GB")
+
+        except Exception as e:
+            print(f"Error parsing GPU memory: {e}")
 
 class RecentlyEdited(QWidget):
     def __init__(self, config):
@@ -185,7 +210,7 @@ class RecentlyEdited(QWidget):
         self.recent_runs_layout.setContentsMargins(0, 0, 0, 0)
 
         if recent_runs:
-            for item in recent_runs[:3]:
+            for item in reversed(recent_runs[-3:]):
                 label = QLabel(f"{item[0]} on {item[1]} at {item[2]}")
                 label.setStyleSheet("font-size: 15px; color: #BDBDBD")
                 self.recent_runs_layout.addWidget(label)

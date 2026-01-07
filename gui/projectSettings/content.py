@@ -46,6 +46,7 @@ def setupContent(self, layout: QVBoxLayout, config):
 
         if success:
             # THREADED: This won't freeze the app anymore
+            print("Running find")
             find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
             global_run_command(find_cmd, is_tree_update=True)
 
@@ -58,7 +59,7 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     def accumulate_tree_data(text):
         self.tree_data_accumulator += text
-    def global_run_command(command, is_tree_update=False, is_file_read=False):
+    def global_run_command(command, is_tree_update=False, is_file_read=False, is_gpu_check=False, is_gpu_mem=False):
         # 1. Don't run if already busy
 
         if command == "exit":
@@ -108,9 +109,10 @@ def setupContent(self, layout: QVBoxLayout, config):
             actual_command = command
 
             # 2. Create the worker with the augmented command
+
         self.worker = SSHStreamWorker(self.ssh_manager, actual_command)
         # 3. Create Worker
-        self.worker = SSHStreamWorker(self.ssh_manager, actual_command)
+        print(f"Tree: {is_tree_update}, GPU check: {is_gpu_check}, GPU mem: {is_gpu_mem}")
 
         if is_tree_update:
             self.tree_data_accumulator = ""

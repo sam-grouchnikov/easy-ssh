@@ -79,6 +79,7 @@ class SSHManager:
                 break
             time.sleep(0.01)
 
+
     def get_pwd_silently(self):
         """Fetches directory using a separate exec session to stay truly silent."""
         if not self.client:  # The paramiko.SSHClient object

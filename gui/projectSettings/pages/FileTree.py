@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
-    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit
+    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit, QFrame
 )
 from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem, QFont
 from PyQt6.QtCore import Qt, QSize
@@ -117,14 +117,45 @@ class FileTreePage(QWidget):
 
         self.editor_widget = QWidget()
         self.editor_layout = QVBoxLayout(self.editor_widget)
+        self.editor_layout.setSpacing(0)
+        self.editor_layout.setContentsMargins(0, 0, 0, 0)
 
+        self.button_layout_widget = QWidget()
+        self.button_layout = QHBoxLayout(self.button_layout_widget)
+        self.button_layout.setContentsMargins(0, 0, 0, 5)
         self.save_button = QPushButton("Save Changes")
+        self.save_button.setFixedHeight(30)
         self.save_button.setFixedWidth(120)
+        self.save_button.setStyleSheet("""
+                    QPushButton {
+                        color: white;
+                        font-size: 14px;
+                        border: 1px solid orange;
+                        border-radius: 10px;
+                    }
+                    QPushButton:hover {{
+                        background-color: #1E1E1E;
+                    }}
+                """)
         self.save_button.clicked.connect(self.save_remote_file)
+        self.save_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.save_button.setEnabled(False)
-        self.editor_layout.addWidget(self.save_button)
+        self.button_layout.addWidget(self.save_button, alignment=Qt.AlignmentFlag.AlignRight)
 
+        self.editor_container = QFrame()
+        self.editor_container.setStyleSheet("""
+                    QFrame {
+                        border: 2px solid #3B3B3B;
+                        border-radius: 12px;
+                        background-color: #1e1e1e;
+                    }
+                """)
+
+        container_layout = QVBoxLayout(self.editor_container)
+        self.editor_layout.addWidget(self.button_layout_widget)
+        self.editor_layout.addSpacing(5)
         self.editor = QPlainTextEdit()
+        self.editor.setAutoFillBackground(True)
         self.editor.setReadOnly(True)  # Start as read-only until a file is loaded
         self.editor.setPlaceholderText("Select a file to view its content...")
 
@@ -132,15 +163,8 @@ class FileTreePage(QWidget):
         font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
         self.editor.setFont(font)
 
-        self.editor.setStyleSheet("""
-                    QPlainTextEdit {
-                        color: #d4d4d4;
-                        background-color: #1e1e1e;
-                        border: 1px solid #333;
-                        padding: 10px;
-                    }
-                """)
-        self.editor_layout.addWidget(self.editor)
+        container_layout.addWidget(self.editor)
+        self.editor_layout.addWidget(self.editor_container)
         self.highlighter = PythonHighlighter(self.editor.document())
         # Add widgets to layout
         self.main_layout.addWidget(self.tree)
