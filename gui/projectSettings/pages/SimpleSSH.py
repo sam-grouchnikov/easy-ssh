@@ -51,8 +51,8 @@ class SimpleSSHPage(QWidget):
         row2_layout = QHBoxLayout(row2)
         row2_layout.setContentsMargins(0, 0, 0, 0)
         row2_layout.setSpacing(15)
-        self.console = ConsoleOutput()
-
+        # Pass the function reference (without parentheses)
+        self.console = ConsoleOutput(on_path_found=self.update_directory_display)
         # Pass the run_func into the menu so buttons can trigger commands
         self.action_menu = ActionButtonMenu(self.console, self.run_func, self.connect_func)
         self.action_menu.setMaximumWidth(425)
@@ -77,5 +77,6 @@ class SimpleSSHPage(QWidget):
         else:
             self.status_label.setText("Status: Disconnected")
             self.icon_label.setPixmap(self.red_icon)
+
 
 

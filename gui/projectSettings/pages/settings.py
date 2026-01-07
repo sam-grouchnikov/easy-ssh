@@ -29,6 +29,7 @@ class SettingsPage(QWidget):
             self.inputs['github_url'].setText(config.get("giturl"))
             self.inputs['github_user'].setText(config.get("gituser"))
             self.inputs['github_token'].setText(config.get("gitpat"))
+            self.inputs['ssh_port'].setText(str(config.get("sshport")))
 
     def save_changes(self):
         updated_data = {
@@ -41,6 +42,7 @@ class SettingsPage(QWidget):
             "git_url": self.inputs['github_url'].text(),
             "git_user": self.inputs['github_user'].text(),
             "git_path": self.inputs['github_token'].text(),
+            "ssh_port": self.inputs['ssh_port'].text(),
         }
 
 
@@ -80,8 +82,37 @@ class SettingsPage(QWidget):
         gen_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         gen_vbox.addWidget(gen_title)
 
-        add_input(gen_vbox, "Project Name", "name").setReadOnly(True)  # PK shouldn't be edited easily
-        add_input(gen_vbox, "SSH Connection Path", "ssh_path")
+        add_input(gen_vbox, "Project Name", "name").setReadOnly(True)
+
+        # Label for the row
+        ssh_label = QLabel("SSH Connection Path & Port")
+        ssh_label.setStyleSheet(label_style)
+        gen_vbox.addWidget(ssh_label)
+
+        # Horizontal container for the two inputs
+        ssh_row = QHBoxLayout()
+        ssh_row.setSpacing(10)
+
+        # 1. SSH Path Input (The main wide field)
+        ssh_path_input = QLineEdit()
+        ssh_path_input.setStyleSheet(input_style)
+        ssh_path_input.setFixedHeight(33)
+        ssh_path_input.setPlaceholderText("")
+        self.inputs['ssh_path'] = ssh_path_input
+        ssh_row.addWidget(ssh_path_input, 4)
+
+        # 2. Port Input (The smaller field)
+        ssh_port_input = QLineEdit()
+        ssh_port_input.setStyleSheet(input_style)
+        ssh_port_input.setFixedHeight(33)
+        ssh_port_input.setFixedWidth(120)
+        ssh_port_input.setPlaceholderText("")
+        self.inputs['ssh_port'] = ssh_port_input
+        ssh_row.addWidget(ssh_port_input)
+
+        gen_vbox.addLayout(ssh_row)
+
+
         add_input(gen_vbox, "SSH Password", "ssh_psw", True)
         grid_layout.addWidget(gen_card, 0, 0)
 

@@ -188,6 +188,23 @@ class cmdPage(QWidget):
         if not hasattr(self, 'current_bubble') or self.current_bubble is None:
             return
 
+        if "SYNC_DIR:" in raw_text:
+            try:
+                # Split the text to find the path
+                parts = raw_text.split("SYNC_DIR:")
+                path_line = parts[1].splitlines()[0].strip()
+                print(path_line)
+                if path_line:
+                    self.update_directory_display(path_line)
+
+                # Remove the SYNC_DIR line from the output so user doesn't see it
+                raw_text = parts[0] + "\n".join(parts[1].splitlines()[1:])
+            except Exception as e:
+                print(f"Sync Error: {e}")
+
+        if not raw_text.strip():
+            return
+
         try:
             clean_text = self.strip_ansi_codes(raw_text)
             if not clean_text:
@@ -223,12 +240,13 @@ class cmdPage(QWidget):
         self.set_busy(False)
         if hasattr(self, 'current_bubble'):
             current = self.current_bubble.text()
-            self.current_bubble.setText(current + "\n\n[Command Finished]")
+            self.current_bubble.setText(current + "\n[Command Finished]")
         self.add_separator()
         self.input_field.setFocus()
 
     def update_directory_display(self, path):
         clean_path = path.strip()
+        print("Updating to ", clean_path)
         self.dir_label.setText(f"Current Directory: {clean_path}")
 
     def update_connection_status(self, connected: bool):

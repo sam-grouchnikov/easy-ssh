@@ -34,7 +34,6 @@ def setupContent(self, layout: QVBoxLayout, config):
         self.ssh_manager = SSHManager(server, user, port, psw)
     else:
         self.ssh_manager = None
-    print("Manager created")
 
     # 2. Define the SHARED Logic for running commands
     def global_handle_connect():
@@ -94,24 +93,34 @@ def setupContent(self, layout: QVBoxLayout, config):
             self.ssh_manager.send_interrupt()
             return
 
+        if command.startswith("cd"):
+            self.cmd_page.add_message("System: Successfully changed directory")
+            self.simple_ssh_page.console.update_output("System: Successfully changed directory")
+
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
             return
 
-            # 3. Create Worker
-        self.worker = SSHStreamWorker(self.ssh_manager, command)
+        if not any([is_tree_update, is_file_read]) and command != "exit":
+            # The semicolon ensures this runs even if the first command fails
+            # We use a unique marker 'SYNC_DIR:'
+            actual_command = f"{command} && echo 'SYNC_DIR:'$(pwd) || echo 'SYNC_DIR:'$(pwd)"
+        else:
+            actual_command = command
+
+            # 2. Create the worker with the augmented command
+        self.worker = SSHStreamWorker(self.ssh_manager, actual_command)
+        # 3. Create Worker
+        self.worker = SSHStreamWorker(self.ssh_manager, actual_command)
 
         if is_tree_update:
-            print("Ckpt1")
             self.tree_data_accumulator = ""
 
             self.worker.output_received.connect(accumulate_tree_data)
-            print("Ckpt2")
 
             self.worker.finished.connect(
                 lambda: self.file_tree_page.rebuild_tree(self.tree_data_accumulator),
                 Qt.ConnectionType.QueuedConnection
             )
-            print("Ckpt3")
         elif is_file_read:
             # Clear the editor first
             self.file_tree_page.editor.clear()
@@ -119,24 +128,18 @@ def setupContent(self, layout: QVBoxLayout, config):
             self.worker.output_received.connect(self.file_tree_page.display_file_content)
         else:
             # Normal terminal behavior
+            self.cmd_page.create_new_output_bubble()
             self.worker.output_received.connect(self.cmd_page.update_live_output)
             self.worker.output_received.connect(self.simple_ssh_page.console.update_output)
 
-        print("Ckpt4")
         self.worker.finished.connect(global_finished)
-        print("Ckpt5")
 
         self.worker.start()
-        print("Ckpt6")
 
     def global_finished():
         self.cmd_page.on_command_finished()
         self.simple_ssh_page.console.finish_command()
 
-        if self.ssh_manager:
-            new_path = self.ssh_manager.get_pwd_silently()
-            self.simple_ssh_page.update_directory_display(new_path)
-            self.cmd_page.update_directory_display(new_path)
 
     # ---- UI Setup ----
     self.title_label = QLabel()

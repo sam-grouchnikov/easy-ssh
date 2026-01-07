@@ -1,6 +1,6 @@
 import re
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QFrame, QPushButton, QScrollArea, \
     QPlainTextEdit, QInputDialog
 from PyQt6.QtGui import QPixmap, QCursor, QTextCursor
@@ -85,7 +85,7 @@ class ActionButtonMenu(QWidget):
         self.term_con_btn = self.make_btn("Terminate Connection", "#5F1D1D")
         self.term_con_btn.clicked.connect(lambda: self.run_func("exit"))
         self.term_run_btn = self.make_btn("Terminate Run", "#5F1D1D")
-        self.term_con_btn.clicked.connect(lambda: self.run_func("Ctrl+C"))
+        self.term_run_btn.clicked.connect(lambda: self.run_func("Ctrl+C"))
         row2.addWidget(self.term_con_btn)
         row2.addWidget(self.term_run_btn)
         row2.addStretch()
@@ -237,8 +237,9 @@ class ActionButtonMenu(QWidget):
 
 
 class ConsoleOutput(QWidget):
-    def __init__(self):
+    def __init__(self, on_path_found=None):
         super().__init__()
+        self.on_path_found = on_path_found
         self.initUI()
 
     def initUI(self):
@@ -298,6 +299,20 @@ class ConsoleOutput(QWidget):
         self.apply_line_spacing()
 
     def update_output(self, raw_text):
+        if "SYNC_DIR:" in raw_text:
+            try:
+                # Split the text to find the path
+                parts = raw_text.split("SYNC_DIR:")
+                path_line = parts[1].splitlines()[0].strip()
+                print(path_line)
+                if path_line:
+                    self.on_path_found(path_line)
+                # Remove the SYNC_DIR line from the output so user doesn't see it
+                raw_text = parts[0] + "\n".join(parts[1].splitlines()[1:])
+            except Exception as e:
+                print(f"Sync Error: {e}")
+
+
         """Appends output and handles \r only for progress bars."""
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
         clean_text = ansi_escape.sub('', raw_text)

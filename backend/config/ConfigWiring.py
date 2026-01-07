@@ -27,7 +27,7 @@ class AppConfig:
             "gituser": "",
             "gitpat": "",
             "lastrun": "",
-            "recentruns": []
+            "recentruns": [],
         }
 
         self.data = defaults
@@ -54,4 +54,10 @@ class AppConfig:
 
     def add_run(self, run):
         self.data["recentruns"].append(run)
+        self.save()
+
+    def set_gpu_count_and_type(self, raw_output):
+        split = raw_output.split("\n")
+        self.data["gpucount"] = len(split)
+        self.data["gputype"] = split[0]
         self.save()
