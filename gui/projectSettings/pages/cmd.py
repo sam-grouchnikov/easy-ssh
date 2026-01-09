@@ -236,13 +236,14 @@ class cmdPage(QWidget):
         except RuntimeError:
             self.current_bubble = None
 
-    def on_command_finished(self):
+    def on_command_finished(self, add_bubble=True):
         self.set_busy(False)
-        if hasattr(self, 'current_bubble'):
-            current = self.current_bubble.text()
-            self.current_bubble.setText(current + "\n[Command Finished]")
-        self.add_separator()
-        self.input_field.setFocus()
+        if add_bubble:
+            if hasattr(self, 'current_bubble'):
+                current = self.current_bubble.text()
+                self.current_bubble.setText(current + "\n[Command Finished]")
+            self.add_separator()
+            self.input_field.setFocus()
 
     def update_directory_display(self, path):
         clean_path = path.strip()

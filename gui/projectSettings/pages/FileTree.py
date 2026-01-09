@@ -162,10 +162,10 @@ class FileTreePage(QWidget):
             print("checkpihhhh", self.home_dir)
             self.current_open_path = "" + self.home_dir + "/" + file_path
             print(f"Current open_path: {self.current_open_path}")
-            self.load_remote_file(file_path)
+            self.load_remote_file(self.current_open_path)
 
     def load_remote_file(self, path):
-        print("Loading remote file")
+        print(f"Loading remote file: {path}")
         self.editor.setPlainText(f"Loading {path}...")
         cmd = f"cat '{path}'"
         self.run_func(cmd, is_file_read=True)
@@ -193,7 +193,7 @@ class FileTreePage(QWidget):
 
         # Run the command. We don't need a special flag here unless
         # you want to capture the 'Success' message specifically.
-        self.run_func(command)
+        self.run_func(command, is_file_save=True)
 
         # Reset button after a short delay or via the 'finished' signal
         self.save_button.setText("Save Changes")
@@ -250,4 +250,4 @@ class FileTreePage(QWidget):
 
         # Trigger the load via SSH
         # We wrap in quotes to handle paths with spaces
-        self.run_func(f"cat '{file_path}'")
+        self.run_func(f"cat '{file_path}'", is_file_read=True)

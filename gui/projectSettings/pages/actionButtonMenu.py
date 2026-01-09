@@ -350,12 +350,13 @@ class ConsoleOutput(QWidget):
         # Set the line height once in initUI instead.
         self.text_display.verticalScrollBar().setValue(v_scroll)
 
-    def finish_command(self):
+    def finish_command(self, add_bubble=True):
         """Appends the finish marker quietly."""
-        cursor = self.text_display.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End)
-        cursor.insertText(f"\n[Command Finished]\n{'-' * 40}\n")
-        self.apply_line_spacing()
+        if add_bubble:
+            cursor = self.text_display.textCursor()
+            cursor.movePosition(QTextCursor.MoveOperation.End)
+            cursor.insertText(f"\n[Command Finished]\n{'-' * 40}\n")
+            self.apply_line_spacing()
 
     def clear(self):
         self.text_display.setPlainText("")

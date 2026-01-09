@@ -37,6 +37,7 @@ def setupContent(self, layout: QVBoxLayout, config):
     print("Manager created")
     self.home_dir = None
     self.current_dir = None
+    self.recent_cmd = None
 
     # 2. Define the SHARED Logic for running commands
     def global_handle_connect():
@@ -64,8 +65,9 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     def accumulate_tree_data(text):
         self.tree_data_accumulator += text
-    def global_run_command(command, is_tree_update=False, is_file_read=False):
+    def global_run_command(command, is_tree_update=False, is_file_read=False, is_file_save=False):
         # 1. Don't run if already busy
+        self.recent_cmd = command
 
         if command == "exit":
             self.cmd_page.add_message("$ exit")
@@ -124,6 +126,8 @@ def setupContent(self, layout: QVBoxLayout, config):
                 Qt.ConnectionType.QueuedConnection
             )
             print("Ckpt3")
+        elif is_file_save:
+            pass
         elif is_file_read:
             # Clear the editor first
             self.file_tree_page.editor.clear()
@@ -144,8 +148,13 @@ def setupContent(self, layout: QVBoxLayout, config):
         print("Ckpt6")
 
     def global_finished():
-        self.cmd_page.on_command_finished()
-        self.simple_ssh_page.console.finish_command()
+        cmd_start = self.recent_cmd.split(' ')[0]
+        if cmd_start in ["cd", "cat"]:
+            add_bubble = False
+        else:
+            add_bubble = True
+        self.cmd_page.on_command_finished(add_bubble)
+        self.simple_ssh_page.console.finish_command(add_bubble)
 
         self.simple_ssh_page.update_directory_display(self.current_dir)
         self.cmd_page.update_directory_display(self.current_dir)
