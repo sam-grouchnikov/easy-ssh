@@ -34,6 +34,9 @@ def setupContent(self, layout: QVBoxLayout, config):
         self.ssh_manager = SSHManager(server, user, port, psw)
     else:
         self.ssh_manager = None
+    print("Manager created")
+    self.home_dir = None
+    self.current_dir = None
 
     # 2. Define the SHARED Logic for running commands
     def global_handle_connect():
@@ -46,12 +49,14 @@ def setupContent(self, layout: QVBoxLayout, config):
 
         if success:
             # THREADED: This won't freeze the app anymore
-            print("Running find")
             find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
             global_run_command(find_cmd, is_tree_update=True)
 
             # Keep directory sync silent
             new_path = self.ssh_manager.get_pwd_silently()
+            self.home_dir = new_path
+            self.file_tree_page.update_home(new_path)
+            self.current_dir = new_path
             self.simple_ssh_page.update_directory_display(new_path)
             self.cmd_page.update_directory_display(new_path)
 
@@ -59,7 +64,7 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     def accumulate_tree_data(text):
         self.tree_data_accumulator += text
-    def global_run_command(command, is_tree_update=False, is_file_read=False, is_gpu_check=False, is_gpu_mem=False):
+    def global_run_command(command, is_tree_update=False, is_file_read=False):
         # 1. Don't run if already busy
 
         if command == "exit":
@@ -95,34 +100,30 @@ def setupContent(self, layout: QVBoxLayout, config):
             return
 
         if command.startswith("cd"):
-            self.cmd_page.add_message("System: Successfully changed directory")
-            self.simple_ssh_page.console.update_output("System: Successfully changed directory")
+            appended = command.split(' ')[1]
+            if appended == '~':
+                self.current_dir = self.home_dir
+            else:
+                self.current_dir += f"/{appended}"
 
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
             return
 
-        if not any([is_tree_update, is_file_read]) and command != "exit":
-            # The semicolon ensures this runs even if the first command fails
-            # We use a unique marker 'SYNC_DIR:'
-            actual_command = f"{command} && echo 'SYNC_DIR:'$(pwd) || echo 'SYNC_DIR:'$(pwd)"
-        else:
-            actual_command = command
-
-            # 2. Create the worker with the augmented command
-
-        self.worker = SSHStreamWorker(self.ssh_manager, actual_command)
-        # 3. Create Worker
-        print(f"Tree: {is_tree_update}, GPU check: {is_gpu_check}, GPU mem: {is_gpu_mem}")
+            # 3. Create Worker
+        self.worker = SSHStreamWorker(self.ssh_manager, command)
 
         if is_tree_update:
+            print("Ckpt1")
             self.tree_data_accumulator = ""
 
             self.worker.output_received.connect(accumulate_tree_data)
+            print("Ckpt2")
 
             self.worker.finished.connect(
                 lambda: self.file_tree_page.rebuild_tree(self.tree_data_accumulator),
                 Qt.ConnectionType.QueuedConnection
             )
+            print("Ckpt3")
         elif is_file_read:
             # Clear the editor first
             self.file_tree_page.editor.clear()
@@ -131,17 +132,23 @@ def setupContent(self, layout: QVBoxLayout, config):
         else:
             # Normal terminal behavior
             self.cmd_page.create_new_output_bubble()
+
             self.worker.output_received.connect(self.cmd_page.update_live_output)
             self.worker.output_received.connect(self.simple_ssh_page.console.update_output)
 
+        print("Ckpt4")
         self.worker.finished.connect(global_finished)
+        print("Ckpt5")
 
         self.worker.start()
+        print("Ckpt6")
 
     def global_finished():
         self.cmd_page.on_command_finished()
         self.simple_ssh_page.console.finish_command()
 
+        self.simple_ssh_page.update_directory_display(self.current_dir)
+        self.cmd_page.update_directory_display(self.current_dir)
 
     # ---- UI Setup ----
     self.title_label = QLabel()
@@ -162,7 +169,7 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     self.simple_ssh_page = SimpleSSHPage(global_run_command, global_handle_connect)
     self.dashboard = Dashboard(config)
-    self.file_tree_page = FileTreePage(global_run_command)
+    self.file_tree_page = FileTreePage(global_run_command, self.home_dir)
 
     # Add pages to the stack
     self.stack.addWidget(self.dashboard)
