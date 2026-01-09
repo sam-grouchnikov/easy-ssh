@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
-    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit
+    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit, QInputDialog
 )
 from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem, QFont
 from PyQt6.QtCore import Qt, QSize
@@ -79,10 +79,11 @@ def build_nested_dict(paths):
 
 
 class FileTreePage(QWidget):
-    def __init__(self, run_func, home_dir):
+    def __init__(self, run_func, home_dir, config):
         super().__init__()
         self.run_func = run_func
         self.home_dir = home_dir
+        self.config = config
 
 
         # UI Setup
@@ -120,10 +121,43 @@ class FileTreePage(QWidget):
         self.editor_layout = QVBoxLayout(self.editor_widget)
 
         self.save_button = QPushButton("Save Changes")
-        self.save_button.setFixedWidth(120)
         self.save_button.clicked.connect(self.save_remote_file)
         self.save_button.setEnabled(False)
-        self.editor_layout.addWidget(self.save_button)
+        self.save_button.setFixedSize(140, 30)
+        self.save_button.setStyleSheet("""
+                QPushButton {
+                border: 1px solid orange;
+                border-radius: 10px;
+                font-size: 14px;
+                }
+                QPushButton:hover {
+                background-color: #20201F
+                }
+                QPushButton:pressed {
+                background-color: #18181F
+                }
+        """)
+        self.save_button.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        self.transfer_button = QPushButton("Transfer to Local Machine")
+        self.transfer_button.setEnabled(False)
+        self.transfer_button.clicked.connect(self.transfer_remote_file)
+        self.transfer_button.setFixedSize(200, 30)
+        self.transfer_button.setStyleSheet("""
+                        QPushButton {
+                        border: 1px solid CornflowerBlue;
+                        border-radius: 10px;
+                        font-size: 14px;
+                        }
+                        QPushButton:hover {
+                        background-color: #20201F
+                        }
+                        QPushButton:pressed {
+                        background-color: #18181F
+                        }
+                """)
+        self.transfer_button.setCursor(Qt.CursorShape.PointingHandCursor)
+
 
         self.editor = QPlainTextEdit()
         self.editor.setReadOnly(True)  # Start as read-only until a file is loaded
@@ -133,18 +167,33 @@ class FileTreePage(QWidget):
         font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
         self.editor.setFont(font)
 
-        self.editor.setStyleSheet("""
-                    QPlainTextEdit {
-                        color: #d4d4d4;
-                        background-color: #1e1e1e;
-                        border: 1px solid #333;
-                        padding: 10px;
-                    }
+        self.editor_widget.setStyleSheet("""
+                         background-color: #18181F;
+                        border: 1px solid #555555;
+                        border-radius: 10px;
+                        font-size: 16px;
+                    
                 """)
         self.editor_layout.addWidget(self.editor)
+        self.editor_layout.addSpacing(10)
+
+        self.button_layout_widget = QWidget()
+        self.button_layout = QHBoxLayout()
+        self.button_layout_widget.setStyleSheet("border: None")
+        self.button_layout_widget.setLayout(self.button_layout)
+
+        self.button_layout.addStretch(1)
+        self.button_layout.addWidget(self.save_button, alignment=Qt.AlignmentFlag.AlignRight)
+        self.button_layout.addSpacing(7)
+        self.button_layout.addWidget(self.transfer_button, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.editor_layout.addWidget(self.button_layout_widget)
+
+
         self.highlighter = PythonHighlighter(self.editor.document())
         # Add widgets to layout
         self.main_layout.addWidget(self.tree)
+        self.main_layout.addSpacing(15)
         self.main_layout.addWidget(self.editor_widget)
         self.current_open_path = None
 
@@ -175,6 +224,7 @@ class FileTreePage(QWidget):
         self.editor.setPlainText(content)
         self.editor.setReadOnly(False)
         self.save_button.setEnabled(True)
+        self.transfer_button.setEnabled(True)
 
     def save_remote_file(self):
         print("Saving remote file")
@@ -199,6 +249,17 @@ class FileTreePage(QWidget):
         self.save_button.setText("Save Changes")
         self.save_button.setEnabled(True)
         print("Saved")
+
+    def transfer_remote_file(self):
+        local_path, ok = QInputDialog.getText(
+            self,
+            "Remote Path",
+            "Enter local path:",
+        )
+        port = self.config.get("port")
+        remote_path = self.current_open_path
+        command = f"scp -P {port} {self.config.get("sshcon")}:{remote_path} {local_path}"
+        self.run_func(command)
 
 
     def rebuild_tree(self, raw_find_output):
