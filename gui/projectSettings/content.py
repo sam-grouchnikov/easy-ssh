@@ -9,14 +9,12 @@ from gui.projectSettings.pages.settings import SettingsPage
 from gui.projectSettings.pages.SimpleSSH import SimpleSSHPage
 from gui.projectSettings.pages.cmd import cmdPage
 from backend.ssh.sshManager import SSHStreamWorker, SSHManager
-from gui.projectSettings.pages.dashboard import Dashboard
 from datetime import datetime
 
 PAGE_NAMES = [
-    "Dashboard",
-    "File Tree",
-    "Terminal",
     "Simple SSH",
+    "Terminal",
+    "File Tree",
     "Logged Metrics",
     "Project Settings",
 ]
@@ -46,7 +44,6 @@ def setupContent(self, layout: QVBoxLayout, config):
         self.cmd_page.add_message(f"System: {msg}")
         self.simple_ssh_page.update_connection_status(success)
         self.cmd_page.update_connection_status(success)
-        self.dashboard.conn_card.update_connection_status(success)
 
         if success:
             # THREADED: This won't freeze the app anymore
@@ -79,7 +76,6 @@ def setupContent(self, layout: QVBoxLayout, config):
             # 2. Update the UI Status
             self.simple_ssh_page.update_connection_status(False)
             self.cmd_page.update_connection_status(False)
-            self.dashboard.conn_card.update_connection_status(False)
             self.cmd_page.add_message("System: Disconnected.")
 
             self.simple_ssh_page.update_directory_display("None")
@@ -177,16 +173,14 @@ def setupContent(self, layout: QVBoxLayout, config):
     self.cmd_page = cmdPage(self.ssh_manager, global_run_command, global_handle_connect)
 
     self.simple_ssh_page = SimpleSSHPage(global_run_command, global_handle_connect)
-    self.dashboard = Dashboard(config)
     self.file_tree_page = FileTreePage(global_run_command, self.home_dir, config, self.ssh_manager)
 
     # Add pages to the stack
-    self.stack.addWidget(self.dashboard)
-    self.stack.addWidget(self.file_tree_page)  # Index 0
-    self.stack.addWidget(self.cmd_page)  # Index 1
-    self.stack.addWidget(self.simple_ssh_page)  # Index 2
-    self.stack.addWidget(GraphsPage())  # Index 3
-    self.stack.addWidget(SettingsPage(config))  # Index 4
+    self.stack.addWidget(self.simple_ssh_page)
+    self.stack.addWidget(self.cmd_page)
+    self.stack.addWidget(self.file_tree_page)
+    self.stack.addWidget(GraphsPage())
+    self.stack.addWidget(SettingsPage(config))
 
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
