@@ -1,11 +1,16 @@
+import os
+
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
-    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit, QInputDialog
+    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit, QInputDialog, QFileDialog, QMessageBox
 )
 from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem, QFont
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
 from PyQt6.QtCore import QRegularExpression
+import subprocess
+
+from scp import SCPClient
 
 
 class PythonHighlighter(QSyntaxHighlighter):
@@ -79,11 +84,12 @@ def build_nested_dict(paths):
 
 
 class FileTreePage(QWidget):
-    def __init__(self, run_func, home_dir, config):
+    def __init__(self, run_func, home_dir, config, ssh_manager):
         super().__init__()
         self.run_func = run_func
         self.home_dir = home_dir
         self.config = config
+        self.ssh_manager = ssh_manager
 
 
         # UI Setup
@@ -233,33 +239,47 @@ class FileTreePage(QWidget):
 
         content = self.editor.toPlainText()
 
-        # We use a 'heredoc' to write the file.
-        # 'EOF' is quoted to prevent the shell from evaluating variables like $HOME
         print(f"Saving to {self.current_open_path}")
         command = f"cat << 'EOF' > {self.current_open_path}\n{content}\nEOF"
 
         self.save_button.setText("Saving...")
         self.save_button.setEnabled(False)
 
-        # Run the command. We don't need a special flag here unless
-        # you want to capture the 'Success' message specifically.
         self.run_func(command, is_file_save=True)
 
         # Reset button after a short delay or via the 'finished' signal
         self.save_button.setText("Save Changes")
         self.save_button.setEnabled(True)
-        print("Saved")
+        QMessageBox.information(self, "Success", "File saved successfully!")
 
     def transfer_remote_file(self):
-        local_path, ok = QInputDialog.getText(
-            self,
-            "Remote Path",
-            "Enter local path:",
-        )
-        port = self.config.get("port")
-        remote_path = self.current_open_path
-        command = f"scp -P {port} {self.config.get("sshcon")}:{remote_path} {local_path}"
-        self.run_func(command)
+        if not self.current_open_path:
+            return
+
+        # Ensure the SSH Manager is actually connected
+        if not self.ssh_manager or not self.ssh_manager.client:
+            QMessageBox.warning(self, "Connection Error", "Please connect to SSH first.")
+            return
+
+        # 1. Get the local destination
+        local_dir = QFileDialog.getExistingDirectory(self, "Select Save Folder")
+
+        if local_dir:
+            try:
+                # 2. Get the transport from your existing Paramiko connection
+                transport = self.ssh_manager.client.get_transport()
+
+                # 3. Use SCPClient to download the file
+                with SCPClient(transport) as scp:
+                    print(f"Downloading: {self.current_open_path}")
+                    scp.get(self.current_open_path, local_dir)
+
+                QMessageBox.information(self, "Success", "File transferred successfully!")
+
+            except Exception as e:
+                QMessageBox.critical(self, "Transfer Failed", f"Error: {str(e)}")
+
+
 
 
     def rebuild_tree(self, raw_find_output):

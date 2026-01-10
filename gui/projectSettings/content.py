@@ -178,7 +178,7 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     self.simple_ssh_page = SimpleSSHPage(global_run_command, global_handle_connect)
     self.dashboard = Dashboard(config)
-    self.file_tree_page = FileTreePage(global_run_command, self.home_dir, config)
+    self.file_tree_page = FileTreePage(global_run_command, self.home_dir, config, self.ssh_manager)
 
     # Add pages to the stack
     self.stack.addWidget(self.dashboard)
