@@ -179,14 +179,14 @@ def setupContent(self, layout: QVBoxLayout, config):
     self.stack.addWidget(self.simple_ssh_page)
     self.stack.addWidget(self.cmd_page)
     self.stack.addWidget(self.file_tree_page)
-    self.stack.addWidget(GraphsPage())
+    self.stack.addWidget(GraphsPage(config))
     self.stack.addWidget(SettingsPage(config))
 
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)
 
     # ---- Navigation Logic ----
-    def update_title(index: int):
+    def update_title():
         user = config.get("user")
         if user == "":
             self.title_label.setText("Welcome to Easy-SSH!")
@@ -200,4 +200,4 @@ def setupContent(self, layout: QVBoxLayout, config):
 
     self.stack.currentChanged.connect(update_title)
     self.stack.setCurrentIndex(0)
-    update_title(0)
+    update_title()

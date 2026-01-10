@@ -2,7 +2,7 @@ from PyQt6.QtGui import QFont, QColor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QListWidget, QListWidgetItem,
-    QLabel, QScrollArea, QGridLayout
+    QLabel, QScrollArea, QGridLayout, QPushButton
 )
 from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -50,7 +50,6 @@ class MetricsPlot(QWidget):
         super().__init__()
 
         self.setStyleSheet("background-color: #151515;")
-
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -130,11 +129,28 @@ class MetricsDisplay(QScrollArea):
 
 
 class GraphsPage(QWidget):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
 
         main_layout = QHBoxLayout(self)
         main_layout.setSpacing(10)
+        self.config = config
+
+        self.side_widget = QWidget()
+        self.side_layout = QVBoxLayout(self.side_widget)
+
+        self.refresh_btn = QPushButton("Refresh List")
+        self.refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #202020; 
+                color: white; 
+                border-radius: 5px; 
+                padding: 5px;
+            }
+            QPushButton:hover { background-color: #333333; }
+        """)
+        self.refresh_btn.clicked.connect(self.refresh_runs)
+        self.side_layout.addWidget(self.refresh_btn)
 
         self.sidebar = QListWidget()
         self.sidebar.setMaximumWidth(150)
@@ -176,25 +192,25 @@ class GraphsPage(QWidget):
         self.sidebar.viewport().setMouseTracking(True)
 
         self.metrics_display = MetricsDisplay()
+        self.side_layout.addWidget(self.sidebar)
 
-        main_layout.addWidget(self.sidebar)
+        main_layout.addWidget(self.side_widget)
         main_layout.addWidget(self.metrics_display, stretch=1)
 
-        from database.database_crud import get_project
         self.runs = []
-        # project = get_project(project_name)
-        # if project is not None:
-        #     print("Project is not none")
-        #     user = project['wandb_user']
-        #     proj = project['wandb_project']
-        #     api_key = project['wandb_api']
-        #     print(f"USER: {user}, PROJECT: {proj}, API_KEY: {api_key}")
-        #     api = wandb.Api()
-        #     wandb_project = f"{user}/{proj}"
-        #     self.runs = list(api.runs(wandb_project))
-        #     print("Finished wandb")
-        # else:
-        #     user, proj, api_key = None, None, None
+        print("Project is not none")
+        user = self.config.get("wandbuser")
+        proj = self.config.get("wandbproj")
+        api_key = self.config.get("wandbapi")
+        api = wandb.Api()
+        wandb_project = f"{user}/{proj}"
+        if user:
+            print(f"Details: user: {user}, project: {wandb_project}")
+            self.runs = list(api.runs(wandb_project))
+        else:
+            self.runs = []
+        print("Finished wandb")
+
 
 
 
@@ -219,6 +235,46 @@ class GraphsPage(QWidget):
             self.sidebar.addItem(item)
 
         self.sidebar.itemClicked.connect(self.on_run_selected)
+
+    def refresh_runs(self):
+        """Refreshes the run list from WandB and updates the sidebar."""
+        user = self.config.get("wandbuser")
+        proj = self.config.get("wandbproj")
+
+        if not user or not proj:
+            print("WandB config incomplete.")
+            return
+        self.refresh_btn.setText("Refreshing...")
+        self.refresh_btn.setEnabled(False)
+        from PyQt6.QtWidgets import QApplication
+        QApplication.processEvents()
+        try:
+            # 1. Re-fetch data from API
+            api = wandb.Api()
+            wandb_project = f"{user}/{proj}"
+            self.runs = list(api.runs(wandb_project))
+
+            # 2. Clear current sidebar items (except the "Runs" header)
+            # We start from index 1 to keep the "Runs" title at index 0
+            while self.sidebar.count() > 1:
+                self.sidebar.takeItem(1)
+
+            # 3. Re-populate the list
+            for run in self.runs:
+                item = QListWidgetItem(run.name)
+                item.setData(Qt.ItemDataRole.UserRole, run)
+                item.setFont(QFont("Arial", 13))
+                item.setForeground(QColor("#FFFFFF"))
+                self.sidebar.addItem(item)
+
+            print(f"Refreshed {len(self.runs)} runs.")
+
+        except Exception as e:
+            print(f"Error refreshing WandB runs: {e}")
+        finally:
+            # 5. Restore Button State
+            self.refresh_btn.setText("Refresh List")
+            self.refresh_btn.setEnabled(True)
 
     def on_run_selected(self, item: QListWidgetItem):
         run = item.data(Qt.ItemDataRole.UserRole)

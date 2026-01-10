@@ -227,7 +227,7 @@ def projectOptions(navigate, config):
     button_row.addStretch()
 
     # Create Project button (right)
-    create_btn = QPushButton("Get Started")
+    create_btn = QPushButton("Continue")
     create_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
     create_btn.setMinimumWidth(185)
     create_btn.setMinimumHeight(40)
