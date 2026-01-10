@@ -255,7 +255,6 @@ class GraphsPage(QWidget):
             self.runs = list(api.runs(wandb_project))
 
             # 2. Clear current sidebar items (except the "Runs" header)
-            # We start from index 1 to keep the "Runs" title at index 0
             while self.sidebar.count() > 1:
                 self.sidebar.takeItem(1)
 

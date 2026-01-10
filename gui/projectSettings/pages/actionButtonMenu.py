@@ -223,7 +223,7 @@ class ActionButtonMenu(QWidget):
                 border: 1px solid {border_color}; 
                 padding: 4px 20px; 
                 border-radius: 10px;
-                font-size: 14px;
+                font-size: 15px;
             }}
             QPushButton:hover {{
                 background-color: #1E1E1E;
@@ -272,8 +272,8 @@ class ConsoleOutput(QWidget):
 
         self.text_display = QPlainTextEdit()
         self.text_display.setReadOnly(True)
-        self.text_display.setStyleSheet("background: transparent; border: none; color: #AAAAAA;"
-                                        "font-family: 'Consolas', 'Monospace', 'Courier New';")
+        self.text_display.setStyleSheet("background: transparent; border: none; color: #DDD;"
+                                        "font-family: 'Consolas', 'Monospace', 'Courier New'; font-size:16px")
         content_layout.addWidget(self.text_display)
 
         outer_layout.addWidget(self.main_container)
@@ -355,7 +355,7 @@ class ConsoleOutput(QWidget):
         if add_bubble:
             cursor = self.text_display.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.End)
-            cursor.insertText(f"\n[Command Finished]\n{'-' * 40}\n")
+            cursor.insertText(f"\n\n[Command Finished]\n{'-' * 40}\n\n")
             self.apply_line_spacing()
 
     def clear(self):

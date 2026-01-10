@@ -37,6 +37,7 @@ class cmdPage(QWidget):
         top_tab_layout.setSpacing(10)
 
         self.dir_label = QLabel("Current Directory: None")
+        self.dir_label.setStyleSheet("color: #AAA")
         top_tab_layout.addWidget(self.dir_label)
 
         # Status Container
@@ -181,7 +182,7 @@ class cmdPage(QWidget):
         """Prepare the bubble for incoming stream data."""
         self.current_bubble = QLabel("")
         self.current_bubble.setWordWrap(True)
-        self.current_bubble.setStyleSheet("color: #CCC; font-family: 'Consolas', 'Courier New';")
+        self.current_bubble.setStyleSheet("color: #EEE; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
         self.chat_layout.addWidget(self.current_bubble)
 
     def update_live_output(self, raw_text):
@@ -241,7 +242,7 @@ class cmdPage(QWidget):
         if add_bubble:
             if hasattr(self, 'current_bubble'):
                 current = self.current_bubble.text()
-                self.current_bubble.setText(current + "\n[Command Finished]")
+                self.current_bubble.setText(current + f"\n\n[Command Finished]\n{'-' * 40}\n")
             self.add_separator()
             self.input_field.setFocus()
 

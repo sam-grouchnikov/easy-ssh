@@ -24,6 +24,7 @@ class SimpleSSHPage(QWidget):
         top_tab_layout.setContentsMargins(15, 0, 15, 0)
 
         self.dir_label = QLabel("Current Directory: None")
+        self.dir_label.setStyleSheet("color: #AAA")
         top_tab_layout.addWidget(self.dir_label)
 
         status_container = QWidget()

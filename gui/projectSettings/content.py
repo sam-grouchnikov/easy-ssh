@@ -42,11 +42,11 @@ def setupContent(self, layout: QVBoxLayout, config):
         success, msg = self.ssh_manager.connect()
 
         self.cmd_page.add_message(f"System: {msg}")
+        self.simple_ssh_page.console.update_output(f"System: {msg}\n\n")
         self.simple_ssh_page.update_connection_status(success)
         self.cmd_page.update_connection_status(success)
 
         if success:
-            # THREADED: This won't freeze the app anymore
             find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
             global_run_command(find_cmd, is_tree_update=True)
 
@@ -130,25 +130,36 @@ def setupContent(self, layout: QVBoxLayout, config):
             # Connect output DIRECTLY to the editor's append function
             self.worker.output_received.connect(self.file_tree_page.display_file_content)
         else:
-            # Normal terminal behavior
             self.cmd_page.create_new_output_bubble()
 
+            command = f"$ {command}\n"
+
+            self.cmd_page.update_live_output(command)
+            self.simple_ssh_page.console.update_output(command)
             self.worker.output_received.connect(self.cmd_page.update_live_output)
             self.worker.output_received.connect(self.simple_ssh_page.console.update_output)
 
         print("Ckpt4")
-        self.worker.finished.connect(global_finished)
+        self.worker.finished.connect(
+            lambda: global_finished(is_tree_update, is_file_read, is_file_save)
+        )
         print("Ckpt5")
 
         self.worker.start()
         print("Ckpt6")
 
-    def global_finished():
+    def global_finished(is_tree_update=False, is_file_read=False, is_file_save=False):
+        # If this was a background/silent task, don't tell the terminals
+        if is_tree_update or is_file_read or is_file_save:
+            # We still want to update the directory display though!
+            self.simple_ssh_page.update_directory_display(self.current_dir)
+            self.cmd_page.update_directory_display(self.current_dir)
+            return
+
+        # Normal terminal finish logic
         cmd_start = self.recent_cmd.split(' ')[0]
-        if cmd_start in ["cd", "cat"]:
-            add_bubble = False
-        else:
-            add_bubble = True
+        add_bubble = cmd_start not in ["cat", "ssh"]
+
         self.cmd_page.on_command_finished(add_bubble)
         self.simple_ssh_page.console.finish_command(add_bubble)
 

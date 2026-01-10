@@ -21,7 +21,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         # Keyword Format (e.g., def, class, if, else)
         keyword_format = QTextCharFormat()
         keyword_format.setForeground(QColor("#569CD6"))  # Light Blue
-        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with", "len", "with"]
+        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with", "len", "with", "self"]
 
         for word in keywords:
             pattern = QRegularExpression(f"\\b{word}\\b")
@@ -166,26 +166,41 @@ class FileTreePage(QWidget):
 
 
         self.editor = QPlainTextEdit()
-        self.editor.setReadOnly(True)  # Start as read-only until a file is loaded
+        self.editor.setReadOnly(True)
         self.editor.setPlaceholderText("Select a file to view its content...")
 
         # Professional Monospace Font for code
         font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
         self.editor.setFont(font)
-
+        self.editor.setStyleSheet("""
+            QPlainTextEdit {
+                background-color: #18181F; 
+                border: none; 
+                border-bottom: 1px solid #555555;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+        """)
         self.editor_widget.setStyleSheet("""
-                         background-color: #18181F;
-                        border: 1px solid #555555;
-                        border-radius: 10px;
-                        font-size: 16px;
-                    
+                QWidget#EditorContainer {
+                    background-color: #18181F;
+                    border: 1px solid #555555;
+                    border-radius: 10px;
+                }
                 """)
+        self.editor_widget.setObjectName("EditorContainer")
+        self.editor.focusInEvent = lambda event: self.editor_widget.setStyleSheet(
+            self.editor_widget.styleSheet().replace("#555555", "CornflowerBlue")
+        )
+        self.editor.focusOutEvent = lambda event: self.editor_widget.setStyleSheet(
+            self.editor_widget.styleSheet().replace("CornflowerBlue", "#555555")
+        )
         self.editor_layout.addWidget(self.editor)
         self.editor_layout.addSpacing(10)
 
         self.button_layout_widget = QWidget()
         self.button_layout = QHBoxLayout()
-        self.button_layout_widget.setStyleSheet("border: None")
+        self.button_layout_widget.setStyleSheet("background-color: #18181F;border: None")
         self.button_layout_widget.setLayout(self.button_layout)
 
         self.button_layout.addStretch(1)
