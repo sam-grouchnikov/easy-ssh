@@ -57,6 +57,8 @@ def setupContent(self, layout: QVBoxLayout):
             self.home_dir = new_path
             self.current_dir = new_path
 
+            self.simple_ssh_page.console.finish_command(single=True)
+
             # 2. Update UI displays
             self.file_tree_page.update_home(new_path)
             self.simple_ssh_page.update_directory_display(new_path)
