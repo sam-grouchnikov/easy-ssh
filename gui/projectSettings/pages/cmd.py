@@ -245,6 +245,9 @@ class cmdPage(QWidget):
                 self.current_bubble.setText(current + f"\n\n[Command Finished]\n{'-' * 40}\n")
             self.add_separator()
             self.input_field.setFocus()
+        self.scroll.verticalScrollBar().setValue(
+            self.scroll.verticalScrollBar().maximum()
+        )
 
     def update_directory_display(self, path):
         clean_path = path.strip()
@@ -262,9 +265,12 @@ class cmdPage(QWidget):
     def add_message(self, text):
         lbl = QLabel(text)
         lbl.setWordWrap(True)
-        lbl.setStyleSheet("color: white; padding: 2px;")
+        lbl.setStyleSheet("color: white; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
         self.chat_layout.addWidget(lbl)
         self.add_separator()
+        self.scroll.verticalScrollBar().setValue(
+            self.scroll.verticalScrollBar().maximum()
+        )
 
     def add_separator(self):
         line = QFrame()

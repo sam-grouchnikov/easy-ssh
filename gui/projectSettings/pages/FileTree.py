@@ -132,7 +132,7 @@ class FileTreePage(QWidget):
         self.save_button.setFixedSize(140, 30)
         self.save_button.setStyleSheet("""
                 QPushButton {
-                border: 1px solid orange;
+                border: 1px solid SeaGreen;
                 border-radius: 10px;
                 font-size: 14px;
                 }

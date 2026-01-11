@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QFont, QColor
+from PyQt6.QtGui import QFont, QColor, QCursor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QListWidget, QListWidgetItem,
@@ -138,19 +138,23 @@ class GraphsPage(QWidget):
 
         self.side_widget = QWidget()
         self.side_layout = QVBoxLayout(self.side_widget)
+        self.side_layout.setContentsMargins(0,2,0,0)
 
         self.refresh_btn = QPushButton("Refresh List")
         self.refresh_btn.setStyleSheet("""
             QPushButton {
-                background-color: #202020; 
-                color: white; 
+                background: none;
+                border: 1px solid SeaGreen; 
+                color: white;
                 border-radius: 5px; 
                 padding: 5px;
+                font-size: 14px;
             }
-            QPushButton:hover { background-color: #333333; }
+            QPushButton:hover { background-color: #14131C; }
         """)
+        self.refresh_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.refresh_btn.clicked.connect(self.refresh_runs)
-        self.side_layout.addWidget(self.refresh_btn)
+        self.side_layout.addWidget(self.refresh_btn, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.sidebar = QListWidget()
         self.sidebar.setMaximumWidth(150)
@@ -162,17 +166,18 @@ class GraphsPage(QWidget):
 
             QListWidget::item {
                 padding: 5px;
+                margin-left:3px;
                 font-size: 19px;
                 color: #FFFFFF;
                 background-color: transparent;
             }
             QListWidget::item:hover {
-                background-color: #131313;
+                background-color: #14131C;
             }
 
 
             QListWidget::item:selected {
-                background-color: #202020;
+                background-color: #1F1D2C;
                 color: #FFFFFF;
                 border: none;
             }
@@ -212,9 +217,6 @@ class GraphsPage(QWidget):
         print("Finished wandb")
 
 
-
-
-
         runs_title = QListWidgetItem("Runs")
         runs_title.setFlags(Qt.ItemFlag.NoItemFlags)
         font = QFont()
@@ -222,6 +224,7 @@ class GraphsPage(QWidget):
         font.setBold(True)
         runs_title.setFont(font)
         self.sidebar.addItem(runs_title)
+
 
         self.sidebar.itemEntered.connect(self.on_item_hovered)
 

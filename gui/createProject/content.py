@@ -271,13 +271,13 @@ def projectOptions(navigate, config):
         name = name_input.text()
         ssh_path = path_input.text()
         ssh_port = port_input.text()
-        ssh_psw = ssh_psw_input.text()  # optionally encrypt
-        wandb_api_text = wandb_api.text()  # optionally encrypt
+        ssh_psw = ssh_psw_input.text()
+        wandb_api_text = wandb_api.text()
         wandb_user_val = wandb_user.text()
         wandb_project_val = wandb_proj.text()
         github_url_val = github_url.text()
         github_user_val = github_user.text()
-        git_pat = github_token.text()  # or add an input for local git path
+        git_pat = github_token.text()
 
         config.set("user", name)
         config.set("sshcon", ssh_path)
@@ -289,6 +289,7 @@ def projectOptions(navigate, config):
         config.set("giturl", github_url_val)
         config.set("gituser", github_user_val)
         config.set("gitpat", git_pat)
+        config.set("cloned", "no")
         config.set("lastrun", "N/A")
 
         print("Config set, moving to project")

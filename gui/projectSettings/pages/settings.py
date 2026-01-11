@@ -153,8 +153,30 @@ class SettingsPage(QWidget):
         save_btn = QPushButton("Save Changes")
         save_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         save_btn.setFixedSize(185, 40)
-        save_btn.setStyleSheet("background-color: #451C4B; border-radius: 5px; color: white; "
-                               "font-weight: bold; font-size: 16px;")
+        save_btn.setStyleSheet("""
+                        QPushButton {
+                            /* Left to Right: Blue (#00dbde) to Purple (#fc00ff) */
+                            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                                              stop:0 #0068C3, stop:1 #6F00B9);
+                            color: white;
+                            font-size: 18px;
+                            border-radius: 10px;
+                            border: none;
+                        }
+
+                        QPushButton:hover {
+                            /* Slightly shift the colors or brighten on hover */
+                            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                                              stop:0 #0075DB, stop:1 #0022CD);
+                                                              cursor: pointer;
+                        }
+
+                        QPushButton:pressed {
+                            /* Darken slightly when clicked to give feedback */
+                            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                                                              stop:0 #0068C3, stop:1 #6F00B9);
+                        }
+                    """)
         save_btn.clicked.connect(self.save_changes)
         btn_row.addWidget(save_btn)
 

@@ -27,6 +27,7 @@ class AppConfig:
             "gituser": "",
             "gitpat": "",
             "lastrun": "",
+            "cloned": "",
             "recentruns": [],
         }
 

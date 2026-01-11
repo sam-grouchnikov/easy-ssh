@@ -17,6 +17,8 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
+        self.cloned=False
+        self.config = config
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -63,7 +65,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         main_layout.addWidget(self.content)
 
         setupSidebar(self.sidebar_layout, navigate)
-        setupContent(self, self.content_layout, config)
+        setupContent(self, self.content_layout)
 
     def set_project(self, project_id):
         self.project_name = project_id
@@ -79,7 +81,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             if widget:
                 widget.deleteLater()
 
-        setupContent(self, self.content_layout, self.project_name)
+        setupContent(self, self.content_layout)
 
 
 
