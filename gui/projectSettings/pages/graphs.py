@@ -191,12 +191,72 @@ class GraphsPage(QWidget):
             QListWidget::item:focus {
                 outline: 0;
             }
+            QScrollBar:vertical {
+                border: none;
+                background: #18181F;
+                width: 13px;
+                margin: 0px 0px 0px 0px;
+            }
+        
+            /* The Scrollbar Handle */
+            QScrollBar::handle:vertical {
+                background: #3E3E42;
+                min-height: 20px;
+                border-radius: 5px;
+                margin: 2px;
+            }
+        
+            /* Handle color when hovering */
+            QScrollBar::handle:vertical:hover {
+                background: #505050;
+            }
+        
+            /* Remove the buttons (arrows) at the top and bottom */
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        
+            /* Remove the background area above and below the handle */
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
         """)
 
         self.sidebar.setMouseTracking(True)
         self.sidebar.viewport().setMouseTracking(True)
 
         self.metrics_display = MetricsDisplay()
+        self.metrics_display.setStyleSheet("""
+            QScrollBar:vertical {
+                border: none;
+                background: #18181F;
+                width: 13px;
+                margin: 0px 0px 0px 0px;
+            }
+        
+            /* The Scrollbar Handle */
+            QScrollBar::handle:vertical {
+                background: #3E3E42;
+                min-height: 20px;
+                border-radius: 5px;
+                margin: 2px;
+            }
+        
+            /* Handle color when hovering */
+            QScrollBar::handle:vertical:hover {
+                background: #505050;
+            }
+        
+            /* Remove the buttons (arrows) at the top and bottom */
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        
+            /* Remove the background area above and below the handle */
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+        """)
         self.side_layout.addWidget(self.sidebar)
 
         main_layout.addWidget(self.side_widget)
