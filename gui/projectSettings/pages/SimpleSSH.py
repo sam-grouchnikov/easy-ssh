@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QPushButton
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QPushButton, QFrame
 from PyQt6.QtGui import QPixmap
 from .actionButtonMenu import ActionButtonMenu, ConsoleOutput
 
@@ -66,6 +66,8 @@ class SimpleSSHPage(QWidget):
         layout.addWidget(row2)
 
         self.setLayout(layout)
+
+
 
     def update_directory_display(self, path):
         clean_path = path.strip()

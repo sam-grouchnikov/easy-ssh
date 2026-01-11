@@ -257,24 +257,24 @@ class ConsoleOutput(QWidget):
             }
         """)
 
-        content_layout = QVBoxLayout(self.main_container)
-        content_layout.setContentsMargins(20, 15, 20, 15)
-        content_layout.setSpacing(6)
+        self.content_layout = QVBoxLayout(self.main_container)
+        self.content_layout.setContentsMargins(20, 15, 20, 15)
+        self.content_layout.setSpacing(6)
 
         title = QLabel("Console Output")
         title.setStyleSheet("color: #AAAAAA; font-size: 21px; border: none; background: transparent;")
-        content_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
+        self.content_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignTop)
 
         border = QFrame()
         border.setFixedHeight(2)
         border.setStyleSheet("background-color: #3B3B3B; border: none;")
-        content_layout.addWidget(border)
+        self.content_layout.addWidget(border)
 
         self.text_display = QPlainTextEdit()
         self.text_display.setReadOnly(True)
         self.text_display.setStyleSheet("background: transparent; border: none; color: #DDD;"
                                         "font-family: 'Consolas', 'Monospace', 'Courier New'; font-size:16px")
-        content_layout.addWidget(self.text_display)
+        self.content_layout.addWidget(self.text_display)
 
         outer_layout.addWidget(self.main_container)
 
@@ -326,7 +326,7 @@ class ConsoleOutput(QWidget):
 
         # 1. Check if this chunk is a progress bar (Epoch/Step)
         # We only want to use the '\r' overwrite logic for these.
-        is_progress = any(x in clean_text.lower() for x in ["epoch", "step", "it/s", "%"])
+        is_progress = any(x in clean_text.lower() for x in ["epoch", "step", "Downloading", "Validation"])
 
         if '\r' in clean_text and is_progress:
             parts = clean_text.split('\r')
@@ -348,14 +348,26 @@ class ConsoleOutput(QWidget):
         # OPTIMIZATION: Don't call apply_line_spacing() here.
         # It selects the whole document and will freeze your app during fast output.
         # Set the line height once in initUI instead.
-        self.text_display.verticalScrollBar().setValue(v_scroll)
+        self.text_display.verticalScrollBar().setValue(
+            self.text_display.verticalScrollBar().maximum()
+        )
+
+    def add_separator(self):
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        # Use 'background-color' instead of 'color' for QFrame separators
+        line.setStyleSheet("background-color: #444; margin: 10px 0px;")
+        line.setFixedHeight(1)
+
+        # This adds it to the layout containing the QPlainTextEdit
+        self.content_layout.addWidget(line)
 
     def finish_command(self, add_bubble=True):
         """Appends the finish marker quietly."""
         if add_bubble:
-            cursor = self.text_display.textCursor()
-            cursor.movePosition(QTextCursor.MoveOperation.End)
-            cursor.insertText(f"\n\n[Command Finished]\n{'-' * 40}\n\n")
+            # cursor = self.text_display.textCursor()
+            # cursor.movePosition(QTextCursor.MoveOperation.End)
+            self.add_separator()
             self.apply_line_spacing()
 
     def clear(self):

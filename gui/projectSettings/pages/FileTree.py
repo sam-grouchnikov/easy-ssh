@@ -180,6 +180,35 @@ class FileTreePage(QWidget):
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
             }
+            QScrollBar:vertical {
+                border: none;
+                background: #18181F;
+                width: 13px;
+                margin: 0px 0px 0px 0px;
+            }
+        
+            /* The Scrollbar Handle */
+            QScrollBar::handle:vertical {
+                background: #3E3E42;
+                min-height: 20px;
+                border-radius: 5px;
+                margin: 2px;
+            }
+        
+            /* Handle color when hovering */
+            QScrollBar::handle:vertical:hover {
+                background: #505050;
+            }
+        
+            /* Remove the buttons (arrows) at the top and bottom */
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        
+            /* Remove the background area above and below the handle */
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
         """)
         self.editor_widget.setStyleSheet("""
                 QWidget#EditorContainer {

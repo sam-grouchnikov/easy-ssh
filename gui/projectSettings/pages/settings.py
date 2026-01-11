@@ -16,34 +16,39 @@ class SettingsPage(QWidget):
         layout.addWidget(self.init_ui())
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)
+        self.config = config
 
-        self.load_project_data(config)
+        self.load_project_data()
 
-    def load_project_data(self, config):
-            self.inputs['name'].setText(config.get("user"))
-            self.inputs['ssh_path'].setText(config.get("sshcon"))
-            self.inputs['ssh_psw'].setText(config.get("sshpsw"))
-            self.inputs['wandb_api'].setText(config.get("wandbapi"))
-            self.inputs['wandb_user'].setText(config.get("wandbuser"))
-            self.inputs['wandb_proj'].setText(config.get("wandbproj"))
-            self.inputs['github_url'].setText(config.get("giturl"))
-            self.inputs['github_user'].setText(config.get("gituser"))
-            self.inputs['github_token'].setText(config.get("gitpat"))
-            self.inputs['ssh_port'].setText(str(config.get("sshport")))
+    def load_project_data(self):
+            self.inputs['name'].setText(self.config.get("user"))
+            self.inputs['ssh_path'].setText(self.config.get("sshcon"))
+            self.inputs['ssh_psw'].setText(self.config.get("sshpsw"))
+            self.inputs['wandb_api'].setText(self.config.get("wandbapi"))
+            self.inputs['wandb_user'].setText(self.config.get("wandbuser"))
+            self.inputs['wandb_proj'].setText(self.config.get("wandbproj"))
+            self.inputs['github_url'].setText(self.config.get("giturl"))
+            self.inputs['github_user'].setText(self.config.get("gituser"))
+            self.inputs['github_token'].setText(self.config.get("gitpat"))
+            self.inputs['ssh_port'].setText(str(self.config.get("sshport")))
 
     def save_changes(self):
         updated_data = {
             "user": self.inputs['name'].text(),
-            "ssh_path": self.inputs['ssh_path'].text(),
-            "ssh_psw": self.inputs['ssh_psw'].text(),
-            "wandb_api": self.inputs['wandb_api'].text(),
-            "wandb_user": self.inputs['wandb_user'].text(),
-            "wandb_project": self.inputs['wandb_proj'].text(),
-            "git_url": self.inputs['github_url'].text(),
-            "git_user": self.inputs['github_user'].text(),
-            "git_path": self.inputs['github_token'].text(),
-            "ssh_port": self.inputs['ssh_port'].text(),
+            "sshcon": self.inputs['ssh_path'].text(),
+            "sshpsw": self.inputs['ssh_psw'].text(),
+            "wandbapi": self.inputs['wandb_api'].text(),
+            "wandbuser": self.inputs['wandb_user'].text(),
+            "wandbproj": self.inputs['wandb_proj'].text(),
+            "giturl": self.inputs['github_url'].text(),
+            "gituser": self.inputs['github_user'].text(),
+            "gitpath": self.inputs['github_token'].text(),
+            "sshport": self.inputs['ssh_port'].text(),
         }
+        for key, value in updated_data.items():
+            self.config.set(key, value)
+        QMessageBox.information(self, "Success", "Saved changes successfully!")
+
 
 
     def init_ui(self):

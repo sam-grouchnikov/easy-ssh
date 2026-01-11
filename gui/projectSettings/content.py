@@ -22,35 +22,29 @@ PAGE_NAMES = [
 
 def setupContent(self, layout: QVBoxLayout):
     if self.config.is_complete():
-        print("complete")
         path = self.config.get("sshcon")
         user = path.split('@')[0]
         server = path.split('@')[1]
         psw = self.config.get("sshpsw")
         port = self.config.get("sshport")
-        print("making manager")
         self.ssh_manager = SSHManager(server, user, port, psw)
-        print("finished initialization")
     else:
         self.ssh_manager = None
-    print("Manager created")
     self.home_dir = None
     self.current_dir = None
     self.recent_cmd = None
 
     def global_handle_connect():
+        self.settings_page.load_project_data()
         if self.ssh_manager is None and self.config.get("user") != "":
-            print("Refreshing")
             path_new = self.config.get("sshcon")
             user_new = path_new.split('@')[0]
             server_new = path_new.split('@')[1]
             psw_new = self.config.get("sshpsw")
             port_new = self.config.get("sshport")
-            print("making manager")
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
             print(self.ssh_manager)
         success, msg = self.ssh_manager.connect()
-        print("After")
         self.cmd_page.add_message(f"System: {msg}")
         # Removed extra \n\n to keep console clean, added only if needed
         self.simple_ssh_page.console.update_output(f"System: {msg}\n\n")
@@ -68,21 +62,18 @@ def setupContent(self, layout: QVBoxLayout):
             self.simple_ssh_page.update_directory_display(new_path)
             self.cmd_page.update_directory_display(new_path)
             print("Start clone")
-            print(self.config)
             if self.config.get("cloned") == "no":
-                print("ckpt0.1")
                 git_url = self.config.get("giturl")
-                print("ckpt0.2")
 
                 if git_url:
-                    print("ckpt0.3")
 
                     global_run_command(f"git clone {git_url}", is_git_clone=True)
                     self.config.set("cloned", "yes")
             print("End clone")
             find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
+            print("Tree update")
             global_run_command(find_cmd, is_tree_update=True)
-
+            print("Tree update done")
 
             new_path = self.ssh_manager.get_pwd_silently()
             self.home_dir = new_path
@@ -90,6 +81,10 @@ def setupContent(self, layout: QVBoxLayout):
             self.current_dir = new_path
             self.simple_ssh_page.update_directory_display(new_path)
             self.cmd_page.update_directory_display(new_path)
+
+    def update_tree():
+        find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
+        global_run_command(find_cmd, is_tree_update=True)
 
     self.tree_data_accumulator = ""
 
@@ -101,8 +96,7 @@ def setupContent(self, layout: QVBoxLayout):
         print("Command: ", command)
 
         if command == "exit":
-            self.cmd_page.add_message("$ exit")
-            self.cmd_page.add_message("System: Closing connection...")
+            self.cmd_page.add_message("$ exit\nSystem: Disconnected")
 
             # 1. Close the backend connection
             self.ssh_manager.close()
@@ -110,25 +104,26 @@ def setupContent(self, layout: QVBoxLayout):
             # 2. Update the UI Status
             self.simple_ssh_page.update_connection_status(False)
             self.cmd_page.update_connection_status(False)
-            self.cmd_page.add_message("System: Disconnected.")
 
             self.simple_ssh_page.update_directory_display("None")
             self.cmd_page.update_directory_display("None")
             return
 
         if command.startswith("python") or command.startswith("python3"):
-            now = datetime.now()
-            date = now.strftime("%B %d, %Y")
-            time = now.strftime("%I:%M %p")
-            if "-m" in command:
-                file = command.split(" ")[2].split(".")[1] + ".py"
-            else:
-                file = command.split(" ")[1]
+            if "venv" not in command:
+                now = datetime.now()
+                date = now.strftime("%B %d, %Y")
+                time = now.strftime("%I:%M %p")
+                if "-m" in command:
+                    file = command.split(" ")[2].split(".")[1] + ".py"
+                else:
+                    file = command.split(" ")[1]
 
-            self.config.add_run([file, date, time])
-
+                self.config.add_run([file, date, time])
         if command == "Ctrl+C":
+            print("Sending interrupt")
             self.ssh_manager.send_interrupt()
+            print("Sent")
             return
 
         if command.startswith("cd"):
@@ -140,9 +135,7 @@ def setupContent(self, layout: QVBoxLayout):
 
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
             return
-        print("ckpt1")
         self.worker = SSHStreamWorker(self.ssh_manager, command)
-        print("ckpt2")
         if is_tree_update:
             self.tree_data_accumulator = ""
 
@@ -152,8 +145,12 @@ def setupContent(self, layout: QVBoxLayout):
                 lambda: self.file_tree_page.rebuild_tree(self.tree_data_accumulator),
                 Qt.ConnectionType.QueuedConnection
             )
-        elif is_file_save or is_git_clone:
+        elif is_file_save:
             pass
+        elif is_git_clone:
+            update_tree()
+            self.graph_page.refresh_runs()
+
         elif is_file_read:
             # Clear the editor first
             self.file_tree_page.editor.clear()
@@ -193,6 +190,7 @@ def setupContent(self, layout: QVBoxLayout):
         self.simple_ssh_page.update_directory_display(self.current_dir)
         self.cmd_page.update_directory_display(self.current_dir)
 
+
     # ---- UI Setup ----
     self.title_label = QLabel()
     self.title_label.setStyleSheet(
@@ -212,13 +210,15 @@ def setupContent(self, layout: QVBoxLayout):
 
     self.simple_ssh_page = SimpleSSHPage(global_run_command, global_handle_connect)
     self.file_tree_page = FileTreePage(global_run_command, self.home_dir, self.config, self.ssh_manager)
+    self.settings_page = SettingsPage(self.config)
+    self.graph_page = GraphsPage(self.config)
 
     # Add pages to the stack
     self.stack.addWidget(self.simple_ssh_page)
     self.stack.addWidget(self.cmd_page)
     self.stack.addWidget(self.file_tree_page)
-    self.stack.addWidget(GraphsPage(self.config))
-    self.stack.addWidget(SettingsPage(self.config))
+    self.stack.addWidget(self.graph_page)
+    self.stack.addWidget(self.settings_page)
 
     self.stack.setContentsMargins(10, 0, 25, 20)
     layout.addWidget(self.stack)

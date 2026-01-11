@@ -69,23 +69,61 @@ class cmdPage(QWidget):
         container_layout = QVBoxLayout(container)
         container_layout.setContentsMargins(10, 20, 10, 10)
         container_layout.setSpacing(10)
+        container.setObjectName("MainOuterContainer")
         container.setStyleSheet("""
-            background-color: #18181F;
-            border: 1px solid #555555;
-            border-radius: 10px;
-            font-size: 16px;
+            QWidget#MainOuterContainer {
+                background-color: #18181F;
+                border: 1px solid #555555;
+                border-radius: 10px;
+                font-size: 16px;
+            }
         """)
         main_layout.addWidget(container)
 
         # ---- CHAT SCROLL AREA ----
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-        self.scroll.setStyleSheet("border: none;")
+
+        self.scroll.setStyleSheet("""
+            QScrollBar:vertical {
+                border: none;
+                background: #18181F;
+                width: 13px;
+                margin: 0px 0px 0px 0px;
+            }
+        
+            /* The Scrollbar Handle */
+            QScrollBar::handle:vertical {
+                background: #3E3E42;
+                min-height: 20px;
+                border-radius: 5px;
+                margin: 2px;
+            }
+        
+            /* Handle color when hovering */
+            QScrollBar::handle:vertical:hover {
+                background: #505050;
+            }
+        
+            /* Remove the buttons (arrows) at the top and bottom */
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        
+            /* Remove the background area above and below the handle */
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+        """)
 
         self.chat_container = QWidget()
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.chat_layout.setSpacing(4)
+        self.chat_container.setStyleSheet("""
+                background-color: #18181F;
+                font-size: 16px;
+        """)
 
         self.scroll.setWidget(self.chat_container)
         container_layout.addWidget(self.scroll)
@@ -98,11 +136,12 @@ class cmdPage(QWidget):
         self.input_field.setPlaceholderText("Enter command...")
         self.input_field.setStyleSheet("""
             QLineEdit {
-                background-color: #121217;
+                background-color: #18181F;
                 color: white;
                 border-radius: 5px;
                 border: 1px solid #555;
                 padding: 8px;
+                font-size: 16px;
             }
             QLineEdit:disabled {
                 background-color: #0c0c0f;
@@ -118,7 +157,8 @@ class cmdPage(QWidget):
                 border-radius: 5px;
                 padding: 8px 20px;
                 color: white;
-                font-weight: bold;
+                font-size: 16px;
+                border: 1px solid #555;
             }
             QPushButton:hover { background-color: #53195C; }
             QPushButton:disabled {
@@ -128,14 +168,52 @@ class cmdPage(QWidget):
         """)
 
         self.clear_btn = QPushButton("Clear")
-        self.clear_btn.setStyleSheet("background-color: #7B1818; color: white; border-radius: 5px; padding: 8px 20px;")
+        self.clear_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #7B1818;
+                color: white; border-radius: 5px;
+                padding: 8px 20px;
+                font-size: 16px;
+                border: 1px solid #555;
+            }
+            QPushButton:hover { background-color: #8C1B1B; }
+            QPushButton:disabled {
+                background-color: #2A2A2A;
+                color: #666;
+            }
+         """)
 
         self.end_btn = QPushButton("Ctrl + C")
-        self.end_btn.setStyleSheet("background-color: #540F0F; color: white; border-radius: 5px; padding: 8px 20px;")
+        self.end_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #540F0F;
+                color: white; border-radius: 5px;
+                padding: 8px 20px;
+                font-size: 16px;
+                border: 1px solid #555;
+            }
+            QPushButton:hover { background-color: #6C1212; }
+            QPushButton:disabled {
+                background-color: #2A2A2A;
+                color: #666;
+            }
+         """)
 
         self.connect_btn = QPushButton("Connect")
-        self.connect_btn.setStyleSheet(
-            "background-color: #134419; color: white; border-radius: 5px; padding: 8px 20px;")
+        self.connect_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #134419;
+                color: white; border-radius: 5px;
+                padding: 8px 20px;
+                font-size: 16px;
+                border: 1px solid #555;
+            }
+            QPushButton:hover { background-color: #18521F; }
+            QPushButton:disabled {
+                background-color: #2A2A2A;
+                color: #666;
+            }
+         """)
 
         # Set heights
         for btn in [self.send_btn, self.clear_btn, self.end_btn, self.connect_btn, self.input_field]:
@@ -176,7 +254,6 @@ class cmdPage(QWidget):
 
     def handle_interrupt(self):
         self.manager.send_interrupt()
-        self.add_message("System: Sent Ctrl+C (Interrupt)")
 
     def create_new_output_bubble(self):
         """Prepare the bubble for incoming stream data."""
@@ -213,7 +290,7 @@ class cmdPage(QWidget):
 
             # Check if this is a progress bar situation
             # We only want to overwrite (\r) if it's a known progress bar type
-            is_progress_bar = any(word in clean_text.lower() for word in ["epoch", "step", "%", "it/s"])
+            is_progress_bar = any(word in clean_text.lower() for word in ["epoch", "step", "Downloading", "Validation"])
 
             if '\r' in clean_text and is_progress_bar:
                 # OVERWRITE MODE (Progress bars)
@@ -222,7 +299,6 @@ class cmdPage(QWidget):
                 if latest_update.strip():
                     self.current_bubble.setText(latest_update)
             else:
-                # APPEND MODE (nvidia-smi, ls, cat, etc.)
                 current = self.current_bubble.text()
 
                 # If the current bubble is empty and we are starting a table,
@@ -240,10 +316,12 @@ class cmdPage(QWidget):
     def on_command_finished(self, add_bubble=True):
         self.set_busy(False)
         if add_bubble:
-            if hasattr(self, 'current_bubble'):
-                current = self.current_bubble.text()
-                self.current_bubble.setText(current + f"\n\n[Command Finished]\n{'-' * 40}\n")
+            # if hasattr(self, 'current_bubble'):
+            #     current = self.current_bubble.text()
+            #     self.current_bubble.setText(current + "\n\n")
             self.add_separator()
+
+
             self.input_field.setFocus()
         self.scroll.verticalScrollBar().setValue(
             self.scroll.verticalScrollBar().maximum()
@@ -276,7 +354,11 @@ class cmdPage(QWidget):
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
         line.setStyleSheet("color: #444; margin: 2px 0px;")
+        self.chat_layout.addSpacing(10)
+
         self.chat_layout.addWidget(line)
+        self.chat_layout.addSpacing(10)
+
 
     def clear_console(self):
         while self.chat_layout.count():
