@@ -1,12 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
 from datetime import datetime
 
-from PyQt6.QtGui import QCursor, QPixmap
-from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QPushButton, QHBoxLayout, QGridLayout, QMessageBox, QFrame
-)
 from PyQt6.QtCore import Qt
-import database.database_crud as db_crud
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QHBoxLayout, QFrame
+)
 
 
 class Dashboard(QWidget):
@@ -27,7 +35,7 @@ class Dashboard(QWidget):
     def init_ui(self, config):
         main_widget = QWidget()
         main_layout = QVBoxLayout(main_widget)
-        main_layout.setContentsMargins(0,0,0,0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
         # --- ROW 1 ---
         row1 = QHBoxLayout()
@@ -41,6 +49,7 @@ class Dashboard(QWidget):
 
         return main_widget
 
+
 class ConnectionCard(QWidget):
     def __init__(self, config):
         super().__init__()
@@ -48,7 +57,6 @@ class ConnectionCard(QWidget):
 
     def init_ui(self, config):
         main_layout = QVBoxLayout(self)
-
 
         self.wrapper = QWidget()
         self.wrapper.setStyleSheet("background-color: #16161A; border-radius: 12px")
@@ -110,6 +118,7 @@ class ConnectionCard(QWidget):
             self.status_label.setText("Status: Disconnected")
             self.border.setStyleSheet("background-color: #941E1E; border-radius: 5px")
 
+
 class ClusterInfo(QWidget):
     def __init__(self):
         super().__init__()
@@ -127,8 +136,6 @@ class ClusterInfo(QWidget):
         self.layout.setContentsMargins(35, 15, 35, 20)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-
-
         # Title
         self.title = QLabel("GPU Info")
         self.title.setStyleSheet("font-size: 22px; font-weight: bold;")
@@ -141,13 +148,11 @@ class ClusterInfo(QWidget):
         self.layout.addWidget(self.type_title)
         self.layout.addSpacing(4)
 
-
         # Status Label
         self.gpu_count = QLabel("GPU Count: Fetched on connect")
         self.gpu_count.setStyleSheet("font-size: 15px; color: #BDBDBD")
         self.layout.addWidget(self.gpu_count)
         self.layout.addSpacing(4)
-
 
         # Last Run
         self.available_memory = QLabel("Memory Available: Fetched on connect")
@@ -179,6 +184,7 @@ class ClusterInfo(QWidget):
 
         except Exception as e:
             print(f"Error parsing GPU memory: {e}")
+
 
 class RecentlyEdited(QWidget):
     def __init__(self, config):
@@ -224,6 +230,4 @@ class RecentlyEdited(QWidget):
 
         layout.addWidget(self.recent_runs_widget)
 
-
         main_layout.addWidget(self.wrapper)
-

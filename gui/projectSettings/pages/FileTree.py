@@ -1,15 +1,23 @@
-import os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem
+from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
-    QLabel, QPushButton, QSizePolicy, QLineEdit, QPlainTextEdit, QInputDialog, QFileDialog, QMessageBox
+    QPushButton, QPlainTextEdit, QFileDialog, QMessageBox
 )
-from PyQt6.QtGui import QIcon, QCursor, QStandardItemModel, QStandardItem, QFont
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
-from PyQt6.QtCore import QRegularExpression
-import subprocess
-
 from scp import SCPClient
 
 
@@ -21,7 +29,8 @@ class PythonHighlighter(QSyntaxHighlighter):
         # Keyword Format (e.g., def, class, if, else)
         keyword_format = QTextCharFormat()
         keyword_format.setForeground(QColor("#569CD6"))  # Light Blue
-        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with", "len", "with", "self"]
+        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with",
+                    "len", "with", "self"]
 
         for word in keywords:
             pattern = QRegularExpression(f"\\b{word}\\b")
@@ -45,14 +54,12 @@ class PythonHighlighter(QSyntaxHighlighter):
                 match = iterator.next()
                 self.setFormat(match.capturedStart(), match.capturedLength(), format)
 
-def build_nested_dict(paths):
 
+def build_nested_dict(paths):
     tree = {}
 
-    # 'paths' is the list ['/dir/file1', '/dir/file2']
     for path in paths:
         # 1. Clean the individual string
-        # This is where the error was likely happening (calling .strip on the list)
         clean_path = path.strip()
 
         # 2. Skip useless entries
@@ -81,8 +88,6 @@ def build_nested_dict(paths):
     return tree
 
 
-
-
 class FileTreePage(QWidget):
     def __init__(self, run_func, home_dir, config, ssh_manager):
         super().__init__()
@@ -90,7 +95,6 @@ class FileTreePage(QWidget):
         self.home_dir = home_dir
         self.config = config
         self.ssh_manager = ssh_manager
-
 
         # UI Setup
         self.main_layout = QHBoxLayout(self)
@@ -108,7 +112,6 @@ class FileTreePage(QWidget):
         self.tree.setIconSize(QSize(22, 22))
         self.tree.setMinimumWidth(500)
         self.tree.setMaximumWidth(600)
-
 
         self.tree.setStyleSheet("""
                         QTreeView {
@@ -193,12 +196,10 @@ class FileTreePage(QWidget):
                 """)
         self.transfer_button.setCursor(Qt.CursorShape.PointingHandCursor)
 
-
         self.editor = QPlainTextEdit()
         self.editor.setReadOnly(True)
         self.editor.setPlaceholderText("Select a file to view its content...")
 
-        # Professional Monospace Font for code
         font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
         self.editor.setFont(font)
         self.editor.setStyleSheet("""
@@ -208,6 +209,8 @@ class FileTreePage(QWidget):
                 border-bottom: 1px solid #555555;
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
+                font-family: 'Consolas', 'Monospace', 'Courier New';
+                font-size: 14px;
             }
             QScrollBar:vertical {
                 border: none;
@@ -267,7 +270,6 @@ class FileTreePage(QWidget):
         self.button_layout.addWidget(self.transfer_button, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.editor_layout.addWidget(self.button_layout_widget)
-
 
         self.highlighter = PythonHighlighter(self.editor.document())
         # Add widgets to layout
@@ -352,9 +354,6 @@ class FileTreePage(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Transfer Failed", f"Error: {str(e)}")
 
-
-
-
     def rebuild_tree(self, raw_find_output):
 
         print("Rebuild tree started")
@@ -368,7 +367,6 @@ class FileTreePage(QWidget):
 
         nested_data = build_nested_dict(paths)
         print("Ckpt2")
-
 
         # Populate the model starting from the invisible root
         self.populate_tree(self.model.invisibleRootItem(), nested_data)

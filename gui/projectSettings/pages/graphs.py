@@ -1,13 +1,25 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+import matplotlib.pyplot as plt
+import wandb
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QColor, QCursor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QListWidget, QListWidgetItem,
-    QLabel, QScrollArea, QGridLayout, QPushButton
+    QLabel, QScrollArea, QGridLayout, QPushButton, QApplication
 )
-from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
-import wandb
+
 
 def make_plot(steps, values, title):
     fig, ax = plt.subplots(figsize=(4, 3))
@@ -41,8 +53,6 @@ def make_plot(steps, values, title):
 
     fig.subplots_adjust(left=0.20, right=0.98, top=0.95, bottom=0.18)
     return fig
-
-
 
 
 class MetricsPlot(QWidget):
@@ -91,6 +101,7 @@ class MetricsDisplay(QScrollArea):
                 item.widget().deleteLater()
 
     def load_run(self, run):
+
         self.clear()
 
         history = run.history()
@@ -138,7 +149,7 @@ class GraphsPage(QWidget):
 
         self.side_widget = QWidget()
         self.side_layout = QVBoxLayout(self.side_widget)
-        self.side_layout.setContentsMargins(0,2,0,0)
+        self.side_layout.setContentsMargins(0, 2, 0, 0)
 
         self.refresh_btn = QPushButton("Refresh List")
         self.refresh_btn.setStyleSheet("""
@@ -266,7 +277,6 @@ class GraphsPage(QWidget):
         print("Project is not none")
         user = self.config.get("wandbuser")
         proj = self.config.get("wandbproj")
-        api_key = self.config.get("wandbapi")
         api = wandb.Api()
         wandb_project = f"{user}/{proj}"
         if user:
@@ -276,7 +286,6 @@ class GraphsPage(QWidget):
             self.runs = []
         print("Finished wandb")
 
-
         runs_title = QListWidgetItem("Runs")
         runs_title.setFlags(Qt.ItemFlag.NoItemFlags)
         font = QFont()
@@ -285,7 +294,6 @@ class GraphsPage(QWidget):
         runs_title.setFont(font)
         self.sidebar.addItem(runs_title)
 
-
         self.sidebar.itemEntered.connect(self.on_item_hovered)
 
         for run in self.runs:
@@ -293,7 +301,6 @@ class GraphsPage(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, run)
             item.setFont(QFont("Arial", 13))
             item.setForeground(QColor("#FFFFFF"))
-
 
             self.sidebar.addItem(item)
 
@@ -309,7 +316,6 @@ class GraphsPage(QWidget):
             return
         self.refresh_btn.setText("Refreshing...")
         self.refresh_btn.setEnabled(False)
-        from PyQt6.QtWidgets import QApplication
         QApplication.processEvents()
         try:
             # 1. Re-fetch data from API
@@ -342,8 +348,12 @@ class GraphsPage(QWidget):
         run = item.data(Qt.ItemDataRole.UserRole)
         if run is None:
             return
-
-        self.metrics_display.load_run(run)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            self.metrics_display.load_run(run)
+        finally:
+            # Restore normal cursor even if there's an error
+            QApplication.restoreOverrideCursor()
 
     def on_item_hovered(self, item: QListWidgetItem):
         if item.flags() & Qt.ItemFlag.ItemIsSelectable:

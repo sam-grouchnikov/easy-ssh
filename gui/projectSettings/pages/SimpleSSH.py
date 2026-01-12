@@ -1,6 +1,18 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QPushButton, QFrame
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout
+
 from .actionButtonMenu import ActionButtonMenu, ConsoleOutput
 
 
@@ -11,8 +23,8 @@ class SimpleSSHPage(QWidget):
         self.connect_func = connect_func
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 0, 10, 0)  # This removes the outer padding
-        layout.setSpacing(10)  # This removes gaps between the top bar and row2
+        layout.setContentsMargins(10, 0, 10, 0)
+        layout.setSpacing(10)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # ---- TOP BAR (Status & Directory) ----
@@ -59,15 +71,11 @@ class SimpleSSHPage(QWidget):
         self.action_menu.setMaximumWidth(425)
         self.action_menu.setMaximumHeight(650)
 
-
-
         row2_layout.addWidget(self.action_menu, alignment=Qt.AlignmentFlag.AlignTop)
         row2_layout.addWidget(self.console)
         layout.addWidget(row2)
 
         self.setLayout(layout)
-
-
 
     def update_directory_display(self, path):
         clean_path = path.strip()
@@ -80,6 +88,3 @@ class SimpleSSHPage(QWidget):
         else:
             self.status_label.setText("Status: Disconnected")
             self.icon_label.setPixmap(self.red_icon)
-
-
-

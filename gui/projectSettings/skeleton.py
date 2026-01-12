@@ -1,23 +1,33 @@
-import sys
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
 
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QMainWindow,
-    QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame, QSizePolicy, QSpacerItem
+    QWidget, QMainWindow,
+    QVBoxLayout, QHBoxLayout, QSizePolicy
 )
-from gui.sidebar import setupSidebar
+
 from gui.projectSettings.content import setupContent
+
 
 class ProjectSettingsSkeleton(QMainWindow):
     def load_project(self):
         self.refresh()
+
     def __init__(self, navigate, config):
         super().__init__()
         self.project_name = None
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
-        self.cloned=False
+        self.cloned = False
         self.config = config
 
         central_widget = QWidget()
@@ -61,10 +71,8 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.content_layout.setSpacing(15)
         self.content.setLayout(self.content_layout)
 
-        # main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.content)
 
-        setupSidebar(self.sidebar_layout, navigate)
         setupContent(self, self.content_layout)
 
     def set_project(self, project_id):
@@ -82,11 +90,3 @@ class ProjectSettingsSkeleton(QMainWindow):
                 widget.deleteLater()
 
         setupContent(self, self.content_layout)
-
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = ProjectSettingsSkeleton()
-    window.show()
-    sys.exit(app.exec())

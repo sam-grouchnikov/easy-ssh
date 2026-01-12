@@ -1,14 +1,21 @@
-import sys
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-from PyQt6.QtGui import QCursor
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QMainWindow,
-    QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame, QSizePolicy, QSpacerItem
+    QWidget, QMainWindow,
+    QVBoxLayout, QHBoxLayout, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QPropertyAnimation
-from gui.sidebar import setupSidebar
+
 from gui.createProject.content import setupContent
+
 
 class CreateSkeleton(QMainWindow):
     def __init__(self, navigate, config):
@@ -60,14 +67,4 @@ class CreateSkeleton(QMainWindow):
 
         main_layout.addWidget(self.content)
 
-        setupSidebar(self.sidebar_layout, navigate)
         setupContent(self.content_layout, navigate, config)
-
-
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = CreateSkeleton()
-    window.show()
-    sys.exit(app.exec())

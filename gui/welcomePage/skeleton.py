@@ -1,13 +1,21 @@
-import sys
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QMainWindow,
-    QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame, QSizePolicy, QSpacerItem
+    QWidget, QMainWindow,
+    QLabel, QPushButton,
+    QVBoxLayout, QHBoxLayout
 )
-from gui.sidebar import setupSidebar
-from gui.projectSettings.content import setupContent
+
 
 class HomepageSkeleton(QMainWindow):
     def __init__(self, navigate):
@@ -15,14 +23,14 @@ class HomepageSkeleton(QMainWindow):
         self.project_name = None
         self.setWindowTitle("Homepage")
 
-
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         central_widget.setStyleSheet("""
             background-color: qradialgradient(
-                cx:0.5, cy:0.5, radius:0.8, fx:0.5, fy:0.5,
-                stop:0 #1D1B28, 
-                stop:1 #0D0C12
+                cx:0.5, cy:0.5, radius:1.5, fx:0.5, fy:0.5,
+                stop:0 #1E031E,    /* Primary Slack Purple */
+                stop:0.5 #190219,  /* Mid-stop bridge to reduce banding */
+                stop:1 #130113     /* Deep Dark Corner Purple */
             );
         """)
 
@@ -88,7 +96,3 @@ class HomepageSkeleton(QMainWindow):
         main_layout.addLayout(h_container)
 
         main_layout.addStretch(1)
-
-
-
-

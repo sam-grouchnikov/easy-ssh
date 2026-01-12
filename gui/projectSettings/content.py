@@ -1,15 +1,28 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+from datetime import datetime
+
+from PyQt6.QtCore import Qt, QCoreApplication
 from PyQt6.QtWidgets import (
     QVBoxLayout, QLabel, QSizePolicy, QStackedWidget
 )
-from PyQt6.QtCore import Qt
+
+from backend.ssh.sshManager import SSHStreamWorker, SSHManager
 from gui.navbar import navbar
 from gui.projectSettings.pages.FileTree import FileTreePage
-from gui.projectSettings.pages.graphs import GraphsPage
-from gui.projectSettings.pages.settings import SettingsPage
 from gui.projectSettings.pages.SimpleSSH import SimpleSSHPage
 from gui.projectSettings.pages.cmd import cmdPage
-from backend.ssh.sshManager import SSHStreamWorker, SSHManager
-from datetime import datetime
+from gui.projectSettings.pages.graphs import GraphsPage
+from gui.projectSettings.pages.settings import SettingsPage
 
 PAGE_NAMES = [
     "Simple SSH",
@@ -35,6 +48,9 @@ def setupContent(self, layout: QVBoxLayout):
     self.recent_cmd = None
 
     def global_handle_connect():
+        self.simple_ssh_page.action_menu.ssh_con_btn.setText("Connecting")
+        self.cmd_page.connect_btn.setText("Connecting")
+        QCoreApplication.processEvents()
         self.settings_page.load_project_data()
         if self.ssh_manager is None and self.config.get("user") != "":
             path_new = self.config.get("sshcon")
@@ -44,9 +60,10 @@ def setupContent(self, layout: QVBoxLayout):
             port_new = self.config.get("sshport")
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
             print(self.ssh_manager)
+
         success, msg = self.ssh_manager.connect()
         self.cmd_page.add_message(f"System: {msg}")
-        # Removed extra \n\n to keep console clean, added only if needed
+        self.cmd_page.add_separator()
         self.simple_ssh_page.console.update_output(f"System: {msg}\n\n")
         self.simple_ssh_page.update_connection_status(success)
         self.cmd_page.update_connection_status(success)
@@ -68,7 +85,6 @@ def setupContent(self, layout: QVBoxLayout):
                 git_url = self.config.get("giturl")
 
                 if git_url:
-
                     global_run_command(f"git clone {git_url}", is_git_clone=True)
                     self.config.set("cloned", "yes")
             print("End clone")
@@ -83,6 +99,14 @@ def setupContent(self, layout: QVBoxLayout):
             self.current_dir = new_path
             self.simple_ssh_page.update_directory_display(new_path)
             self.cmd_page.update_directory_display(new_path)
+            self.cmd_page.connect_btn.setText("Connect")
+            self.cmd_page.connect_btn.setEnabled(False)
+            self.simple_ssh_page.action_menu.ssh_con_btn.setText("Connect to SSH")
+            self.simple_ssh_page.action_menu.ssh_con_btn.setEnabled(False)
+            self.simple_ssh_page.action_menu.run_curr_btn.setEnabled(True)
+            self.cmd_page.send_btn.setEnabled(True)
+        else:
+            self.cmd_page.connect_btn.setText("Connect")
 
     def update_tree():
         find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
@@ -92,10 +116,13 @@ def setupContent(self, layout: QVBoxLayout):
 
     def accumulate_tree_data(text):
         self.tree_data_accumulator += text
+
     def global_run_command(command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False):
         # 1. Don't run if already busy
         self.recent_cmd = command
         print("Command: ", command)
+        self.cmd_page.send_btn.setEnabled(False)
+        self.simple_ssh_page.action_menu.run_curr_btn.setEnabled(False)
 
         if command == "exit":
             self.cmd_page.add_message("$ exit\nSystem: Disconnected")
@@ -109,6 +136,11 @@ def setupContent(self, layout: QVBoxLayout):
 
             self.simple_ssh_page.update_directory_display("None")
             self.cmd_page.update_directory_display("None")
+
+            self.cmd_page.connect_btn.setText("Connect")
+            self.cmd_page.connect_btn.setEnabled(True)
+            self.simple_ssh_page.action_menu.ssh_con_btn.setText("Connect to SSH")
+            self.simple_ssh_page.action_menu.ssh_con_btn.setEnabled(True)
             return
 
         if command.startswith("python") or command.startswith("python3"):
@@ -151,7 +183,10 @@ def setupContent(self, layout: QVBoxLayout):
             pass
         elif is_git_clone:
             update_tree()
+            print("Updated tree")
             self.graph_page.refresh_runs()
+            print("refreshed runs")
+            pass
 
         elif is_file_read:
             # Clear the editor first
@@ -169,29 +204,32 @@ def setupContent(self, layout: QVBoxLayout):
             self.worker.output_received.connect(self.simple_ssh_page.console.update_output)
 
         self.worker.finished.connect(
-            lambda: global_finished(is_tree_update, is_file_read, is_file_save)
+            lambda: global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
         )
 
         self.worker.start()
 
-    def global_finished(is_tree_update=False, is_file_read=False, is_file_save=False):
-        # If this was a background/silent task, don't tell the terminals
-        if is_tree_update or is_file_read or is_file_save:
-            # We still want to update the directory display though!
+    def global_finished(is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False):
+        if is_tree_update or is_file_read or is_file_save or is_git_clone:
             self.simple_ssh_page.update_directory_display(self.current_dir)
             self.cmd_page.update_directory_display(self.current_dir)
             return
 
         # Normal terminal finish logic
         cmd_start = self.recent_cmd.split(' ')[0]
-        add_bubble = cmd_start not in ["cat", "ssh", "git"]
-
+        add_bubble = cmd_start not in ["cat", "ssh", "git", "find"]
+        if self.recent_cmd.startswith("git pull"):
+            add_bubble = True
+        if is_git_clone:
+            add_bubble = False
+        print("CMD: ", self.recent_cmd, " ADD: ", add_bubble)
         self.cmd_page.on_command_finished(add_bubble)
-        self.simple_ssh_page.console.finish_command(add_bubble)
+        self.simple_ssh_page.console.finish_command(add_bubble, add_sep=not is_git_clone)
 
         self.simple_ssh_page.update_directory_display(self.current_dir)
         self.cmd_page.update_directory_display(self.current_dir)
-
+        self.cmd_page.send_btn.setEnabled(True)
+        self.simple_ssh_page.action_menu.run_curr_btn.setEnabled(True)
 
     # ---- UI Setup ----
     self.title_label = QLabel()

@@ -1,11 +1,20 @@
-import sys
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
-    QApplication, QWidget,
+    QWidget,
     QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
 )
-from PyQt6.QtCore import Qt, pyqtSignal
 
 
 class NavItem(QWidget):
@@ -17,7 +26,7 @@ class NavItem(QWidget):
         self._selected = False
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 6, 12, 6)
+        layout.setContentsMargins(22, 6, 22, 6)
         layout.setSpacing(8)
 
         icon = QLabel()
@@ -66,7 +75,6 @@ class NavItem(QWidget):
         super().mousePressEvent(event)
 
 
-
 def select_nav_item(items, selected_index):
     for item in items:
         item.setSelected(item.index == selected_index)
@@ -85,10 +93,10 @@ def navbar():
 
     items = [
         ("Simple-SSH", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/loading.png"),
-        ("Terminal",   "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/command.png"),
+        ("Terminal", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/command.png"),
         ("File Tree", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/code-fork.png"),
-        ("Graphs",     "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/line-graph.png"),
-        ("Project Settings",   "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/setting.png"),
+        ("Graphs", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/line-graph.png"),
+        ("Project Settings", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/setting.png"),
     ]
 
     nav_items = []
@@ -117,6 +125,3 @@ def navbar():
 
     nb_container.nav_items = nav_items
     return nb_container
-
-
-

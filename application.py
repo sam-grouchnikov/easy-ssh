@@ -1,11 +1,25 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
 import sys
+
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QStackedWidget,
     QWidget
 )
+
 from backend.config.ConfigWiring import AppConfig
+
 
 class Application(QMainWindow):
 
@@ -49,6 +63,7 @@ class Application(QMainWindow):
 
     def get_page(self, name: str) -> QWidget:
         return self._pages.get(name)
+
 
 def run():
     app = QApplication(sys.argv)

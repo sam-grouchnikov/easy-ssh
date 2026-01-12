@@ -1,12 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import (
-    QVBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, QWidget,
-    QGridLayout, QHBoxLayout, QToolButton, QFrame, QLineEdit
+    QVBoxLayout, QLabel, QPushButton, QWidget,
+    QGridLayout, QHBoxLayout, QFrame, QLineEdit
 )
-from PyQt6.QtCore import Qt
-import database.database_crud
-from database.database import get_connection
-import time
 
 
 def setupContent(layout: QVBoxLayout, navigate, config):
@@ -17,7 +25,6 @@ def setupContent(layout: QVBoxLayout, navigate, config):
     secondary_label = QLabel("Enter your details below")
     secondary_label.setStyleSheet("color: gray; font-size: 19px; margin-left: 20px")
     layout.addWidget(secondary_label)
-
 
     border = QFrame()
     border.setFrameShape(QFrame.Shape.HLine)
@@ -47,7 +54,7 @@ def projectOptions(navigate, config):
         "background: #1B1B20;"
         "padding: 0px 5px"
     )
-    label_style = "color: #ffffff; font-size: 18px;"
+    label_style = "color: #ffffff; font-size: 16px; padding-top: 5px"
 
     # -------------------------------------------------------------
     # ------------------- GENERAL SETTINGS CARD -------------------
@@ -108,7 +115,6 @@ def projectOptions(navigate, config):
     ssh_conn_layout.addLayout(path_vbox, stretch=4)  # Path gets more space
     ssh_conn_layout.addLayout(port_vbox, stretch=1)  # Port stays small
 
-    # 5. Add the container to your main settings layout
     gen_settings_layout.addWidget(ssh_conn_container)
 
     # SSH Password
@@ -124,7 +130,6 @@ def projectOptions(navigate, config):
 
     # Add card to grid
     grid_layout.addWidget(gen_settings, 0, 0)
-
 
     # -------------------------------------------------------------
     # ------------------ WEIGHTS & BIASES CARD --------------------
@@ -218,11 +223,9 @@ def projectOptions(navigate, config):
     # Add to grid
     grid_layout.addWidget(github_widget, 0, 2)
 
-
     # ---- BUTTON ROW ----
     button_row = QHBoxLayout()
     button_row.setContentsMargins(0, 5, 0, 0)
-
 
     button_row.addStretch()
 
@@ -300,6 +303,5 @@ def projectOptions(navigate, config):
 
     # Add row to the grid widget (below cards)
     grid_layout.addLayout(button_row, grid_layout.rowCount(), 0, 1, -1)
-
 
     return grid_widget

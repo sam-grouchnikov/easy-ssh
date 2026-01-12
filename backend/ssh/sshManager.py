@@ -1,6 +1,17 @@
-import paramiko
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
 import time
 
+import paramiko
 from PyQt6.QtCore import pyqtSignal, QThread
 
 
@@ -84,15 +95,13 @@ class SSHManager:
                 break
             time.sleep(0.01)
 
-
     def get_pwd_silently(self):
         """Fetches directory using a separate exec session to stay truly silent."""
-        if not self.client:  # The paramiko.SSHClient object
+        if not self.client:
             return ""
 
         try:
             # exec_command creates a brand new, temporary channel
-            # that doesn't share stdout with your main interactive shell.
             stdin, stdout, stderr = self.client.exec_command("pwd")
 
             # Read the output and strip newlines

@@ -1,10 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+import re
+
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QScrollArea, QFrame, QSizePolicy
+    QPushButton, QScrollArea, QFrame
 )
-from PyQt6.QtCore import Qt
-import re
 
 
 class cmdPage(QWidget):
@@ -49,7 +61,6 @@ class cmdPage(QWidget):
         self.status_label = QLabel("Status: Disconnected")
         self.icon_label = QLabel()
 
-        # Icons (Keep your existing icon logic)
         self.green_icon = QPixmap("gui/icons/green_circle.png").scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio,
                                                                        Qt.TransformationMode.SmoothTransformation)
         self.red_icon = QPixmap("gui/icons/red-circle.png").scaled(16, 16, Qt.AspectRatioMode.KeepAspectRatio,
@@ -85,6 +96,10 @@ class cmdPage(QWidget):
         self.scroll.setWidgetResizable(True)
 
         self.scroll.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
             QScrollBar:vertical {
                 border: none;
                 background: #18181F;
@@ -153,30 +168,30 @@ class cmdPage(QWidget):
         self.send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.send_btn.setStyleSheet("""
             QPushButton {
-                background-color: #451C4B;
-                border-radius: 5px;
+                background-color: #18181F;
+                border-radius: 8px;
                 padding: 8px 20px;
                 color: white;
                 font-size: 16px;
-                border: 1px solid #555;
+                border: 2px solid #00417A;
             }
-            QPushButton:hover { background-color: #53195C; }
+            QPushButton:hover { background-color: #20202A; }
             QPushButton:disabled {
-                background-color: #2A2A2A;
-                color: #666;
+                border: 2px solid #444;
+
             }
         """)
 
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.setStyleSheet("""
             QPushButton {
-                background-color: #7B1818;
-                color: white; border-radius: 5px;
+                background-color: #18181F;
+                color: white; border-radius: 8px;
                 padding: 8px 20px;
                 font-size: 16px;
-                border: 1px solid #555;
+                border: 2px solid #8C1B1B;
             }
-            QPushButton:hover { background-color: #8C1B1B; }
+            QPushButton:hover { background-color: #20202A; }
             QPushButton:disabled {
                 background-color: #2A2A2A;
                 color: #666;
@@ -186,13 +201,13 @@ class cmdPage(QWidget):
         self.end_btn = QPushButton("Ctrl + C")
         self.end_btn.setStyleSheet("""
             QPushButton {
-                background-color: #540F0F;
-                color: white; border-radius: 5px;
+                 background-color: #18181F;
+               color: white; border-radius: 8px;
                 padding: 8px 20px;
                 font-size: 16px;
-                border: 1px solid #555;
+                border: 2px solid #8C1B1B;
             }
-            QPushButton:hover { background-color: #6C1212; }
+            QPushButton:hover { background-color: #20202A; }
             QPushButton:disabled {
                 background-color: #2A2A2A;
                 color: #666;
@@ -202,16 +217,16 @@ class cmdPage(QWidget):
         self.connect_btn = QPushButton("Connect")
         self.connect_btn.setStyleSheet("""
             QPushButton {
-                background-color: #134419;
-                color: white; border-radius: 5px;
+                background-color: #18181F;
+                color: white; border-radius: 8px;
                 padding: 8px 20px;
                 font-size: 16px;
-                border: 1px solid #555;
+                border: 2px solid #18521F;
             }
-            QPushButton:hover { background-color: #18521F; }
+            QPushButton:hover { background-color: #20202A; }
             QPushButton:disabled {
-                background-color: #2A2A2A;
-                color: #666;
+                border: 2px solid #444;
+
             }
          """)
 
@@ -222,9 +237,9 @@ class cmdPage(QWidget):
 
         input_bar.addWidget(self.input_field)
         input_bar.addWidget(self.send_btn)
-        input_bar.addWidget(self.connect_btn)
-        input_bar.addWidget(self.clear_btn)
         input_bar.addWidget(self.end_btn)
+        input_bar.addWidget(self.clear_btn)
+        input_bar.addWidget(self.connect_btn)
         container_layout.addLayout(input_bar)
 
         # Connections
@@ -259,7 +274,8 @@ class cmdPage(QWidget):
         """Prepare the bubble for incoming stream data."""
         self.current_bubble = QLabel("")
         self.current_bubble.setWordWrap(True)
-        self.current_bubble.setStyleSheet("color: #EEE; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
+        self.current_bubble.setStyleSheet(
+            "color: #EEE; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
         self.chat_layout.addWidget(self.current_bubble)
 
     def update_live_output(self, raw_text):
@@ -283,49 +299,56 @@ class cmdPage(QWidget):
         if not raw_text.strip():
             return
 
+        clean_text = self.strip_ansi_codes(raw_text)
+        if not clean_text:
+            return
+
+        # 1. BROADEN indicators for both Training and Testing
+        # Added "loss", "%", and bar symbols like #, =, and block characters
+        progress_indicators = ["it/s", "%", "step", "epoch", "loss", "v_num", "val_", "train_"]
+
+        is_progress_bar = any(x in clean_text.lower() for x in progress_indicators)
+
+        # 2. DECIDE: Overwrite or Append?
         try:
-            clean_text = self.strip_ansi_codes(raw_text)
-            if not clean_text:
-                return
-
-            # Check if this is a progress bar situation
-            # We only want to overwrite (\r) if it's a known progress bar type
-            is_progress_bar = any(word in clean_text.lower() for word in ["epoch", "step", "Downloading", "Validation"])
-
-            if '\r' in clean_text and is_progress_bar:
-                # OVERWRITE MODE (Progress bars)
+            if '\r' in clean_text:
+                # Most training bars use \r. Take the latest segment.
                 parts = clean_text.split('\r')
-                latest_update = parts[-1]
-                if latest_update.strip():
-                    self.current_bubble.setText(latest_update)
+                latest = parts[-1].strip()
+                if latest:
+                    self.current_bubble.setText(latest)
+
+            elif is_progress_bar:
+                # For Testing or Training lines that use \n but are clearly bars
+                val = clean_text.strip()
+                if val:
+                    self.current_bubble.setText(val)
+
             else:
-                current = self.current_bubble.text()
+                # Everything else (Normal Logs/Prints) -> APPEND
+                current_val = self.current_bubble.text()
+                self.current_bubble.setText(current_val + clean_text)
 
-                # If the current bubble is empty and we are starting a table,
-                # make sure we use a monospace font for nvidia-smi alignment
-                self.current_bubble.setText(current + clean_text)
-
-            # Force scroll to bottom
-            self.scroll.verticalScrollBar().setValue(
+            # 3. SCROLL
+            QTimer.singleShot(10, lambda: self.scroll.verticalScrollBar().setValue(
                 self.scroll.verticalScrollBar().maximum()
-            )
+            ))
 
         except RuntimeError:
             self.current_bubble = None
+        QTimer.singleShot(10, lambda: self.scroll.verticalScrollBar().setValue(
+            self.scroll.verticalScrollBar().maximum()
+        ))
 
     def on_command_finished(self, add_bubble=True):
         self.set_busy(False)
         if add_bubble:
-            # if hasattr(self, 'current_bubble'):
-            #     current = self.current_bubble.text()
-            #     self.current_bubble.setText(current + "\n\n")
             self.add_separator()
 
-
             self.input_field.setFocus()
-        self.scroll.verticalScrollBar().setValue(
+        QTimer.singleShot(30, lambda: self.scroll.verticalScrollBar().setValue(
             self.scroll.verticalScrollBar().maximum()
-        )
+        ))
 
     def update_directory_display(self, path):
         clean_path = path.strip()
@@ -345,7 +368,6 @@ class cmdPage(QWidget):
         lbl.setWordWrap(True)
         lbl.setStyleSheet("color: white; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
         self.chat_layout.addWidget(lbl)
-        self.add_separator()
         self.scroll.verticalScrollBar().setValue(
             self.scroll.verticalScrollBar().maximum()
         )
@@ -359,12 +381,12 @@ class cmdPage(QWidget):
         self.chat_layout.addWidget(line)
         self.chat_layout.addSpacing(10)
 
-
     def clear_console(self):
         while self.chat_layout.count():
             item = self.chat_layout.takeAt(0)
             if item.widget(): item.widget().deleteLater()
 
     def strip_ansi_codes(self, text):
+        # Disclaimer: This function was written by AI for accurate regex use.
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
         return ansi_escape.sub('', text)

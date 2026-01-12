@@ -1,10 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit,
     QPushButton, QHBoxLayout, QGridLayout, QMessageBox
 )
-from PyQt6.QtCore import Qt
-import database.database_crud as db_crud
 
 
 class SettingsPage(QWidget):
@@ -21,16 +31,16 @@ class SettingsPage(QWidget):
         self.load_project_data()
 
     def load_project_data(self):
-            self.inputs['name'].setText(self.config.get("user"))
-            self.inputs['ssh_path'].setText(self.config.get("sshcon"))
-            self.inputs['ssh_psw'].setText(self.config.get("sshpsw"))
-            self.inputs['wandb_api'].setText(self.config.get("wandbapi"))
-            self.inputs['wandb_user'].setText(self.config.get("wandbuser"))
-            self.inputs['wandb_proj'].setText(self.config.get("wandbproj"))
-            self.inputs['github_url'].setText(self.config.get("giturl"))
-            self.inputs['github_user'].setText(self.config.get("gituser"))
-            self.inputs['github_token'].setText(self.config.get("gitpat"))
-            self.inputs['ssh_port'].setText(str(self.config.get("sshport")))
+        self.inputs['name'].setText(self.config.get("user"))
+        self.inputs['ssh_path'].setText(self.config.get("sshcon"))
+        self.inputs['ssh_psw'].setText(self.config.get("sshpsw"))
+        self.inputs['wandb_api'].setText(self.config.get("wandbapi"))
+        self.inputs['wandb_user'].setText(self.config.get("wandbuser"))
+        self.inputs['wandb_proj'].setText(self.config.get("wandbproj"))
+        self.inputs['github_url'].setText(self.config.get("giturl"))
+        self.inputs['github_user'].setText(self.config.get("gituser"))
+        self.inputs['github_token'].setText(self.config.get("gitpat"))
+        self.inputs['ssh_port'].setText(str(self.config.get("sshport")))
 
     def save_changes(self):
         updated_data = {
@@ -48,8 +58,6 @@ class SettingsPage(QWidget):
         for key, value in updated_data.items():
             self.config.set(key, value)
         QMessageBox.information(self, "Success", "Saved changes successfully!")
-
-
 
     def init_ui(self):
         grid_widget = QWidget()
@@ -116,7 +124,6 @@ class SettingsPage(QWidget):
         ssh_row.addWidget(ssh_port_input)
 
         gen_vbox.addLayout(ssh_row)
-
 
         add_input(gen_vbox, "SSH Password", "ssh_psw", True)
         grid_layout.addWidget(gen_card, 0, 0)

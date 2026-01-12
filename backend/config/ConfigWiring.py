@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Author: Sam Grouchnikov
+License: GPL-3.0
+Version: 1.0.0
+Email: sam.grouchnikov@gmail.com
+Status: Development
+"""
+
 import json
 import os
 
@@ -5,7 +16,7 @@ import os
 class AppConfig:
     def __init__(self, filename="user_data.json"):
         self.filename = filename
-        self.data = self.load_initial()  # Load once on startup
+        self.data = self.load_initial()
 
     def load_initial(self):
         if os.path.exists(self.filename):
@@ -13,9 +24,9 @@ class AppConfig:
                 with open(self.filename, 'r') as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
-                pass  # Fall back to defaults if file is corrupted
+                pass
 
-        defaults =  {
+        defaults = {
             "user": "",
             "sshcon": "",
             "sshport": "",
