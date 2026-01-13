@@ -25,8 +25,8 @@ from gui.projectSettings.pages.graphs import GraphsPage
 from gui.projectSettings.pages.settings import SettingsPage
 
 PAGE_NAMES = [
-    "Simple SSH",
     "Terminal",
+    "Simple SSH",
     "File Tree",
     "Logged Metrics",
     "Project Settings",
@@ -254,8 +254,8 @@ def setupContent(self, layout: QVBoxLayout):
     self.graph_page = GraphsPage(self.config)
 
     # Add pages to the stack
-    self.stack.addWidget(self.simple_ssh_page)
     self.stack.addWidget(self.cmd_page)
+    self.stack.addWidget(self.simple_ssh_page)
     self.stack.addWidget(self.file_tree_page)
     self.stack.addWidget(self.graph_page)
     self.stack.addWidget(self.settings_page)

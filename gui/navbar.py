@@ -92,8 +92,8 @@ def navbar():
     nb_layout.setSpacing(0)
 
     items = [
-        ("Simple-SSH", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/loading.png"),
         ("Terminal", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/command.png"),
+        ("Simple-SSH", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/loading.png"),
         ("File Tree", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/code-fork.png"),
         ("Graphs", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/line-graph.png"),
         ("Project Settings", "C:/Users/samgr/PycharmProjects/ssh-runner-app/gui/icons/setting.png"),
