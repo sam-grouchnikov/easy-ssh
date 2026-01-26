@@ -28,18 +28,17 @@ class AppConfig:
 
         defaults = {
             "user": "",
-            "sshcon": "",
-            "sshport": "",
-            "sshpsw": "",
-            "wandbapi": "",
-            "wandbuser": "",
-            "wandbproj": "",
-            "giturl": "",
-            "gituser": "",
-            "gitpat": "",
-            "lastrun": "",
-            "cloned": "",
-            "recentruns": [],
+            "psw": "",
+            "email": "",
+            "ssh_user": "",
+            "ssh_ip": "",
+            "ssh_psw": "",
+            "ssh_port": "",
+            "git_url": "",
+            "git_pat": "",
+            "wandb_user": "",
+            "wandb_proj": "",
+            "wandb_api": "",
         }
 
         self.data = defaults

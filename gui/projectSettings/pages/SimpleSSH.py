@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.0.0
+Version: 1.1.0
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """

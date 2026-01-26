@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.0.0
+Version: 1.1.0
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -19,68 +19,93 @@ from PyQt6.QtWidgets import (
     QLabel, QScrollArea, QGridLayout, QPushButton, QApplication
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt6.QtWidgets import QStyledItemDelegate
+
+THEMES = {
+    "dark": {
+        "bg_main": "#151515",
+        "bg_side": "#000000",
+        "bg_plot": "#202020",
+        "text": "#FFFFFF",
+        "text_dim": "#9E9E9E",
+        "grid": "#434343",
+        "accent": "#6075D4"
+    },
+    "light": {
+        "bg_main": "#F5F5F5",
+        "bg_side": "#E0E0E0",
+        "bg_plot": "#FFFFFF",
+        "text": "#000000",
+        "text_dim": "#333333",
+        "grid": "#D1D1D1",
+        "accent": "#3E4EB8"
+    }
+}
+
+import pyqtgraph as pg
 
 
-def make_plot(steps, values, title):
-    fig, ax = plt.subplots(figsize=(4, 3))
+def create_plot_widget(steps, values, title, theme_mode):
+    colors = THEMES[theme_mode]
 
-    fig.patch.set_facecolor('#202020')
-    ax.set_facecolor("#202020")
+    plot_node = pg.PlotWidget()
 
-    ax.plot(steps, values, color="#6075D4", linewidth=0.8)
+    plot_node.setBackground(colors["bg_plot"])
 
-    ax.set_xlabel("Step", color="#9E9E9E")
-    ax.set_ylabel("Value", color="#9E9E9E")
-    ax.tick_params(
-        axis='both',
-        which='both',
-        length=3,
-        colors="#9E9E9E"
-    )
+    label_style = {'color': colors["text_dim"], 'font-size': '12px'}
+    plot_node.setLabel('bottom', "Step", **label_style)
+    plot_node.setLabel('left', title, **label_style)
 
-    ax.spines["bottom"].set_color("#9E9E9E")
-    ax.spines["left"].set_color("#9E9E9E")
+    # Styling the Axes (Spines)
+    pen = pg.mkPen(color=colors["text_dim"], width=1)
+    plot_node.getAxis('left').setPen(pen)
+    plot_node.getAxis('bottom').setPen(pen)
+    plot_node.getAxis('left').setTextPen(pen)
+    plot_node.getAxis('bottom').setTextPen(pen)
 
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    # Grid
+    plot_node.showGrid(x=False, y=True, alpha=0.3)
 
-    ax.spines["bottom"].set_linewidth(1)
-    ax.spines["left"].set_linewidth(1)
+    data_pen = pg.mkPen(color=colors["accent"], width=0.9)
+    plot_node.plot(steps, values, pen=data_pen, antialias=True)
 
-    ax.grid(False)
-    ax.xaxis.grid(True, color="#434343", linestyle="-", linewidth=0)
-    ax.yaxis.grid(True, color="#434343", linestyle="--", linewidth=1)
+    plot_node.setMouseEnabled(x=True, y=True)
 
-    fig.subplots_adjust(left=0.20, right=0.98, top=0.95, bottom=0.18)
-    return fig
+    return plot_node
 
 
 class MetricsPlot(QWidget):
-    def __init__(self, fig, title: str):
+    def __init__(self, plot_widget, title: str, theme_mode):
         super().__init__()
+        self.plot_widget = plot_widget
+        self.title_str = title
 
-        self.setStyleSheet("background-color: #151515;")
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout = QVBoxLayout(self)
+        self.label = QLabel(title)
+        self.layout.addWidget(self.label)
+        self.layout.addSpacing(3)
+        self.layout.addWidget(self.plot_widget)
+        self.setContentsMargins(0,0,0,0)
 
-        label = QLabel(title)
-        label.setStyleSheet("""
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            background-color: transparent;
-        """)
+        self.apply_theme(theme_mode)
 
-        canvas = FigureCanvas(fig)
-        canvas.setStyleSheet("background-color: #151515;")
-        canvas.setMinimumHeight(300)
+    def apply_theme(self, theme_mode):
+        colors = THEMES[theme_mode]
+        self.label.setStyleSheet(f"color: {colors['text']}; font-weight: bold; font-size: 16px;")
 
-        layout.addWidget(label)
-        layout.addWidget(canvas)
+        # Update the pyqtgraph colors
+        self.plot_widget.setBackground(colors["bg_plot"])
+
+        # Update Axis colors
+        pen = pg.mkPen(color=colors["text_dim"], width=1)
+        for axis in ['left', 'bottom']:
+            ax = self.plot_widget.getAxis(axis)
+            ax.setPen(pen)
+            ax.setTextPen(pen)
 
 
 class MetricsDisplay(QScrollArea):
-    def __init__(self):
+    def __init__(self, theme):
         super().__init__()
         self.setWidgetResizable(True)
 
@@ -88,25 +113,28 @@ class MetricsDisplay(QScrollArea):
 
         self.grid = QGridLayout(self.container)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.grid.setSpacing(20)
+        self.grid.setSpacing(15)
 
         self.setWidget(self.container)
+        self.setContentsMargins(0,0,0,0)
+        self.update_theme(theme)
 
         self.columns = 2
 
     def clear(self):
         while self.grid.count():
             item = self.grid.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
-    def load_run(self, run):
+            widget = item.widget()
+            if widget:
+                if hasattr(widget, 'canvas'):
+                    plt.close(widget.canvas.figure)
+                widget.deleteLater()
+    def load_run(self, run, theme_mode):
 
         self.clear()
-
         history = run.history()
 
-        if "trainer/global_step" not in history:
+        if "trainer/global_step" not in history.columns:
             self.grid.addWidget(QLabel("No step data available."), 0, 0)
             return
 
@@ -116,6 +144,8 @@ class MetricsDisplay(QScrollArea):
         col_idx = 0
 
         for col in history.columns:
+            if col in ["_step", "_trainer", "_runtime", "_timestamp"]:
+                continue
             if col == step_col:
                 continue
 
@@ -123,20 +153,36 @@ class MetricsDisplay(QScrollArea):
             if series.empty:
                 continue
 
-            fig = make_plot(
+            plot_widget = create_plot_widget(
                 series[step_col].to_list(),
                 series[col].to_list(),
-                col
+                col,
+                theme_mode=theme_mode
             )
 
-            plot_widget = MetricsPlot(fig, col)
+            display_item = MetricsPlot(plot_widget, col, theme_mode=theme_mode)
+            display_item.setMinimumHeight(350)
 
-            self.grid.addWidget(plot_widget, row, col_idx)
+            self.grid.addWidget(display_item, row, col_idx)
 
             col_idx += 1
             if col_idx >= self.columns:
                 col_idx = 0
                 row += 1
+
+    def update_theme(self, mode):
+        for i in range(self.grid.count()):
+            item = self.grid.itemAt(i)
+            widget = item.widget()
+
+            if isinstance(widget, MetricsPlot):
+                widget.apply_theme(mode)
+
+    def set_light_mode(self):
+        self.update_theme("light")
+
+    def set_dark_mode(self):
+        self.update_theme("dark")
 
 
 class GraphsPage(QWidget):
@@ -144,132 +190,45 @@ class GraphsPage(QWidget):
         super().__init__()
 
         main_layout = QHBoxLayout(self)
-        main_layout.setSpacing(10)
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(12, 30, 0, 30)
         self.config = config
 
         self.side_widget = QWidget()
         self.side_layout = QVBoxLayout(self.side_widget)
-        self.side_layout.setContentsMargins(0, 2, 0, 0)
+        self.side_layout.setContentsMargins(0, 0, 0, 0)
+        self.side_layout.setSpacing(5)
 
         self.refresh_btn = QPushButton("Refresh List")
-        self.refresh_btn.setStyleSheet("""
-            QPushButton {
-                background: none;
-                border: 1px solid SeaGreen; 
-                color: white;
-                border-radius: 5px; 
-                padding: 5px;
-                font-size: 14px;
-            }
-            QPushButton:hover { background-color: #14131C; }
-        """)
+
         self.refresh_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.refresh_btn.clicked.connect(self.refresh_runs)
         self.side_layout.addWidget(self.refresh_btn, alignment=Qt.AlignmentFlag.AlignTop)
+        self.refresh_btn.setFixedHeight(35)
+        self.side_layout.addSpacing(5)
+
+        self.sidebar_container = QWidget()
+        self.sidebar_container.setStyleSheet("border-radius: 10px;")
+        self.container_layout = QVBoxLayout(self.sidebar_container)
+        self.container_layout.setContentsMargins(5, 5, 5, 5)
 
         self.sidebar = QListWidget()
+        self.sidebar.setContentsMargins(0,0,0,0)
         self.sidebar.setMaximumWidth(150)
-        self.sidebar.setStyleSheet("""
-            QListWidget {
-                background-color: transparent;
-                outline: 0;
-            }
-
-            QListWidget::item {
-                padding: 5px;
-                margin-left:3px;
-                font-size: 19px;
-                color: #FFFFFF;
-                background-color: transparent;
-            }
-            QListWidget::item:hover {
-                background-color: #14131C;
-            }
+        self.container_layout.addWidget(self.sidebar)
 
 
-            QListWidget::item:selected {
-                background-color: #1F1D2C;
-                color: #FFFFFF;
-                border: none;
-            }
-
-            QListWidget::item:selected:!active {
-                background-color: #202020;
-                color: #FFFFFF;
-                border: none;
-            }
-
-            QListWidget::item:focus {
-                outline: 0;
-            }
-            QScrollBar:vertical {
-                border: none;
-                background: #18181F;
-                width: 13px;
-                margin: 0px 0px 0px 0px;
-            }
-        
-            /* The Scrollbar Handle */
-            QScrollBar::handle:vertical {
-                background: #3E3E42;
-                min-height: 20px;
-                border-radius: 5px;
-                margin: 2px;
-            }
-        
-            /* Handle color when hovering */
-            QScrollBar::handle:vertical:hover {
-                background: #505050;
-            }
-        
-            /* Remove the buttons (arrows) at the top and bottom */
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-        
-            /* Remove the background area above and below the handle */
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: none;
-            }
-        """)
 
         self.sidebar.setMouseTracking(True)
         self.sidebar.viewport().setMouseTracking(True)
 
-        self.metrics_display = MetricsDisplay()
-        self.metrics_display.setStyleSheet("""
-            QScrollBar:vertical {
-                border: none;
-                background: #18181F;
-                width: 13px;
-                margin: 0px 0px 0px 0px;
-            }
-        
-            /* The Scrollbar Handle */
-            QScrollBar::handle:vertical {
-                background: #3E3E42;
-                min-height: 20px;
-                border-radius: 5px;
-                margin: 2px;
-            }
-        
-            /* Handle color when hovering */
-            QScrollBar::handle:vertical:hover {
-                background: #505050;
-            }
-        
-            /* Remove the buttons (arrows) at the top and bottom */
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-        
-            /* Remove the background area above and below the handle */
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: none;
-            }
-        """)
-        self.side_layout.addWidget(self.sidebar)
+        self.current_theme = "light"
+        self.metrics_display = MetricsDisplay(self.current_theme)
+        self.metrics_display.setContentsMargins(15,15,15,0)
 
+        self.side_layout.addWidget(self.sidebar_container)
+
+        main_layout.addSpacing(5)
         main_layout.addWidget(self.side_widget)
         main_layout.addWidget(self.metrics_display, stretch=1)
 
@@ -308,8 +267,8 @@ class GraphsPage(QWidget):
 
     def refresh_runs(self):
         """Refreshes the run list from WandB and updates the sidebar."""
-        user = self.config.get("wandbuser")
-        proj = self.config.get("wandbproj")
+        user = self.config.get("wandb_user")
+        proj = self.config.get("wandb_proj")
 
         if not user or not proj:
             print("WandB config incomplete.")
@@ -350,7 +309,9 @@ class GraphsPage(QWidget):
             return
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
-            self.metrics_display.load_run(run)
+            print("Trying to load")
+            self.metrics_display.load_run(run, self.current_theme)
+            print("Finished loading")
         finally:
             # Restore normal cursor even if there's an error
             QApplication.restoreOverrideCursor()
@@ -360,3 +321,219 @@ class GraphsPage(QWidget):
             self.sidebar.viewport().setCursor(Qt.CursorShape.PointingHandCursor)
         else:
             self.sidebar.viewport().setCursor(Qt.CursorShape.ArrowCursor)
+
+
+    def set_light_mode(self):
+        self.current_theme = "light"
+        self.metrics_display.set_light_mode()
+        self.refresh_btn.setStyleSheet("""
+                    QPushButton {
+                        background: #e6dff9;
+                        color: #484458;
+                        border-radius: 12px; 
+                        padding: 5px;
+                        font-size: 17px;
+                        font-weight: 520
+                    }
+                    QPushButton:hover { background-color: #B5A1FF; }
+                """)
+
+        self.sidebar_container.setStyleSheet("""
+                background-color: #F9F1F9;
+                border-radius: 10px;
+        """)
+
+        self.sidebar.setStyleSheet("""
+                    QListWidget {outline: none; border-radius: 10px;
+                        border: none;}
+                     
+
+                    QListWidget::item {
+                        padding: 0px 10px;
+                        margin-left:3px;
+                        font-size: 16px;
+                        color: #333;
+                        background-color: transparent;
+                        border-radius: 10px;
+                        margin-left: 5px;
+                        margin-right: 5px;
+                        margin-bottom: 5px;
+                    }
+                    QListWidget::item:hover {
+                        background-color: #ECE6F1;
+                    }
+
+
+                    QListWidget::item:selected {
+                        background-color: #e6dff9;
+                        border: none;
+                    }
+
+
+                    QListWidget::item:focus {
+                        outline: 0;
+                    }
+                    QScrollBar:vertical {
+                        border: none;
+                        background: #ECE6F1;
+                        width: 13px;
+                        margin: 0px 0px 0px 0px;
+                    }
+
+                    QScrollBar::handle:vertical {
+                        background: #DDD5E2;
+                        min-height: 20px;
+                        border-radius: 5px;
+                        margin: 2px;
+                    }
+
+                    QScrollBar::handle:vertical:hover {
+                        background: #DCD1E2;
+                    }
+
+                    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                        height: 0px;
+                    }
+
+                    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                        background: none;
+                    }
+                """)
+        self.metrics_display.setStyleSheet("""
+                    QScrollBar:vertical {
+                        border: none;
+                        background: #ECE6F1;
+                        width: 13px;
+                        margin: 0px 0px 0px 0px;
+                    }
+                    QScrollArea {
+                        border: none;
+                    }
+                   
+
+                    QScrollBar::handle:vertical {
+                        background: #DDD5E2;
+                        min-height: 20px;
+                        border-radius: 5px;
+                        margin: 2px;
+                    }
+
+                    QScrollBar::handle:vertical:hover {
+                        background: #DAD2DE;
+                    }
+
+                    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                        height: 0px;
+                    }
+
+                    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                        background: none;
+                    }
+                """)
+
+    def set_dark_mode(self):
+        self.current_theme = "dark"
+        self.metrics_display.set_dark_mode()
+        self.refresh_btn.setStyleSheet("""
+                            QPushButton {
+                                background: #1A1921;
+                                color: #C38BFF;
+                                border-radius: 12px; 
+                                padding: 5px;
+                                font-size: 17px;
+                                font-weight: 520
+                            }
+                            QPushButton:hover { background-color: #24232D; }
+                        """)
+        self.sidebar_container.setStyleSheet("""
+                        background-color: #1A1921;
+                        border-radius: 10px;
+                """)
+        self.sidebar.setStyleSheet("""
+                            QListWidget {background-color: #1A1921;outline: none; border-radius: 10px;
+                                border: none;}
+                            
+                            
+                            QListWidget::item {
+                                padding: 0px 10px;
+                                margin-left:3px;
+                                font-size: 16px;
+                                color: #9D9D9D;
+                                background-color: transparent;
+                                border-radius: 10px;
+                                margin-left: 5px;
+                                margin-right: 5px;
+                                margin-bottom: 5px;
+                            }
+                            QListWidget::item:hover {
+                                background-color: #24222A;
+                            }
+    
+
+                            QListWidget::item:selected {
+                                background-color: #362A48;
+                                border: none;
+                            }
+
+
+                            QListWidget::item:focus {
+                                outline: 0;
+                            }
+                            QScrollBar:vertical {
+                                border: none;
+                                background: #312D39;
+                                width: 13px;
+                                margin: 0px 0px 0px 0px;
+                            }
+
+                            QScrollBar::handle:vertical {
+                                background: #211E29;
+                                min-height: 20px;
+                                border-radius: 5px;
+                                margin: 2px;
+                            }
+
+                            QScrollBar::handle:vertical:hover {
+                                background: #1A1723;
+                            }
+
+                            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                                height: 0px;
+                            }
+
+                            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                                background: none;
+                            }
+                        """)
+        self.metrics_display.setStyleSheet("""
+                            QScrollArea {
+                                    border: none;
+                            }
+                            QScrollBar:vertical {
+                                border: none;
+                                background: #312D39;
+                                width: 13px;
+                                margin: 0px 0px 0px 0px;
+                            }
+
+                            QScrollBar::handle:vertical {
+                                background: #211E29;
+                                min-height: 20px;
+                                border-radius: 5px;
+                                margin: 2px;
+                            }
+
+                            QScrollBar::handle:vertical:hover {
+                                background: #1A1723;
+                            }
+
+                            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                                height: 0px;
+                            }
+
+                            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                                background: none;
+                            }
+                        """)
+
+

@@ -4,95 +4,200 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.0.0
+Version: 1.1.0
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
 
-from PyQt6.QtCore import Qt
+import sys
+from PyQt6.QtCore import Qt, QSize, QPointF
+from PyQt6.QtGui import QPixmap, QColor, QCursor, QIcon, QPainter, QLinearGradient, QBrush
 from PyQt6.QtWidgets import (
-    QWidget, QMainWindow,
+    QWidget, QMainWindow, QApplication,
     QLabel, QPushButton,
-    QVBoxLayout, QHBoxLayout
+    QVBoxLayout, QHBoxLayout, QFrame
 )
 
-
 class HomepageSkeleton(QMainWindow):
-    def __init__(self, navigate):
+    def __init__(self, navigate, toggle_theme_func):
         super().__init__()
-        self.project_name = None
         self.setWindowTitle("Homepage")
+        self.resize(1000, 700)
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        central_widget.setStyleSheet("""
-            background-color: qradialgradient(
-                cx:0.5, cy:0.5, radius:1.5, fx:0.5, fy:0.5,
-                stop:0 #1E031E,    /* Primary Slack Purple */
-                stop:0.5 #190219,  /* Mid-stop bridge to reduce banding */
-                stop:1 #130113     /* Deep Dark Corner Purple */
+        # Use our custom smooth background frame
+        self.central_widget = QFrame()
+        self.setCentralWidget(self.central_widget)
+        self.central_widget.setObjectName("mainContainer")
+
+        self.main_layout = QVBoxLayout()
+        self.main_layout.setContentsMargins(0, 40, 0, 0)
+        self.main_layout.setSpacing(0)
+        self.central_widget.setLayout(self.main_layout)
+
+        self.top_bar = QWidget()
+        self.top_bar_layout = QHBoxLayout()
+        self.top_bar_layout.setContentsMargins(35, 10, 25, 10)
+        self.top_bar.setObjectName("top_bar")
+        self.top_bar.setFixedHeight(75)
+        self.top_bar.setLayout(self.top_bar_layout)
+        self.top_bar_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.top_bar_layout.setSpacing(20)
+
+        # 1: Mode Toggle Button
+        self.mode_button = QPushButton()
+        self.mode_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.mode_button.clicked.connect(toggle_theme_func)
+        self.top_bar_layout.addWidget(self.mode_button)
+
+        self.docs = QPushButton("Docs")
+        self.docs.setFixedSize(150,50)
+        self.top_bar_layout.addWidget(self.docs)
+        self.docs.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.github = QPushButton("GitHub")
+        self.github.setFixedSize(150, 50)
+        self.top_bar_layout.addWidget(self.github)
+        self.github.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.sign_in_btn = QPushButton("Sign in")
+        self.sign_in_btn.setFixedSize(150, 50)
+        self.sign_in_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.top_bar_layout.addWidget(self.sign_in_btn)
+
+        self.main_layout.addWidget(self.top_bar, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.main_layout.addSpacing(125)
+
+        self.easyssh = QLabel("Easy-SSH")
+        self.main_layout.addWidget(self.easyssh, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.main_layout.addSpacing(30)
+
+        self.description = QLabel("Your one stop shop for AI model training.")
+        self.main_layout.addWidget(self.description, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.main_layout.addSpacing(45)
+
+        self.get_started_btn = QPushButton("Get Started")
+        self.get_started_btn.setFixedSize(250, 50)
+        self.get_started_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.get_started_btn.clicked.connect(lambda _, p="create": navigate(p))
+
+        self.main_layout.addWidget(self.get_started_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.main_layout.addStretch(1)
+
+        self.is_dark = False
+        self.set_light_mode()
+
+    def toggle_mode(self):
+        if self.is_dark:
+            self.set_light_mode()
+        else:
+            self.set_dark_mode()
+        self.is_dark = not self.is_dark
+
+    def set_light_mode(self):
+        self.central_widget.setStyleSheet("""
+        QFrame#mainContainer{
+            background-color: qlineargradient(
+                x1: 1, y1: 0, 
+                x2: 0, y2: 1, 
+                stop: 0 #A992FF, 
+                stop: 0.70 #D6C7FE, 
+                stop: 1 #DBCEFF
             );
-        """)
-
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-        central_widget.setLayout(main_layout)
-
-        main_layout.addStretch(1)
-
-        welcome_box = QWidget()
-        welcome_box.setStyleSheet("border: 1px solid #A4A4A4; border-radius: 10px; background-color: #18181F")
-
-        box_layout = QVBoxLayout(welcome_box)
-        box_layout.setSpacing(15)
-        box_layout.setContentsMargins(50, 70, 50, 70)
-        welcome_label = QLabel("Welcome to Easy-SSH")
-        welcome_label.setStyleSheet("""color: white; font-size: 40px; border: none;""")
-        welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        box_layout.addWidget(welcome_label)
-
-        desc_label = QLabel("Your one stop shop for AI model training.")
-        desc_label.setStyleSheet("color: #A4A4A4; font-size: 22px; border: none;")
-        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        box_layout.addWidget(desc_label)
-        box_layout.addSpacing(15)
-
-        self.start_btn = QPushButton("Get Started")
-        self.start_btn.setFixedSize(200, 50)
-        self.start_btn.setStyleSheet("""
-            QPushButton {
-                /* Left to Right: Blue (#00dbde) to Purple (#fc00ff) */
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                                                  stop:0 #0068C3, stop:1 #6F00B9);
-                color: white;
-                font-size: 20px;
-                border-radius: 10px;
-                border: none;
-            }
-
-            QPushButton:hover {
-                /* Slightly shift the colors or brighten on hover */
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                                                  stop:0 #0075DB, stop:1 #0022CD);
-                                                  cursor: pointer;
-            }
-
-            QPushButton:pressed {
-                /* Darken slightly when clicked to give feedback */
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                                                  stop:0 #0068C3, stop:1 #6F00B9);
             }
         """)
-        self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.start_btn.clicked.connect(lambda _, p="create": navigate(p))
-        box_layout.addWidget(self.start_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        h_container = QHBoxLayout()
-        h_container.addStretch(1)
-        h_container.addWidget(welcome_box)
-        h_container.addStretch(1)
+        # UI Elements
+        self.top_bar.setStyleSheet("QWidget#top_bar { background-color: #F4E1FF; border-radius: 10px; }")
+        self.mode_button.setStyleSheet("""
+            QPushButton { background-color: transparent; border: none; padding: 5px; }
+            QPushButton:hover { background-color: rgba(0, 0, 0, 20); border-radius: 15px; }
+        """)
+        self.docs.setStyleSheet("""
+                           QPushButton { background:transparent; font-size: 23px; font-weight: bold; border-radius: 15px; color:black; }
+                           QPushButton:hover { background-color: rgba(0, 0, 0, 20); }
+                           QPushButton:pressed {background-color: #D4C4FF; }
+                       """)
+        self.github.setStyleSheet("""
+                           QPushButton { background:transparent; font-size: 23px; font-weight: bold; border-radius: 15px; color:black; }
+                           QPushButton:hover { background-color: rgba(0, 0, 0, 20); }
+                           QPushButton:pressed {background-color: #D4C4FF; }
+                       """)
 
-        main_layout.addLayout(h_container)
+        self.sign_in_btn.setStyleSheet("""
+            QPushButton { background-color: #D4C4FF; font-size: 23px; font-weight: bold; border-radius: 15px; color:black; }
+            QPushButton:hover { background-color: #DACCFF; }
+            QPushButton:pressed {background-color: #D4C4FF; }
+        """)
 
-        main_layout.addStretch(1)
+        self.easyssh.setStyleSheet("font-size: 65px; color: #000000; font-weight: bold;")
+        self.description.setStyleSheet("font-size: 35px; color: #000000; font-weight: bold;")
+        self.get_started_btn.setStyleSheet("""
+        QPushButton{background-color: black; color: white; font-size: 23px; border-radius: 25px; font-weight: 650px;}
+        QPushButton:hover{background-color: #222}"""
+        )
+
+
+
+        # Update Icon to "Light Mode" icon
+        icon_path = "C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\light mode.png"
+        self.mode_button.setIcon(QIcon(icon_path))
+        self.mode_button.setIconSize(QSize(40, 40))
+
+    def set_dark_mode(self):
+        # Update smooth gradient colors
+        self.central_widget.setStyleSheet("""
+            QFrame#mainContainer{
+                background-color: #141318
+            }
+        """)
+
+        self.top_bar.setStyleSheet("QWidget#top_bar { background-color: #2B2838; border-radius: 10px; }")
+        self.mode_button.setStyleSheet("""
+            QPushButton { background-color: transparent; border: none; padding: 5px; }
+            QPushButton:hover { background-color: #39354A; border-radius: 15px; }
+            
+        """)
+        self.docs.setStyleSheet("""
+                            QPushButton { 
+                                background-color: #2B2838; 
+                                border: none;
+                                font-size: 23px; 
+                                font-weight: bold; 
+                                border-radius: 15px; 
+                                color: white; 
+                            }
+                            QPushButton:hover { background-color: #39354A; }
+                            QPushButton:pressed { background-color: #494266; }
+                        """)
+
+        self.github.setStyleSheet("""
+                            QPushButton { 
+                                background-color: #2B2838; 
+                                border: none;
+                                font-size: 23px; 
+                                font-weight: bold; 
+                                border-radius: 15px; 
+                                color: white; 
+                            }
+                            QPushButton:hover { background-color: #39354A; }
+                            QPushButton:pressed { background-color: #494266; }
+                        """)
+
+        self.sign_in_btn.setStyleSheet("""
+            QPushButton { background-color: #3E375B; font-size: 23px; font-weight: bold; color: #FFFFFF; border-radius: 15px; }
+            QPushButton:hover { background-color: #494266; }
+            QPushButton:pressed { background-color: #3E375B; }
+        """)
+
+        self.easyssh.setStyleSheet("font-size: 65px; color: #C392FF; font-weight: bold;")
+        self.description.setStyleSheet("font-size: 35px; color: #C392FF; font-weight: bold;")
+        self.get_started_btn.setStyleSheet("""
+            QPushButton{background-color: #D0C4FF; color: #141318; font-size: 23px; border-radius: 25px; font-weight: 650px;}
+            QPushButton:hover{background-color: #B7A3FF}
+        """)
+
+        # Update Icon to "Dark Mode" icon
+        icon_path = "C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\dark mode.png"
+        self.mode_button.setIcon(QIcon(icon_path))
+        self.mode_button.setIconSize(QSize(40, 40))

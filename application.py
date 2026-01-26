@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.0.0
+Version: 1.1.0
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -31,9 +31,19 @@ class Application(QMainWindow):
 
         self._stack = QStackedWidget()
         self.setCentralWidget(self._stack)
+        self.is_dark = False
 
         self._pages = {}
         self._skeletons = {}
+
+    def toggle_theme(self):
+        self.is_dark = not self.is_dark
+
+        for skeleton in self._skeletons.values():
+            if self.is_dark:
+                skeleton.set_dark_mode()
+            else:
+                skeleton.set_light_mode()
 
     def add_skeleton(self, name: str, skeleton: QMainWindow):
         central = skeleton.centralWidget()
@@ -61,6 +71,13 @@ class Application(QMainWindow):
 
         self._stack.setCurrentWidget(self._pages[name])
 
+        if name == "project" and skeleton:
+            if hasattr(skeleton, "load_settings"):
+                skeleton.load_settings()
+
+
+
+
     def get_page(self, name: str) -> QWidget:
         return self._pages.get(name)
 
@@ -73,13 +90,16 @@ def run():
 
     from gui.createProject.skeleton import CreateSkeleton
     from gui.welcomePage.skeleton import HomepageSkeleton
-    home = HomepageSkeleton(window.show_page)
-    create = CreateSkeleton(window.show_page, config)
-    project = ProjectSettingsSkeleton(window.show_page, config)
+    home = HomepageSkeleton(window.show_page, window.toggle_theme)
+    create = CreateSkeleton(window.show_page, window.toggle_theme, config)
+    project = ProjectSettingsSkeleton(window.show_page, config, window.toggle_theme)
 
-    window.add_skeleton("project", project)
     window.add_skeleton("create", create)
     window.add_skeleton("home", home)
+    window.add_skeleton("project", project)
+
+    if window.is_dark:
+        window.toggle_theme()
 
     if config.is_complete():
 
