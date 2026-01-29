@@ -9,8 +9,6 @@ Email: sam.grouchnikov@gmail.com
 Status: Development
 """
 
-# test 1
-
 import sys
 
 from PyQt6.QtWidgets import (

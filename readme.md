@@ -42,3 +42,4 @@ python application.py
 * Support for more AI model training libraries
   * Tensorflow + Tensorboard workflows
   * Normal Pytorch DDP support (torchrun commands)
+* File editor bug checks with Pylint

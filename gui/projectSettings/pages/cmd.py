@@ -11,11 +11,11 @@ Status: Development
 
 import re
 
-from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QPixmap, QCursor, QIcon, QColor
+from PyQt6.QtCore import Qt, QTimer, QSize, QPoint
+from PyQt6.QtGui import QPixmap, QCursor, QIcon, QColor, QAction
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect
+    QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect, QMenu
 )
 
 
@@ -124,24 +124,68 @@ class cmdPage(QWidget):
         self.connect_btn = QPushButton("Connect")
         self.end_btn = QPushButton("Ctrl + C")
 
+        self.tools_btn = QPushButton("Tools")
+        self.tools_menu = QMenu(self)
+        self.setup_tools_menu()
 
-        self.clear_btn = QPushButton("Tools")
+        # Connect the click to our custom positioning function
+        self.tools_btn.clicked.connect(self.show_tools_menu_above)
+
+
+
+
 
 
 
         self.input_bar.addWidget(self.input_field)
         self.input_bar.addWidget(self.send_btn)
         self.input_bar.addWidget(self.end_btn)
-        self.input_bar.addWidget(self.clear_btn)
+        self.input_bar.addWidget(self.tools_btn)
         self.input_bar.addWidget(self.connect_btn)
         self.container_layout.addLayout(self.input_bar)
 
         # Connections
         self.send_btn.clicked.connect(self.handle_send)
         self.input_field.returnPressed.connect(self.handle_send)
-        self.clear_btn.clicked.connect(self.clear_console)
         self.end_btn.clicked.connect(self.handle_interrupt)
         self.connect_btn.clicked.connect(self.handle_connect)
+
+    def setup_tools_menu(self):
+        self.tools_menu.setObjectName("toolsMenu")
+        self.tools_menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.tools_menu.setWindowFlags(
+            Qt.WindowType.Popup |
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.NoDropShadowWindowHint
+        )
+        actions = [
+            ("Auto Environment Setup", self.dummy_func),
+            ("Scan Dependency Imports", self.dummy_func),
+            ("System Health Check", self.dummy_func),
+            ("Clean Up Zombie Processes", self.dummy_func)
+        ]
+
+        for text, slot in actions:
+            action = QAction(text, self)
+            action.triggered.connect(slot)
+            self.tools_menu.addAction(action)
+
+    def show_tools_menu_above(self):
+        menu_width = self.tools_menu.sizeHint().width()
+        menu_height = self.tools_menu.sizeHint().height()
+        btn_width = self.tools_btn.width()
+
+        btn_pos = self.tools_btn.mapToGlobal(QPoint(0, 0))
+        x = btn_pos.x() + btn_width - menu_width
+
+        y = btn_pos.y() - menu_height - 15
+
+        self.tools_menu.exec(QPoint(x, y))
+
+    def dummy_func(self):
+        print("Action: Auto Environment Setup triggered")
+
+
 
     def set_busy(self, busy):
         self.send_btn.setEnabled(not busy)
@@ -410,9 +454,13 @@ class cmdPage(QWidget):
                     }
                     QPushButton:hover { background-color: #C6D8FF; }
                     QPushButton:pressed{background-color: #D6E3FF;}
+                    QPushButton::menu-indicator {
+                                image: none;
+                                width: 0px;
+                            }
                     """
         # Set heights
-        for btn in [self.send_btn, self.clear_btn, self.end_btn]:
+        for btn in [self.send_btn, self.tools_btn, self.end_btn]:
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(btn_style_sheet)
@@ -437,6 +485,39 @@ class cmdPage(QWidget):
                 widget.setStyleSheet("color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
 
         self.is_dark = False
+        self.tools_btn.setStyleSheet(self.tools_btn.styleSheet() + """
+                    QPushButton::menu-indicator {
+                        image: none;
+                        width: 0px;
+                    }
+                """)
+        self.tools_menu.setStyleSheet("""
+                QMenu#toolsMenu {
+                    background-color: #EDEBF3; 
+                    border-radius: 5px;
+                    padding: 8px 0px;
+                    margin: -1px;
+                }
+                QMenu::item {
+                    padding: 10px 20px;
+                    font-size: 13.5px;
+                    font-weight: 510;
+                    color: #5D5D5D;
+                    background-color: transparent;
+                    margin: 2px 8px; 
+                    border-radius: 6px;
+                    cursor: pointer;
+                }
+                QMenu::item:selected {
+                    background-color: #E5E2ED;
+                    cursor: pointer;
+                }
+                QMenu::separator {
+                    height: 1px;
+                    background: #484848;
+                    margin: 5px 15px;
+                }
+            """)
 
     def set_dark_mode(self):
         self.top_bar.setStyleSheet("""
@@ -546,9 +627,13 @@ class cmdPage(QWidget):
                             }
                             QPushButton:hover { background-color: #3C3C43; }
                             QPushButton:pressed{background-color: #313137;}
+                            QPushButton::menu-indicator {
+                                image: none;
+                                width: 0px;
+                            }
                             """
         # Set heights
-        for btn in [self.send_btn, self.clear_btn, self.end_btn]:
+        for btn in [self.send_btn, self.tools_btn, self.end_btn]:
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(btn_style_sheet)
@@ -572,3 +657,30 @@ class cmdPage(QWidget):
                 # Apply your style here
                 widget.setStyleSheet("color: #fff; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
         self.is_dark = True
+        self.tools_menu.setStyleSheet("""
+        QMenu {
+            background-color: #24222E; 
+            border-radius: 12px;
+            padding: 8px 0px;
+            margin: -1px;
+        }
+        QMenu::item {
+            padding: 10px 20px;
+            font-size: 13.5px;
+            font-weight: 510;
+            color: #D3D3D3;
+            background-color: transparent;
+            margin: 2px 8px; 
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        QMenu::item:selected {
+            background-color: #353340;
+            cursor: pointer;
+        }
+        QMenu::separator {
+            height: 1px;
+            background: #484848;
+            margin: 5px 15px;
+        }
+    """)
