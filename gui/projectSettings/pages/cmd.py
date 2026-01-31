@@ -39,7 +39,6 @@ class cmdPage(QWidget):
         # ---- TOP BAR -----
         self.top_bar = QWidget()
         self.top_bar.setObjectName('top_bar')
-        # 2. Match the background color (#1F1F1F) and font
 
         self.top_bar.setFixedHeight(40)
 
@@ -51,6 +50,7 @@ class cmdPage(QWidget):
         self.dir_label = QLabel("Current Directory: None")
         self.dir_label.setFixedHeight(20)
         self.top_tab_layout.addWidget(self.dir_label)
+        self.top_tab_layout.addStretch(1)
 
         # Status Container
         self.status_container = QWidget()
@@ -122,7 +122,10 @@ class cmdPage(QWidget):
 
         self.send_btn = QPushButton("Run")
         self.connect_btn = QPushButton("Connect")
-        self.end_btn = QPushButton("Ctrl + C")
+        self.actions_btn = QPushButton("Actions")
+        self.actions_menu = QMenu(self)
+
+        self.setup_actions_menu()
 
         self.tools_btn = QPushButton("Tools")
         self.tools_menu = QMenu(self)
@@ -130,6 +133,7 @@ class cmdPage(QWidget):
 
         # Connect the click to our custom positioning function
         self.tools_btn.clicked.connect(self.show_tools_menu_above)
+        self.actions_btn.clicked.connect(self.show_actions_menu_above)
 
 
 
@@ -139,7 +143,7 @@ class cmdPage(QWidget):
 
         self.input_bar.addWidget(self.input_field)
         self.input_bar.addWidget(self.send_btn)
-        self.input_bar.addWidget(self.end_btn)
+        self.input_bar.addWidget(self.actions_btn)
         self.input_bar.addWidget(self.tools_btn)
         self.input_bar.addWidget(self.connect_btn)
         self.container_layout.addLayout(self.input_bar)
@@ -147,7 +151,7 @@ class cmdPage(QWidget):
         # Connections
         self.send_btn.clicked.connect(self.handle_send)
         self.input_field.returnPressed.connect(self.handle_send)
-        self.end_btn.clicked.connect(self.handle_interrupt)
+        self.actions_btn.clicked.connect(self.handle_interrupt)
         self.connect_btn.clicked.connect(self.handle_connect)
 
     def setup_tools_menu(self):
@@ -181,6 +185,37 @@ class cmdPage(QWidget):
         y = btn_pos.y() - menu_height - 15
 
         self.tools_menu.exec(QPoint(x, y))
+
+    def setup_actions_menu(self):
+        self.actions_menu.setObjectName("actionsMenu")
+        self.actions_menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.actions_menu.setWindowFlags(
+            Qt.WindowType.Popup |
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.NoDropShadowWindowHint
+        )
+        actions = [
+            ("Clear Console", self.clear_console),
+            ("Terminate Run", self.handle_interrupt),
+            ("Clear all Server Files", self.dummy_func),
+        ]
+
+        for text, slot in actions:
+            action = QAction(text, self)
+            action.triggered.connect(slot)
+            self.actions_menu.addAction(action)
+
+    def show_actions_menu_above(self):
+        menu_width = self.actions_menu.sizeHint().width()
+        menu_height = self.actions_menu.sizeHint().height()
+        btn_width = self.actions_btn.width()
+
+        btn_pos = self.actions_btn.mapToGlobal(QPoint(0, 0))
+        x = btn_pos.x() + btn_width - menu_width
+
+        y = btn_pos.y() - menu_height - 15
+
+        self.actions_menu.exec(QPoint(x, y))
 
     def dummy_func(self):
         print("Action: Auto Environment Setup triggered")
@@ -460,7 +495,7 @@ class cmdPage(QWidget):
                             }
                     """
         # Set heights
-        for btn in [self.send_btn, self.tools_btn, self.end_btn]:
+        for btn in [self.send_btn, self.tools_btn, self.actions_btn]:
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(btn_style_sheet)
@@ -491,10 +526,10 @@ class cmdPage(QWidget):
                         width: 0px;
                     }
                 """)
-        self.tools_menu.setStyleSheet("""
-                QMenu#toolsMenu {
+        menu_ss = """
+                QMenu {
                     background-color: #EDEBF3; 
-                    border-radius: 5px;
+                    border-radius: 10px;
                     padding: 8px 0px;
                     margin: -1px;
                 }
@@ -517,7 +552,9 @@ class cmdPage(QWidget):
                     background: #484848;
                     margin: 5px 15px;
                 }
-            """)
+            """
+        self.tools_menu.setStyleSheet(menu_ss)
+        self.actions_menu.setStyleSheet(menu_ss)
 
     def set_dark_mode(self):
         self.top_bar.setStyleSheet("""
@@ -633,7 +670,7 @@ class cmdPage(QWidget):
                             }
                             """
         # Set heights
-        for btn in [self.send_btn, self.tools_btn, self.end_btn]:
+        for btn in [self.send_btn, self.tools_btn, self.actions_btn]:
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(btn_style_sheet)
@@ -657,7 +694,7 @@ class cmdPage(QWidget):
                 # Apply your style here
                 widget.setStyleSheet("color: #fff; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
         self.is_dark = True
-        self.tools_menu.setStyleSheet("""
+        menu_ss = """
         QMenu {
             background-color: #24222E; 
             border-radius: 12px;
@@ -683,4 +720,6 @@ class cmdPage(QWidget):
             background: #484848;
             margin: 5px 15px;
         }
-    """)
+    """
+        self.tools_menu.setStyleSheet(menu_ss)
+        self.actions_menu.setStyleSheet(menu_ss)

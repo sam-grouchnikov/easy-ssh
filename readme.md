@@ -43,3 +43,4 @@ python application.py
   * Tensorflow + Tensorboard workflows
   * Normal Pytorch DDP support (torchrun commands)
 * File editor bug checks with Pylint
+* Agentic system to analyze errors and suggest fixes

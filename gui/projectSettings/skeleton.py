@@ -205,13 +205,13 @@ class ProjectSettingsSkeleton(QMainWindow):
 
         self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect)
         self.file_tree_page = FileTreePage(self.global_run_command, self.home_dir, self.config, self.ssh_manager)
-        self.settings_page = SettingsPage(self.config)
-        # self.graph_page = GraphsPage(self.config)
+        self.settings_page = SettingsPage(self.config, self.reload_manager)
+        self.graph_page = GraphsPage(self.config)
 
         # self.cmd_page = QWidget()
         # self.file_tree_page = QWidget()
         # self.settings_page = QWidget()
-        self.graph_page = QWidget()
+        # self.graph_page = QWidget()
 
         self.stack.addWidget(self.cmd_page)
         self.stack.addWidget(self.file_tree_page)
@@ -241,6 +241,13 @@ class ProjectSettingsSkeleton(QMainWindow):
     def load_settings(self):
         self.settings_page.load_parts()
         self.profile_name_lbl.setText(self.config.get("user"))
+
+    def reload_manager(self):
+        server_new = self.config.get("ssh_ip")
+        user_new = self.config.get("ssh_user")
+        port_new = self.config.get("ssh_port")
+        psw_new = self.config.get("ssh_psw")
+        self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
 
     def global_handle_connect(self):
         self.cmd_page.connect_btn.setText("Connecting")
@@ -411,7 +418,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.cmd_page.set_light_mode()
         self.file_tree_page.set_light_mode()
         self.settings_page.set_light_mode()
-        # self.graph_page.set_light_mode()
+        self.graph_page.set_light_mode()
         self.light_text_lbl.setText("Light Mode")
         self.central_widget.setStyleSheet("background-color: #F9F9FF;")
         self.sidebar.setStyleSheet("background-color: #EDEDF4")
@@ -494,7 +501,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.cmd_page.set_dark_mode()
         self.file_tree_page.set_dark_mode()
         self.settings_page.set_dark_mode()
-        # self.graph_page.set_dark_mode()
+        self.graph_page.set_dark_mode()
         self.light_text_lbl.setText("Dark Mode")
         self.central_widget.setStyleSheet("background-color: #141318;")
         self.sidebar.setStyleSheet("background-color: #1B1926")

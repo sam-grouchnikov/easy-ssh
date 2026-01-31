@@ -18,10 +18,11 @@ from PyQt6.QtWidgets import (
 
 
 class SettingsPage(QWidget):
-    def __init__(self, config):
+    def __init__(self, config, reload):
         super().__init__()
         self.inputs = {}
         self.config = config
+        self.reload = reload
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -109,6 +110,7 @@ class SettingsPage(QWidget):
         self.config.set("wandb_user", self.integrations_row.wandbblock.username.input.text())
         self.config.set("wandb_proj", self.integrations_row.wandbblock.proj.input.text())
         self.config.set("wandb_api", self.integrations_row.wandbblock.api_key.input.text())
+        self.reload()
 
 
     def set_light_mode(self):
