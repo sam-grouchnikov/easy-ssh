@@ -34,14 +34,15 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.setMinimumSize(600, 400)
         self.cloned = False
         self.config = config
-        if self.config.is_complete():
-            server = config.get("ssh_ip")
-            user = config.get("ssh_user")
-            port = config.get("ssh_port")
-            psw = config.get("ssh_psw")
-            self.ssh_manager = SSHManager(server, user, port, psw)
-        else:
-            self.ssh_manager = None
+        # if self.config.is_complete():
+        #     server = config.get("ssh_ip")
+        #     user = config.get("ssh_user")
+        #     port = config.get("ssh_port")
+        #     psw = config.get("ssh_psw")
+        #     self.ssh_manager = SSHManager(server, user, port, psw)
+        # else:
+        #     self.ssh_manager = None
+        self.ssh_manager = None
         self.home_dir = None
         self.current_dir = None
         self.recent_cmd = None

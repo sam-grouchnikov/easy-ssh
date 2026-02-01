@@ -108,7 +108,7 @@ class FirebaseClient:
 
     def uid(self) -> str:
         self._require_session()
-        return self._session.uid  # type: ignore[return-value]
+        return self._session.uid
 
     def _ensure_id_token(self) -> str:
         self._require_session()
