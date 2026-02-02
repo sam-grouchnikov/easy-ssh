@@ -42,3 +42,6 @@ python application.py
 * Support for more AI model training libraries
   * Tensorflow + Tensorboard workflows
   * Normal Pytorch DDP support (torchrun commands)
+
+### Dev tab latest update
+Fully wired the sign in functions with Firebase
