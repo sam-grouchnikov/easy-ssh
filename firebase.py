@@ -159,7 +159,7 @@ class FirebaseClient:
 
     # ---- FIRESTORE ----
     def get_doc(self, doc_path: str) -> Dict[str, Any]:
-        # Firestore REST accepts Firebase ID tokens; rules apply :contentReference[oaicite:6]{index=6}
+        # Firestore REST accepts Firebase ID tokens;
         id_token = self._ensure_id_token()
         url = f"https://firestore.googleapis.com/v1/projects/{self.project_id}/databases/(default)/documents/{doc_path}"
         r = requests.get(url, headers={"Authorization": f"Bearer {id_token}"}, timeout=15)

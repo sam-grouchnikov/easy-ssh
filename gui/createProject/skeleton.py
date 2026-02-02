@@ -43,20 +43,17 @@ class CreateSkeleton(QMainWindow):
         self.central_widget.setLayout(self.main_layout)
 
         self.stack = QStackedWidget(self)
-        self.signInWidget = SignInWidget(self.fb, self.navigate)
         self.signUpWidget = SignUpWidget(self.fb, self.navigate)
-        self.stack.addWidget(self.signInWidget)
         self.stack.addWidget(self.signUpWidget)
-        self.stack.setCurrentIndex(1)
+        self.stack.setCurrentIndex(0)
 
         self.main_layout.addWidget(self.stack)
         self.is_dark = False
 
         self.set_light_mode()
 
-
-    def create_account(self):
-        self.navigate("project")
+    def setSignIn(self):
+        self.signUpWidget.set_to_sign_in()
 
     def set_light_mode(self):
         self.signUpWidget.set_light_mode()
@@ -73,6 +70,7 @@ class CreateSkeleton(QMainWindow):
                 """)
 
     def set_dark_mode(self):
+        self.signUpWidget.set_dark_mode()
         self.central_widget.setStyleSheet("""
                     QFrame#mainContainer{
                         background-color: #141318

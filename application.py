@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
 from backend.config.ConfigWiring import AppConfig
 
 
+
 class Application(QMainWindow):
 
     def __init__(self):
@@ -70,9 +71,12 @@ class Application(QMainWindow):
 
         self._stack.setCurrentWidget(self._pages[name])
 
+        if name == "create" and skeleton and kwargs["signin"] == "true":
+            skeleton.setSignIn()
+
         if name == "project" and skeleton:
-            if hasattr(skeleton, "load_settings"):
-                skeleton.load_settings()
+            skeleton.update_uid(kwargs["uid"])
+
 
 
 
@@ -99,16 +103,17 @@ def run():
     from gui.welcomePage.skeleton import HomepageSkeleton
     home = HomepageSkeleton(window.show_page, window.toggle_theme)
     create = CreateSkeleton(window.show_page, window.toggle_theme, fb)
-    # project = ProjectSettingsSkeleton(window.show_page, config, window.toggle_theme)
 
-    window.add_skeleton("create", create)
     window.add_skeleton("home", home)
-    # window.add_skeleton("project", project)
+    window.add_skeleton("create", create)
+
+    project = ProjectSettingsSkeleton(window.show_page, window.toggle_theme, fb)
+    window.add_skeleton("project", project)
 
     if window.is_dark:
         window.toggle_theme()
 
-    window.show_page("create")
+    window.show_page("home")
     window.show()
 
     sys.exit(app.exec())

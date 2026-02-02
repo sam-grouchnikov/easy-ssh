@@ -25,23 +25,21 @@ from gui.projectSettings.pages.cmd import cmdPage
 from gui.projectSettings.pages.graphs import GraphsPage
 from gui.projectSettings.pages.settings import SettingsPage
 
+from firebase import _from_fs_value, _to_fs_value, from_fs_doc
+def config_doc_path(uid: str) -> str:
+    return f"users/{uid}/config/main"
+
 class ProjectSettingsSkeleton(QMainWindow):
-    def __init__(self, navigate, config, toggle_theme_func):
+    def __init__(self, navigate, toggle_theme_func, fb):
         super().__init__()
         self.project_name = None
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
         self.cloned = False
-        self.config = config
-        # if self.config.is_complete():
-        #     server = config.get("ssh_ip")
-        #     user = config.get("ssh_user")
-        #     port = config.get("ssh_port")
-        #     psw = config.get("ssh_psw")
-        #     self.ssh_manager = SSHManager(server, user, port, psw)
-        # else:
-        #     self.ssh_manager = None
+        self.uid = None
+        self.fb = fb
+
         self.ssh_manager = None
         self.home_dir = None
         self.current_dir = None
@@ -180,10 +178,12 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.profile_icon_lbl.setPixmap(
             self.profile_pix.scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         self.profile_icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.profile_btn.clicked.connect(lambda _, p="home": navigate(p))
 
 
         # 2. The Username Label (Single Row)
-        self.profile_name_lbl = QLabel(config.get("User"))
+        # self.profile_name_lbl = QLabel(config.get("User"))
+        self.profile_name_lbl = QLabel("")
         # Using 16px for a clean, readable look
         self.profile_name_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
@@ -203,10 +203,11 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.content_layout.addWidget(self.sidebar)
 
         self.stack = QStackedWidget(self)
+        self.config = None
 
         self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect)
         self.file_tree_page = FileTreePage(self.global_run_command, self.home_dir, self.config, self.ssh_manager)
-        self.settings_page = SettingsPage(self.config, self.reload_manager)
+        self.settings_page = SettingsPage(self.config, self.reload_manager, self.fb)
         self.graph_page = GraphsPage(self.config)
 
         # self.cmd_page = QWidget()
@@ -239,16 +240,21 @@ class ProjectSettingsSkeleton(QMainWindow):
         handle_navigation(0)
         self.set_light_mode()
 
+    def update_uid(self, new):
+        print("Got to update")
+        self.uid = new
+        self.doc_path = config_doc_path(self.uid)
+        self.doc = self.fb.get_doc(self.doc_path)
+        self.config = from_fs_doc(self.doc)
+        self.settings_page.update_config(self.config, self.doc_path)
+        self.load_settings()
+
     def load_settings(self):
-        self.settings_page.load_parts()
-        self.profile_name_lbl.setText(self.config.get("user"))
+        self.settings_page.load_parts(self.config)
+        self.profile_name_lbl.setText(self.config.get("email"))
 
     def reload_manager(self):
-        server_new = self.config.get("ssh_ip")
-        user_new = self.config.get("ssh_user")
-        port_new = self.config.get("ssh_port")
-        psw_new = self.config.get("ssh_psw")
-        self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
+        pass
 
     def global_handle_connect(self):
         self.cmd_page.connect_btn.setText("Connecting")

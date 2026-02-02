@@ -234,10 +234,16 @@ class GraphsPage(QWidget):
 
         self.runs = []
         print("Project is not none")
-        user = self.config.get("wandbuser")
-        proj = self.config.get("wandbproj")
-        api = wandb.Api()
-        wandb_project = f"{user}/{proj}"
+        try:
+            user = self.config.get("wandbuser")
+            proj = self.config.get("wandbproj")
+            api = wandb.Api()
+            wandb_project = f"{user}/{proj}"
+        except:
+            user = None
+            proj = None
+            api = None
+            wandb_project = None
         if user:
             print(f"Details: user: {user}, project: {wandb_project}")
             self.runs = list(api.runs(wandb_project))
