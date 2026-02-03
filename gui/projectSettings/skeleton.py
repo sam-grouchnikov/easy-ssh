@@ -257,7 +257,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         pass
 
     def global_handle_connect(self):
-        self.cmd_page.connect_btn.setText("Connecting")
+        self.cmd_page.connect_btn.setText(" Connecting")
         QCoreApplication.processEvents()
         print("Loaded data")
         if self.ssh_manager is None and self.config.get("user") != "":
@@ -268,7 +268,6 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
 
         success, msg = self.ssh_manager.connect()
-        print("connected")
         self.cmd_page.add_message(f"System: {msg}")
         print(1)
         self.cmd_page.add_separator()
@@ -299,11 +298,11 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.file_tree_page.update_home(new_path)
             self.current_dir = new_path
             self.cmd_page.update_directory_display(new_path)
-            self.cmd_page.connect_btn.setText("Connect")
+            self.cmd_page.connect_btn.setText(" Connect")
             self.cmd_page.connect_btn.setEnabled(False)
             self.cmd_page.send_btn.setEnabled(True)
         else:
-            self.cmd_page.connect_btn.setText("Connect")
+            self.cmd_page.connect_btn.setText(" Connect")
 
     def update_tree(self):
         find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
@@ -428,7 +427,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.graph_page.set_light_mode()
         self.light_text_lbl.setText("Light Mode")
         self.central_widget.setStyleSheet("background-color: #F9F9FF;")
-        self.sidebar.setStyleSheet("background-color: #EDEDF4")
+        self.sidebar.setStyleSheet("background-color:#eee6ee")
         self.easy_ssh_label.setStyleSheet("color: black; font-weight: bold; font-size: 38px")
         self.line.setStyleSheet("background-color: #555;")
         self.pages_label.setStyleSheet("color: black; font-size: 26px; font-weight: 570;")

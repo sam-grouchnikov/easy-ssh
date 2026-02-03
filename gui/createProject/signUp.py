@@ -26,7 +26,7 @@ class SignUpWidget(QWidget):
 
         self.outer_container = QWidget()
         self.outer_container_layout = QVBoxLayout(self.outer_container)
-        self.outer_container_layout.setContentsMargins(30, 25, 40, 20)
+        self.outer_container_layout.setContentsMargins(30, 25, 30, 35)
         self.outer_container.setFixedSize(450, 520)
         self.outer_container.setObjectName("outer_container")
 
@@ -145,6 +145,8 @@ class SignUpWidget(QWidget):
                                 margin: 0px;
                                 text-decoration: underline;
                                 margin-left:4px;
+                                background:transparent;
+                                border:none;
                         """)
         self.back.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.outer_container_layout.addStretch(1)

@@ -15,7 +15,7 @@ from PyQt6.QtCore import Qt, QTimer, QSize, QPoint
 from PyQt6.QtGui import QPixmap, QCursor, QIcon, QColor, QAction
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect, QMenu
+    QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect, QMenu, QSizePolicy
 )
 
 
@@ -32,7 +32,7 @@ class cmdPage(QWidget):
     def initUI(self):
         self.main_layout = QVBoxLayout(self)
         # 1. Remove the top margin of the main layout to let the bar touch the top
-        self.main_layout.setContentsMargins(40, 40, 80, 55)
+        self.main_layout.setContentsMargins(200, 25, 200, 20)
         self.main_layout.setSpacing(10)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -42,38 +42,52 @@ class cmdPage(QWidget):
 
         self.top_bar.setFixedHeight(40)
 
-        # 3. Fix the internal layout margins (Remove the bottom 10px margin)
         self.top_tab_layout = QHBoxLayout(self.top_bar)
         self.top_tab_layout.setContentsMargins(20, 3, 20, 3)
         self.top_tab_layout.setSpacing(10)
 
+
         self.dir_label = QLabel("Current Directory: None")
         self.dir_label.setFixedHeight(20)
-        self.top_tab_layout.addWidget(self.dir_label)
-        self.top_tab_layout.addStretch(1)
 
-        # Status Container
+        self.status_label = QLabel("Status: Disconnected")
+
         self.status_container = QWidget()
         self.status_container.setFixedHeight(20)
         self.status_container.setStyleSheet("border: none;")
+
         self.status_layout = QHBoxLayout(self.status_container)
         self.status_layout.setContentsMargins(0, 0, 0, 0)
-        self.status_layout.setSpacing(5)
+        self.status_layout.setSpacing(8)  # Space between dot and directory text
 
-        self.status_label = QLabel("Status: Disconnected")
-        self.status_dot = QLabel()
-
+        # 1. The Dot
         self.status_dot = QLabel()
         self.status_size = 12
         self.status_dot.setFixedSize(self.status_size, self.status_size)
+        self.status_dot.setStyleSheet("background-color: #ff4444; border-radius: 6px;")  # Default red
 
+        # 2. The Directory Label (Assuming you've initialized this elsewhere)
+        # If not initialized yet, add: self.dir_label = QLabel("Not Connected")
+        self.dir_label.setStyleSheet("font-weight: 500; color: #5f6368;")
 
-
-
-        self.status_layout.addWidget(self.status_label)
+        # 3. Add only the dot and the directory label
         self.status_layout.addWidget(self.status_dot)
+        self.status_layout.addWidget(self.dir_label)
 
-        self.top_tab_layout.addStretch()
+        # 4. Shrink-to-fit logic
+        # Set size policy so it doesn't try to take up extra space
+        self.status_container.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        self.status_container.adjustSize()
+
+        # 5. Add to top layout centered
+        self.top_tab_layout.addWidget(self.status_container, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+
+
+
+
+        # self.status_layout.addWidget(self.status_label)
+
         self.top_tab_layout.addWidget(self.status_container)
 
         self.main_layout.addWidget(self.top_bar)
@@ -82,7 +96,7 @@ class cmdPage(QWidget):
         # ---- CONTAINER ----
         self.container = QWidget()
         self.container_layout = QVBoxLayout(self.container)
-        self.container_layout.setContentsMargins(10, 20, 10, 10)
+        self.container_layout.setContentsMargins(10, 5, 10, 10)
         self.container_layout.setSpacing(10)
         self.container.setObjectName("MainOuterContainer")
 
@@ -91,8 +105,6 @@ class cmdPage(QWidget):
         # ---- CHAT SCROLL AREA ----
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-
-
 
         self.chat_container = QWidget()
         self.chat_layout = QVBoxLayout(self.chat_container)
@@ -115,44 +127,101 @@ class cmdPage(QWidget):
         shadow1.setYOffset(0)
         shadow1.setColor(QColor(0, 0, 0, 80))
 
-        self.input_field.setGraphicsEffect(shadow1)
+        self.input_wrapper = QFrame()
+        self.input_wrapper.setObjectName("InputWrapper")
+        self.input_wrapper.setStyleSheet("""
+            #InputWrapper {
+                background-color: #ffffff;
+                border: 1px solid #dadce0;
+                border-radius: 24px;
+            }
+        """)
+
+        # Apply shadow to the whole wrapper, not just the text field
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(15)
+        shadow.setXOffset(0)
+        shadow.setYOffset(2)
+        shadow.setColor(QColor(0, 0, 0, 40))
+        self.input_wrapper.setGraphicsEffect(shadow)
+
+        # --- 2. Master Layout inside the Wrapper ---
+        self.master_input_layout = QVBoxLayout(self.input_wrapper)
+        self.master_input_layout.setContentsMargins(20, 15, 20, 10)
+        self.master_input_layout.setSpacing(4)
+
+        # --- 3. Initialize Row 1: The Input Field ---
+        self.input_field = QLineEdit()
+        self.input_field.setContentsMargins(10,0,0,0)
         self.input_field.setPlaceholderText("Enter command...")
         self.input_field.setCursor(QCursor(Qt.CursorShape.IBeamCursor))
+        self.input_field.setStyleSheet("border: none; background: transparent; font-size: 16px;"
+                                       "padding-top: 8px; padding-bottom: 8px; padding-left: 25px;")
 
+        # --- 4. Initialize Row 2: Buttons ---
+        self.button_row_layout = QHBoxLayout()
+        self.button_row_layout.setSpacing(10)
 
+        self.tools_btn = QPushButton(" Tools")
+        self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench.png'))
+        self.tools_btn.setIconSize(QSize(20, 20))
+
+        self.actions_btn = QPushButton(" Actions")
+        self.actions_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action.png'))
+        self.actions_btn.setIconSize(QSize(20, 20))
+
+        # --- Right Side Buttons ---
+        self.connect_btn = QPushButton("  Connect")
+        self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link.png'))
+        self.connect_btn.setIconSize(QSize(20, 20))
         self.send_btn = QPushButton("Run")
-        self.connect_btn = QPushButton("Connect")
-        self.actions_btn = QPushButton("Actions")
+
         self.actions_menu = QMenu(self)
-
-        self.setup_actions_menu()
-
-        self.tools_btn = QPushButton("Tools")
         self.tools_menu = QMenu(self)
+
+
+
+        # Make the Run button a bit more prominent
+        self.send_btn.setStyleSheet("""
+            QPushButton { 
+                background-color: #1a73e8; 
+                color: white; 
+                border-radius: 12px; 
+                padding: 5px 15px; 
+            }
+            QPushButton:hover { background-color: #1557b0; }
+        """)
+
+        # --- 5. Assemble the Layout ---
+        # Add top row
+        self.master_input_layout.addWidget(self.input_field)
+
+        # Build bottom row
+        self.button_row_layout.addWidget(self.tools_btn)
+        self.button_row_layout.addWidget(self.actions_btn)
+        self.button_row_layout.addStretch()  # This pushes the next buttons to the far right
+        self.button_row_layout.addWidget(self.connect_btn)
+        self.button_row_layout.addWidget(self.send_btn)
+
+        # Add bottom row to master
+        self.master_input_layout.addSpacing(5)
+        self.master_input_layout.addLayout(self.button_row_layout)
+
+        # --- 6. Final Placement & Logic ---
+        # Add the wrapper to your main window's layout
+        self.container_layout.addWidget(self.input_wrapper)
+
+        # Setup Menus and Connections
+        self.setup_actions_menu()
         self.setup_tools_menu()
 
-        # Connect the click to our custom positioning function
         self.tools_btn.clicked.connect(self.show_tools_menu_above)
         self.actions_btn.clicked.connect(self.show_actions_menu_above)
-
-
-
-
-
-
-
-        self.input_bar.addWidget(self.input_field)
-        self.input_bar.addWidget(self.send_btn)
-        self.input_bar.addWidget(self.actions_btn)
-        self.input_bar.addWidget(self.tools_btn)
-        self.input_bar.addWidget(self.connect_btn)
-        self.container_layout.addLayout(self.input_bar)
-
-        # Connections
         self.send_btn.clicked.connect(self.handle_send)
         self.input_field.returnPressed.connect(self.handle_send)
-        self.actions_btn.clicked.connect(self.handle_interrupt)
         self.connect_btn.clicked.connect(self.handle_connect)
+        # Note: Re-linked actions_btn to handle_interrupt as per your code
+        self.actions_btn.clicked.connect(self.handle_interrupt)
 
     def setup_tools_menu(self):
         self.tools_menu.setObjectName("toolsMenu")
@@ -382,11 +451,16 @@ class cmdPage(QWidget):
         return ansi_escape.sub('', text)
 
     def set_light_mode(self):
+        # self.top_bar.setStyleSheet("""
+        #             QWidget{
+        #                 background-color: #F2E9F9; font-size: 18px; color: #7D7D7D; border-radius: 7px; border: 1px solid #909090
+        #             }
+        #         """)
         self.top_bar.setStyleSheet("""
-                    QWidget{
-                        background-color: #F2E9F9; font-size: 18px; color: #7D7D7D; border-radius: 7px; border: 1px solid #909090
-                    }
-                """)
+                            QWidget{
+                                background: transparent; font-size: 18px; color: #7D7D7D; border-radius: 7px; border: none
+                            }
+                        """)
         self.dir_label.setStyleSheet("color: #3B3B3B; font-weight: 500; border: none;")
         self.status_label.setStyleSheet("color: #3B3B3B; font-weight: 500;")
         if self.status_label.text() == "Status: Disconnected":
@@ -399,14 +473,14 @@ class cmdPage(QWidget):
                                         background-color: #A3D671;
                                         border-radius: {self.status_size // 2}px;
                                     """)
-        self.container.setStyleSheet("""
-                    QWidget#MainOuterContainer {
-                        background-color: #F3F3FA;
-                        border: 1px solid #555555;
-                        border-radius: 10px;
-                        font-size: 16px;
-                    }
-                """)
+        # self.container.setStyleSheet("""
+        #             QWidget#MainOuterContainer {
+        #                 background-color: #F3F3FA;
+        #                 border: 1px solid #555555;
+        #                 border-radius: 10px;
+        #                 font-size: 16px;
+        #             }
+        #         """)
         self.scroll.setStyleSheet("""
                     QScrollArea {
                         border: none;
@@ -442,53 +516,53 @@ class cmdPage(QWidget):
                         background: none;
                     }
                 """)
-        self.chat_container.setStyleSheet("""
-                        background-color: #F3F3FA;
-                        font-size: 16px;
-                """)
+        
         self.input_field.setStyleSheet("""
                     QLineEdit {
-                        background-color: #FAFAFF;
-                        color: #535353;
+                        background: transparent;
+                        color: #444;
                         border-radius: 10px;
-                        border: 1px solid #909090;
                         padding: 8px;
-                        font-size: 16px;
+                        font-size: 17px;
+                        font-weight: 503;
                     }
                     
                 """)
         self.connect_btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #D7E9B8;
+                        background: transparent;
                         border-radius: 10px;
                         padding: 8px 20px;
-                        color: #324F34;
-                        font-size: 18px;
-                        font-weight: 520;
+                        color: #7c757e;
+                        font-size: 17px;
+                        font-weight: 510;
+                        spacing: 10px;
                     }
-                    QPushButton:hover { background-color: #CCE2A7; }
-                    QPushButton:pressed {background-color: #D7E9B8;}
+                    QPushButton:hover { background-color: #f3ebf3; }
+                    QPushButton:pressed {background-color: #f3ebf3;}
                     """)
         self.connect_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(8)
-        shadow.setXOffset(0)
-        shadow.setYOffset(0)
-        shadow.setColor(QColor(0, 0, 0, 80))
+        # shadow = QGraphicsDropShadowEffect()
+        # shadow.setBlurRadius(8)
+        # shadow.setXOffset(0)
+        # shadow.setYOffset(0)
+        # shadow.setColor(QColor(0, 0, 0, 80))
 
-        self.connect_btn.setGraphicsEffect(shadow)
+        # self.connect_btn.setGraphicsEffect(shadow)
 
         btn_style_sheet = """QPushButton {
-                        background-color: #D6E3FF;
+                        background: transparent;
                         border-radius: 10px;
-                        padding: 8px 20px;
-                        color: #5A3583;
-                        font-size: 18px;
-                        font-weight: 520;
+                        padding: 4px 15px;      /* Reduced horizontal padding */
+                        color: #7c757e;
+                        font-size: 17px;
+                        font-weight: 510;
+                        text-align: left;       /* Helps anchor the icon and text */
+                        spacing: 15px;
                     }
-                    QPushButton:hover { background-color: #C6D8FF; }
-                    QPushButton:pressed{background-color: #D6E3FF;}
+                    QPushButton:hover { background-color: #f3ebf3; }
+                    QPushButton:pressed{background-color: #f3ebf3;}
                     QPushButton::menu-indicator {
                                 image: none;
                                 width: 0px;
@@ -502,14 +576,14 @@ class cmdPage(QWidget):
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
-            shadow = QGraphicsDropShadowEffect()
-            shadow.setBlurRadius(8)
-            shadow.setXOffset(0)
-            shadow.setYOffset(0)
-            shadow.setColor(QColor(0, 0, 0, 80))
-
-            btn.setGraphicsEffect(shadow)
-            btn.setGraphicsEffect(shadow)
+            # shadow = QGraphicsDropShadowEffect()
+            # shadow.setBlurRadius(8)
+            # shadow.setXOffset(0)
+            # shadow.setYOffset(0)
+            # shadow.setColor(QColor(0, 0, 0, 80))
+            #
+            # btn.setGraphicsEffect(shadow)
+            # btn.setGraphicsEffect(shadow)
 
         for i in range(self.chat_layout.count()):
             item = self.chat_layout.itemAt(i)
