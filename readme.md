@@ -44,4 +44,4 @@ python application.py
   * Normal Pytorch DDP support (torchrun commands)
 
 ### Dev tab latest update
-Fully wired the sign in functions with Firebase
+More gemini-like terminal interface (start)
