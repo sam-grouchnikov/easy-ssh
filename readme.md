@@ -44,4 +44,4 @@ python application.py
   * Normal Pytorch DDP support (torchrun commands)
 
 ### Dev tab latest update
-More gemini-like terminal interface (start)
+More gemini-like terminal interface (light mode)
