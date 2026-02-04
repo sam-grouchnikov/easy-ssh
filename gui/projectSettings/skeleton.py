@@ -313,9 +313,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.tree_data_accumulator += text
 
     def global_run_command(self, command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False):
-        # 1. Don't run if already busy
         self.recent_cmd = command
-        print("Command: ", command)
         self.cmd_page.send_btn.setEnabled(False)
 
         if command == "exit":
@@ -354,16 +352,27 @@ class ProjectSettingsSkeleton(QMainWindow):
             print("Sent")
             return
 
+        if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
+            return
+        self.worker = SSHStreamWorker(self.ssh_manager, command)
+
         if command.startswith("cd"):
             appended = command.split(' ')[1]
             if appended == '~':
                 self.current_dir = self.home_dir
             else:
                 self.current_dir += f"/{appended}"
+            command = f"$ {command}"
 
-        if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
+            self.cmd_page.add_message(command, is_cmd=True)
+            self.worker.finished.connect(
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            )
+
+            self.worker.start()
             return
-        self.worker = SSHStreamWorker(self.ssh_manager, command)
+
+
         if is_tree_update:
             self.tree_data_accumulator = ""
 
@@ -388,11 +397,11 @@ class ProjectSettingsSkeleton(QMainWindow):
             # Connect output DIRECTLY to the editor's append function
             self.worker.output_received.connect(self.file_tree_page.display_file_content)
         else:
+            command = f"$ {command}"
+
+            self.cmd_page.add_message(command, is_cmd=True)
             self.cmd_page.create_new_output_bubble()
 
-            command = f"$ {command}\n"
-
-            self.cmd_page.update_live_output(command)
             self.worker.output_received.connect(self.cmd_page.update_live_output)
 
         self.worker.finished.connect(

@@ -110,6 +110,7 @@ class cmdPage(QWidget):
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.chat_layout.setSpacing(4)
+        self.chat_container.setContentsMargins(30,0,20,0)
 
 
         self.scroll.setWidget(self.chat_container)
@@ -173,8 +174,10 @@ class cmdPage(QWidget):
         # --- Right Side Buttons ---
         self.connect_btn = QPushButton("  Connect")
         self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link.png'))
-        self.connect_btn.setIconSize(QSize(20, 20))
-        self.send_btn = QPushButton("Run")
+        self.connect_btn.setIconSize(QSize(19, 19))
+        self.send_btn = QPushButton(" Run")
+        self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send.png'))
+        self.send_btn.setIconSize(QSize(19, 19))
 
         self.actions_menu = QMenu(self)
         self.tools_menu = QMenu(self)
@@ -306,7 +309,6 @@ class cmdPage(QWidget):
         text = self.input_field.text().strip()
         if not text: return
         self.input_field.clear()
-        # Trigger the global shared logic
         self.run_func(text)
 
     def handle_interrupt(self):
@@ -320,9 +322,12 @@ class cmdPage(QWidget):
                 "color: #fff; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
         else:
             self.current_bubble.setStyleSheet(
-                "color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
+                "color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                "font-size: 15px;")
 
+        self.chat_layout.addSpacing(10)
         self.chat_layout.addWidget(self.current_bubble)
+
 
     def update_live_output(self, raw_text):
         if not hasattr(self, 'current_bubble') or self.current_bubble is None:
@@ -415,15 +420,25 @@ class cmdPage(QWidget):
                             border-radius: {self.status_size // 2}px;
                         """)
 
-    def add_message(self, text):
+    def add_message(self, text, is_connect=False, is_error=False, is_cmd=False):
         lbl = QLabel(text)
-        lbl.setWordWrap(True)
+        lbl.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        lbl.adjustSize()
+        # if is_cmd:
+        #     if self.is_dark:
+        #         lbl.setStyleSheet("color: white; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
+        #     else:
+        #         lbl.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
+        #                           "background-color: #f3ebf3; padding: 4px 4px; border-radius: 5px;")
+
         if self.is_dark:
             lbl.setStyleSheet("color: white; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
         else:
-            lbl.setStyleSheet("color: black; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
+            lbl.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
+                              "background-color: #f3ebf3; padding: 10px 10px; border-radius: 15px;"
+                              "font-size: 16px; font-weight: 500;")
 
-        self.chat_layout.addWidget(lbl)
+        self.chat_layout.addWidget(lbl, alignment=Qt.AlignmentFlag.AlignLeft)
         self.scroll.verticalScrollBar().setValue(
             self.scroll.verticalScrollBar().maximum()
         )
@@ -435,10 +450,10 @@ class cmdPage(QWidget):
             line.setStyleSheet("color: #bbb; margin: 2px 0px;")
         else:
             line.setStyleSheet("color: #444; margin: 2px 0px;")
-        self.chat_layout.addSpacing(10)
+        # self.chat_layout.addSpacing(10)
 
-        self.chat_layout.addWidget(line)
-        self.chat_layout.addSpacing(10)
+        # self.chat_layout.addWidget(line)
+        self.chat_layout.addSpacing(25)
 
     def clear_console(self):
         while self.chat_layout.count():
@@ -486,25 +501,24 @@ class cmdPage(QWidget):
                         border: none;
                         background-color: transparent;
                     }
-                    QScrollBar:vertical {
-                        border: none;
-                        background: #18181F;
-                        width: 13px;
-                        margin: 0px 0px 0px 0px;
-                    }
+                    QScrollBar {
+                                            border: none;
+                                            background: #E9E9E9;
+                                            width: 0px;
+                                            margin: 0px 0px 0px 0px;
+                                            border-radius: 5px;
+                                        }
 
-                    /* The Scrollbar Handle */
-                    QScrollBar::handle:vertical {
-                        background: #3E3E42;
-                        min-height: 20px;
-                        border-radius: 5px;
-                        margin: 2px;
-                    }
+                            QScrollBar::handle {
+                                            background: #D7D7D7;
+                                            min-height: 20px;
+                                            border-radius: 8px;
+                                            margin: 2px;
+                                        }
 
-                    /* Handle color when hovering */
-                    QScrollBar::handle:vertical:hover {
-                        background: #505050;
-                    }
+                            QScrollBar::handle:hover {
+                                            background: #CBCBCB;
+                                        }
 
                     /* Remove the buttons (arrows) at the top and bottom */
                     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -528,7 +542,7 @@ class cmdPage(QWidget):
                     }
                     
                 """)
-        self.connect_btn.setStyleSheet("""
+        self.send_btn.setStyleSheet("""
                     QPushButton {
                         background: transparent;
                         border-radius: 10px;
@@ -538,10 +552,10 @@ class cmdPage(QWidget):
                         font-weight: 510;
                         spacing: 10px;
                     }
-                    QPushButton:hover { background-color: #f3ebf3; }
+                    QPushButton:hover { background-color: #E3CDF7; color: #222 }
                     QPushButton:pressed {background-color: #f3ebf3;}
                     """)
-        self.connect_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.send_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         # shadow = QGraphicsDropShadowEffect()
         # shadow.setBlurRadius(8)
@@ -569,7 +583,7 @@ class cmdPage(QWidget):
                             }
                     """
         # Set heights
-        for btn in [self.send_btn, self.tools_btn, self.actions_btn]:
+        for btn in [self.tools_btn, self.actions_btn, self.connect_btn]:
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(btn_style_sheet)
@@ -591,7 +605,8 @@ class cmdPage(QWidget):
 
             if widget is not None:
                 # Apply your style here
-                widget.setStyleSheet("color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
+                widget.setStyleSheet("color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                                     "font-size: 15px;")
 
         self.is_dark = False
         self.tools_btn.setStyleSheet(self.tools_btn.styleSheet() + """
