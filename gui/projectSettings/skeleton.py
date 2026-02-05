@@ -349,7 +349,7 @@ class ProjectSettingsSkeleton(QMainWindow):
                 self.current_dir += f"/{appended}"
             command = f"$ {command}"
 
-            self.cmd_page.add_message(command, is_cmd=True)
+            self.cmd_page.add_message(command)
             self.worker.finished.connect(
                 lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
             )
@@ -382,7 +382,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         else:
             command = f"$ {command}"
 
-            self.cmd_page.add_message(command, is_cmd=True)
+            self.cmd_page.add_message(command)
             self.cmd_page.create_new_output_bubble()
 
             self.worker.output_received.connect(self.cmd_page.update_live_output)

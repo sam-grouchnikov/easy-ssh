@@ -158,24 +158,19 @@ class cmdPage(QWidget):
         self.button_row_layout.setSpacing(10)
 
         self.tools_btn = QPushButton(" Tools")
-        self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench.png'))
-        self.tools_btn.setIconSize(QSize(20, 20))
+
 
         self.actions_btn = QPushButton(" Actions")
-        self.actions_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action.png'))
-        self.actions_btn.setIconSize(QSize(20, 20))
+
 
         # --- Right Side Buttons ---
         self.connect_btn = QPushButton("  Connect")
-        self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link.png'))
-        self.connect_btn.setIconSize(QSize(19, 19))
+
         self.send_btn = QPushButton("  Run")
-        self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send.png'))
-        self.send_btn.setIconSize(QSize(19, 19))
+
 
         self.actions_menu = QMenu(self)
         self.tools_menu = QMenu(self)
-
 
 
         # Make the Run button a bit more prominent
@@ -313,7 +308,8 @@ class cmdPage(QWidget):
         self.current_bubble.setWordWrap(True)
         if self.is_dark:
             self.current_bubble.setStyleSheet(
-                "color: #fff; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
+                "color: #fff; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                "font-size: 15px;")
         else:
             self.current_bubble.setStyleSheet(
                 "color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
@@ -414,26 +410,17 @@ class cmdPage(QWidget):
                             border-radius: {self.status_size // 2}px;
                         """)
 
-    def add_message(self, text, is_connect=False, is_error=False, is_cmd=False):
+    def add_message(self, text):
         print(self.is_dark)
-        lbl = QLabel(text)
+        lbl = MessageBubble(text)
         lbl.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         lbl.adjustSize()
-        # if is_cmd:
-        #     if self.is_dark:
-        #         lbl.setStyleSheet("color: white; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
-        #     else:
-        #         lbl.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
-        #                           "background-color: #f3ebf3; padding: 4px 4px; border-radius: 5px;")
 
-        if self.is_dark:
-            lbl.setStyleSheet("color: #eee; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
-                              "background-color: #231E23; padding: 10px 10px; border-radius: 15px;"
-                              "font-size: 16px; font-weight: 500;")
+
+        if not self.is_dark:
+            lbl.set_light_mode()
         else:
-            lbl.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
-                              "background-color: #f3ebf3; padding: 10px 10px; border-radius: 15px;"
-                              "font-size: 16px; font-weight: 500;")
+            lbl.set_dark_mode()
 
         self.chat_layout.addWidget(lbl, alignment=Qt.AlignmentFlag.AlignLeft)
         self.scroll.verticalScrollBar().setValue(
@@ -609,9 +596,11 @@ class cmdPage(QWidget):
             widget = item.widget()
 
             if widget is not None:
-                # Apply your style here
-                widget.setStyleSheet("color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
-                                     "font-size: 15px;")
+                if hasattr(widget, "set_light_mode"):
+                    widget.set_light_mode()
+                else:
+                    widget.setStyleSheet("color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                                         "font-size: 15px;")
 
         self.is_dark = False
         self.tools_btn.setStyleSheet(self.tools_btn.styleSheet() + """
@@ -649,10 +638,20 @@ class cmdPage(QWidget):
             """
         self.tools_menu.setStyleSheet(menu_ss)
         self.actions_menu.setStyleSheet(menu_ss)
-        self.is_dark = False
+
+        self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench.png'))
+        self.tools_btn.setIconSize(QSize(20, 20))
+        self.actions_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action.png'))
+        self.actions_btn.setIconSize(QSize(20, 20))
+        self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link.png'))
+        self.connect_btn.setIconSize(QSize(19, 19))
+        self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send.png'))
+        self.send_btn.setIconSize(QSize(19, 19))
+
 
     def set_dark_mode(self):
         self.is_dark = True
+        print("Set dark: ", self.is_dark)
         self.top_bar.setStyleSheet("""
                                     QWidget{
                                         background: transparent; font-size: 18px; color: #AAA3AD; border-radius: 7px; border: none
@@ -723,7 +722,7 @@ class cmdPage(QWidget):
         self.input_field.setStyleSheet("""
                             QLineEdit {
                                 background: transparent;
-                                color: #978E97;
+                                color: #eee;
                                 border-radius: 10px;
                                 padding: 8px;
                                 font-size: 17px;
@@ -742,7 +741,7 @@ class cmdPage(QWidget):
                                 spacing: 10px;
                             }
                             QPushButton:hover { background-color: #3B2D48; color: #ddd }
-                            QPushButton:pressed {background-color: #f3ebf3;}
+                            QPushButton:pressed {background-color: #231E23;}
                             """)
         self.send_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
@@ -765,7 +764,7 @@ class cmdPage(QWidget):
                                 spacing: 15px;
                             }
                             QPushButton:hover { background-color: #302C32; }
-                            QPushButton:pressed{background-color: #f3ebf3;}
+                            QPushButton:pressed{background-color: #231E23;}
                             QPushButton::menu-indicator {
                                         image: none;
                                         width: 0px;
@@ -779,26 +778,18 @@ class cmdPage(QWidget):
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
-            # shadow = QGraphicsDropShadowEffect()
-            # shadow.setBlurRadius(8)
-            # shadow.setXOffset(0)
-            # shadow.setYOffset(0)
-            # shadow.setColor(QColor(0, 0, 0, 80))
-            #
-            # btn.setGraphicsEffect(shadow)
-            # btn.setGraphicsEffect(shadow)
-
         for i in range(self.chat_layout.count()):
             item = self.chat_layout.itemAt(i)
             widget = item.widget()
 
             if widget is not None:
-                # Apply your style here
-                widget.setStyleSheet(
-                    "color: #eee; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
-                    "font-size: 15px;")
+                if hasattr(widget, "set_dark_mode"):
+                    widget.set_dark_mode()
+                else:
+                    widget.setStyleSheet(
+                        "color: #eee; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                        "font-size: 15px; font-weight: 500;")
 
-        self.is_dark = False
         self.tools_btn.setStyleSheet(self.tools_btn.styleSheet() + """
                             QPushButton::menu-indicator {
                                 image: none;
@@ -834,3 +825,25 @@ class cmdPage(QWidget):
                     """
         self.tools_menu.setStyleSheet(menu_ss)
         self.actions_menu.setStyleSheet(menu_ss)
+
+        self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench_dark.png'))
+        self.tools_btn.setIconSize(QSize(20, 20))
+        self.actions_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action_dark.png'))
+        self.actions_btn.setIconSize(QSize(20, 20))
+        self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link_dark.png'))
+        self.connect_btn.setIconSize(QSize(19, 19))
+        self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send_dark.png'))
+        self.send_btn.setIconSize(QSize(19, 19))
+
+class MessageBubble(QLabel):
+    def __init__(self, parent=None):
+        super(QLabel, self).__init__(parent)
+
+    def set_light_mode(self):
+        self.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
+                              "background-color: #F2ECF4; padding: 10px 10px; border-radius: 15px;"
+                              "font-size: 16px; font-weight: 500;")
+    def set_dark_mode(self):
+        self.setStyleSheet("color: #eee; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
+                           "background-color: #2D282E; padding: 10px 10px; border-radius: 15px;"
+                           "font-size: 16px; font-weight: 500;")
