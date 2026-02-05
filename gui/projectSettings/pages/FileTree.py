@@ -290,20 +290,16 @@ class FileTreePage(QWidget):
         item = self.model.itemFromIndex(index)
         if not item.hasChildren():
             file_path = item.data(Qt.ItemDataRole.UserRole)
-            print("checkpihhhh", self.home_dir)
             self.current_open_path = "" + self.home_dir + "/" + file_path
-            print(f"Current open_path: {self.current_open_path}")
             self.load_remote_file(self.current_open_path)
 
     def load_remote_file(self, path):
-        print(f"Loading remote file: {path}")
         self.editor.setPlainText(f"Loading {path}...")
         cmd = f"cat '{path}'"
         self.run_func(cmd, is_file_read=True)
         split = path.split("/")
         last = split[len(split) - 1]
         self.file_name_label.setText(last)
-        print("Finished load")
 
     def reset_editor_text(self):
         self.editor.setPlainText("Select a file to view and edit its contents...")
@@ -323,7 +319,6 @@ class FileTreePage(QWidget):
 
         content = self.editor.toPlainText()
 
-        print(f"Saving to {self.current_open_path}")
         command = f"cat << 'EOF' > {self.current_open_path}\n{content}\nEOF"
 
         self.save_button.setEnabled(False)
@@ -345,7 +340,6 @@ class FileTreePage(QWidget):
                 transport = self.ssh_manager.client.get_transport()
 
                 with SCPClient(transport) as scp:
-                    print(f"Downloading: {self.current_open_path}")
                     scp.get(self.current_open_path, local_dir)
 
                 QMessageBox.information(self, "Success", "File transferred successfully!")
@@ -355,21 +349,16 @@ class FileTreePage(QWidget):
 
     def rebuild_tree(self, raw_find_output):
 
-        print("Rebuild tree started")
         # Completely clear the existing items
         self.model.clear()
-        print("Ckpt1")
 
         # Parse the raw SSH string into a nested dict
         paths = [p for p in raw_find_output.split('\n')]
-        print("Ckpt1.5")
 
         nested_data = build_nested_dict(paths)
-        print("Ckpt2")
 
         # Populate the model starting from the invisible root
         self.populate_tree(self.model.invisibleRootItem(), nested_data)
-        print("rebuild tree ended")
 
     def populate_tree(self, parent_item, data_dict, current_full_path=""):
         # Sort: Folders first, then Alphabetical

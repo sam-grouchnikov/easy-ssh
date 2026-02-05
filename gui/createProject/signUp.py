@@ -174,7 +174,7 @@ class SignUpWidget(QWidget):
             try:
                 session = self.fb.sign_up(self.email_input.text(), self.psw_input.text())
                 uid = self.fb.uid()
-                print(f"\n✅ Signed up successfully")
+                print(f"\n Signed up successfully")
                 doc_path = f"users/{uid}/config/main"
 
                 DEFAULT_CONFIG = {
@@ -195,7 +195,7 @@ class SignUpWidget(QWidget):
                 self.nav("project", uid=uid)
 
             except Exception as e:
-                print("\n❌ Sign-up failed")
+                print("\n Sign-up failed")
                 print(e)
                 raise SystemExit(1)
         else:
@@ -205,13 +205,13 @@ class SignUpWidget(QWidget):
                 print("C2")
                 uid_ind = self.fb.uid()
                 print("C3")
-                print(f"\n✅ Signed in successfully")
+                print(f"\n Signed in successfully")
                 self.nav("project", uid = uid_ind)
                 print(f"UID: {uid_ind}")
                 self.email_input.setText("")
                 self.psw_input.setText("")
             except Exception as e:
-                print("\n❌ Sign-in failed")
+                print("\n Sign-in failed")
                 print(e)
                 raise SystemExit(1)
 

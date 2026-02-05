@@ -224,7 +224,6 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.content_layout.addWidget(self.stack)
 
         def handle_navigation(index):
-            print("Navigating to index ", index)
             self.stack.setCurrentIndex(index)
 
             # 2. Update the visual highlight for all items
@@ -241,7 +240,6 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.set_light_mode()
 
     def update_uid(self, new):
-        print("Got to update")
         self.uid = new
         self.doc_path = config_doc_path(self.uid)
         self.doc = self.fb.get_doc(self.doc_path)
@@ -259,7 +257,6 @@ class ProjectSettingsSkeleton(QMainWindow):
     def global_handle_connect(self):
         self.cmd_page.connect_btn.setText(" Connecting")
         QCoreApplication.processEvents()
-        print("Loaded data")
         if self.ssh_manager is None and self.config.get("user") != "":
             server_new = self.config.get("ssh_ip")
             user_new = self.config.get("ssh_user")
@@ -269,29 +266,19 @@ class ProjectSettingsSkeleton(QMainWindow):
 
         success, msg = self.ssh_manager.connect()
         self.cmd_page.add_message(f"System: {msg}")
-        print(1)
         self.cmd_page.add_separator()
-        print(2)
         self.cmd_page.update_connection_status(success)
-        print("added")
 
         if success:
-            # 1. Get the path first so we know where we are
-            print("getting path")
             new_path = self.ssh_manager.get_pwd_silently()
-            print("Got path")
             self.home_dir = new_path
             self.current_dir = new_path
 
             # 2. Update UI displays
             self.file_tree_page.update_home(new_path)
-            print("Updated home")
             self.cmd_page.update_directory_display(new_path)
-            print("End clone")
             find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
-            print("Tree update")
             self.global_run_command(find_cmd, is_tree_update=True)
-            print("Tree update done")
 
             new_path = self.ssh_manager.get_pwd_silently()
             self.home_dir = new_path
@@ -347,9 +334,7 @@ class ProjectSettingsSkeleton(QMainWindow):
 
                 self.config.add_run([file, date, time])
         if command == "Ctrl+C":
-            print("Sending interrupt")
             self.ssh_manager.send_interrupt()
-            print("Sent")
             return
 
         if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
@@ -386,9 +371,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             pass
         elif is_git_clone:
             self.update_tree()
-            print("Updated tree")
             self.graph_page.refresh_runs()
-            print("refreshed runs")
             pass
 
         elif is_file_read:
@@ -422,7 +405,6 @@ class ProjectSettingsSkeleton(QMainWindow):
             add_bubble = True
         if is_git_clone:
             add_bubble = False
-        print("CMD: ", self.recent_cmd, " ADD: ", add_bubble)
         self.cmd_page.on_command_finished(add_bubble)
 
         self.cmd_page.update_directory_display(self.current_dir)

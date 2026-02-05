@@ -209,10 +209,10 @@ if __name__ == "__main__":
     try:
         session = fb.sign_in(email, password)
         uid = fb.uid()
-        print(f"\n✅ Signed in successfully")
+        print(f"\n Signed in successfully")
         print(f"UID: {uid}")
     except Exception as e:
-        print("\n❌ Sign-in failed")
+        print("\n Sign-in failed")
         print(e)
         raise SystemExit(1)
 
@@ -221,31 +221,31 @@ if __name__ == "__main__":
 
     # ---- Load or create config ----
     try:
-        print("\n📥 Loading config from Firestore...")
+        print("\n Loading config from Firestore...")
         doc = fb.get_doc(doc_path)
         config = from_fs_doc(doc)
         print("Config loaded:")
         pprint(config)
     except Exception:
-        print("\n⚠️ Config not found, creating default config...")
+        print("\n⚠ Config not found, creating default config...")
         fb.set_doc(doc_path, DEFAULT_CONFIG)
         config = DEFAULT_CONFIG.copy()
         print("Default config created.")
 
     # ---- Modify one field ----
-    print("\n✏️ Updating test field...")
+    print("\n✏ Updating test field...")
     config["user"] = "test-user"
     fb.set_doc(doc_path, config)
 
     # ---- Read back ----
-    print("\n📥 Re-loading config after update...")
+    print("\n Re-loading config after update...")
     doc = fb.get_doc(doc_path)
     updated_config = from_fs_doc(doc)
 
-    print("\n✅ Final config from Firestore:")
+    print("\n Final config from Firestore:")
     pprint(updated_config)
 
-    print("\n🎉 Test complete — Firebase Auth +")
+    print("\n Test complete — Firebase Auth +")
 
 # if __name__ == "__main__":
 #     from pprint import pprint
@@ -276,4 +276,4 @@ if __name__ == "__main__":
 #     # Save back to Firestore
 #     fb.set_doc(path, config)
 #
-#     print("\n✅ Config updated successfully.")
+#     print("\n Config updated successfully.")

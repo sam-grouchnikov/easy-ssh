@@ -130,13 +130,7 @@ class cmdPage(QWidget):
 
         self.input_wrapper = QFrame()
         self.input_wrapper.setObjectName("InputWrapper")
-        self.input_wrapper.setStyleSheet("""
-            #InputWrapper {
-                background-color: #ffffff;
-                border: 1px solid #dadce0;
-                border-radius: 24px;
-            }
-        """)
+
 
         # Apply shadow to the whole wrapper, not just the text field
         shadow = QGraphicsDropShadowEffect()
@@ -175,7 +169,7 @@ class cmdPage(QWidget):
         self.connect_btn = QPushButton("  Connect")
         self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link.png'))
         self.connect_btn.setIconSize(QSize(19, 19))
-        self.send_btn = QPushButton(" Run")
+        self.send_btn = QPushButton("  Run")
         self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send.png'))
         self.send_btn.setIconSize(QSize(19, 19))
 
@@ -300,7 +294,7 @@ class cmdPage(QWidget):
         if busy:
             self.send_btn.setText("Running...")
         else:
-            self.send_btn.setText("Run")
+            self.send_btn.setText("  Run")
 
     def handle_connect(self):
         self.connect_func()
@@ -421,6 +415,7 @@ class cmdPage(QWidget):
                         """)
 
     def add_message(self, text, is_connect=False, is_error=False, is_cmd=False):
+        print(self.is_dark)
         lbl = QLabel(text)
         lbl.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         lbl.adjustSize()
@@ -432,7 +427,9 @@ class cmdPage(QWidget):
         #                           "background-color: #f3ebf3; padding: 4px 4px; border-radius: 5px;")
 
         if self.is_dark:
-            lbl.setStyleSheet("color: white; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';")
+            lbl.setStyleSheet("color: #eee; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
+                              "background-color: #231E23; padding: 10px 10px; border-radius: 15px;"
+                              "font-size: 16px; font-weight: 500;")
         else:
             lbl.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
                               "background-color: #f3ebf3; padding: 10px 10px; border-radius: 15px;"
@@ -528,6 +525,14 @@ class cmdPage(QWidget):
                     /* Remove the background area above and below the handle */
                     QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
                         background: none;
+                    }
+                """)
+
+        self.input_wrapper.setStyleSheet("""
+                    #InputWrapper {
+                        background-color: #ffffff;
+                        border: 1px solid #dadce0;
+                        border-radius: 24px;
                     }
                 """)
         
@@ -644,57 +649,65 @@ class cmdPage(QWidget):
             """
         self.tools_menu.setStyleSheet(menu_ss)
         self.actions_menu.setStyleSheet(menu_ss)
+        self.is_dark = False
 
     def set_dark_mode(self):
+        self.is_dark = True
         self.top_bar.setStyleSheet("""
-                            QWidget{
-                                background-color: #24222E; font-size: 18px; color: #D3D3D3; border-radius: 7px; border: 1px solid #484848
-                            }
-                        """)
-        self.dir_label.setStyleSheet("color: #DFC5FF; font-weight: 500; border: none;")
-        self.status_label.setStyleSheet("color: #DFC5FF; font-weight: 500;")
+                                    QWidget{
+                                        background: transparent; font-size: 18px; color: #AAA3AD; border-radius: 7px; border: none
+                                    }
+                                """)
+        self.dir_label.setStyleSheet("color: #AAA3AD; font-weight: 500; border: none;")
+        self.status_label.setStyleSheet("color: #AAA3AD; font-weight: 500;")
         if self.status_label.text() == "Status: Disconnected":
             self.status_dot.setStyleSheet(f"""
-                                background-color: #E58181;
-                                border-radius: {self.status_size // 2}px;
-                            """)
-        else:
-            self.status_dot.setStyleSheet(f"""
-                                        background-color: #A3D671;
+                                        background-color: #E58181;
                                         border-radius: {self.status_size // 2}px;
                                     """)
-        self.container.setStyleSheet("""
-                            QWidget#MainOuterContainer {
-                                background-color: #1A1921;
-                                border: 1px solid #484848;
-                                border-radius: 10px;
-                                font-size: 16px;
-                            }
-                        """)
+        else:
+            self.status_dot.setStyleSheet(f"""
+                                                background-color: #A3D671;
+                                                border-radius: {self.status_size // 2}px;
+                                            """)
+        # self.container.setStyleSheet("""
+        #             QWidget#MainOuterContainer {
+        #                 background-color: #F3F3FA;
+        #                 border: 1px solid #555555;
+        #                 border-radius: 10px;
+        #                 font-size: 16px;
+        #             }
+        #         """)
+        self.input_wrapper.setStyleSheet("""
+                    #InputWrapper {
+                        background-color: #231E23;
+                        border: 1px solid #231E23;
+                        border-radius: 24px;
+                    }
+                """)
         self.scroll.setStyleSheet("""
                             QScrollArea {
                                 border: none;
                                 background-color: transparent;
                             }
-                            QScrollBar:vertical {
-                                border: none;
-                                background: #18181F;
-                                width: 13px;
-                                margin: 0px 0px 0px 0px;
-                            }
+                            QScrollBar {
+                                                    border: none;
+                                                    background: #E9E9E9;
+                                                    width: 0px;
+                                                    margin: 0px 0px 0px 0px;
+                                                    border-radius: 5px;
+                                                }
 
-                            /* The Scrollbar Handle */
-                            QScrollBar::handle:vertical {
-                                background: #3E3E42;
-                                min-height: 20px;
-                                border-radius: 5px;
-                                margin: 2px;
-                            }
+                                    QScrollBar::handle {
+                                                    background: #D7D7D7;
+                                                    min-height: 20px;
+                                                    border-radius: 8px;
+                                                    margin: 2px;
+                                                }
 
-                            /* Handle color when hovering */
-                            QScrollBar::handle:vertical:hover {
-                                background: #505050;
-                            }
+                                    QScrollBar::handle:hover {
+                                                    background: #CBCBCB;
+                                                }
 
                             /* Remove the buttons (arrows) at the top and bottom */
                             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -706,74 +719,74 @@ class cmdPage(QWidget):
                                 background: none;
                             }
                         """)
-        self.chat_container.setStyleSheet("""
-                                background-color: #1A1921;
-                                font-size: 16px;
-                        """)
+
         self.input_field.setStyleSheet("""
                             QLineEdit {
-                                background-color: #282632;
-                                color: #9F9F9F;
+                                background: transparent;
+                                color: #978E97;
                                 border-radius: 10px;
-                                border: 1px solid #525252;
                                 padding: 8px;
-                                font-size: 16px;
+                                font-size: 17px;
+                                font-weight: 503;
                             }
-                            
+
                         """)
-        self.connect_btn.setStyleSheet("""
+        self.send_btn.setStyleSheet("""
                             QPushButton {
-                                background-color: #313137;
+                                background: transparent;
                                 border-radius: 10px;
                                 padding: 8px 20px;
-                                color: #A1FF92;
-                                font-size: 18px;
+                                color: #978E97;
+                                font-size: 17px;
                                 font-weight: 510;
+                                spacing: 10px;
                             }
-                            QPushButton:hover { background-color: #3C3C43; }
-                            QPushButton:pressed{background-color: #313137;}
-                            )
+                            QPushButton:hover { background-color: #3B2D48; color: #ddd }
+                            QPushButton:pressed {background-color: #f3ebf3;}
                             """)
-        self.connect_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.send_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(8)
-        shadow.setXOffset(0)
-        shadow.setYOffset(0)
-        shadow.setColor(QColor(0, 0, 0, 80))
+        # shadow = QGraphicsDropShadowEffect()
+        # shadow.setBlurRadius(8)
+        # shadow.setXOffset(0)
+        # shadow.setYOffset(0)
+        # shadow.setColor(QColor(0, 0, 0, 80))
 
-        self.connect_btn.setGraphicsEffect(shadow)
+        # self.connect_btn.setGraphicsEffect(shadow)
+
         btn_style_sheet = """QPushButton {
-                                background-color: #313137;
+                                background: transparent;
                                 border-radius: 10px;
-                                padding: 8px 20px;
-                                color: #C392FF;
-                                font-size: 18px;
+                                padding: 4px 15px;      /* Reduced horizontal padding */
+                                color: #978E97;
+                                font-size: 17px;
                                 font-weight: 510;
+                                text-align: left;       /* Helps anchor the icon and text */
+                                spacing: 15px;
                             }
-                            QPushButton:hover { background-color: #3C3C43; }
-                            QPushButton:pressed{background-color: #313137;}
+                            QPushButton:hover { background-color: #302C32; }
+                            QPushButton:pressed{background-color: #f3ebf3;}
                             QPushButton::menu-indicator {
-                                image: none;
-                                width: 0px;
-                            }
+                                        image: none;
+                                        width: 0px;
+                                    }
                             """
         # Set heights
-        for btn in [self.send_btn, self.tools_btn, self.actions_btn]:
+        for btn in [self.tools_btn, self.actions_btn, self.connect_btn]:
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(btn_style_sheet)
             btn.setFixedHeight(42)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
-            shadow = QGraphicsDropShadowEffect()
-            shadow.setBlurRadius(8)
-            shadow.setXOffset(0)
-            shadow.setYOffset(0)
-            shadow.setColor(QColor(0, 0, 0, 0))
-
-            btn.setGraphicsEffect(shadow)
-            btn.setGraphicsEffect(shadow)
+            # shadow = QGraphicsDropShadowEffect()
+            # shadow.setBlurRadius(8)
+            # shadow.setXOffset(0)
+            # shadow.setYOffset(0)
+            # shadow.setColor(QColor(0, 0, 0, 80))
+            #
+            # btn.setGraphicsEffect(shadow)
+            # btn.setGraphicsEffect(shadow)
 
         for i in range(self.chat_layout.count()):
             item = self.chat_layout.itemAt(i)
@@ -781,34 +794,43 @@ class cmdPage(QWidget):
 
             if widget is not None:
                 # Apply your style here
-                widget.setStyleSheet("color: #fff; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px")
-        self.is_dark = True
+                widget.setStyleSheet(
+                    "color: #eee; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                    "font-size: 15px;")
+
+        self.is_dark = False
+        self.tools_btn.setStyleSheet(self.tools_btn.styleSheet() + """
+                            QPushButton::menu-indicator {
+                                image: none;
+                                width: 0px;
+                            }
+                        """)
         menu_ss = """
-        QMenu {
-            background-color: #24222E; 
-            border-radius: 12px;
-            padding: 8px 0px;
-            margin: -1px;
-        }
-        QMenu::item {
-            padding: 10px 20px;
-            font-size: 13.5px;
-            font-weight: 510;
-            color: #D3D3D3;
-            background-color: transparent;
-            margin: 2px 8px; 
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        QMenu::item:selected {
-            background-color: #353340;
-            cursor: pointer;
-        }
-        QMenu::separator {
-            height: 1px;
-            background: #484848;
-            margin: 5px 15px;
-        }
-    """
+                        QMenu {
+                            background-color: #231E23; 
+                            border-radius: 10px;
+                            padding: 8px 0px;
+                            margin: -1px;
+                        }
+                        QMenu::item {
+                            padding: 10px 20px;
+                            font-size: 13.5px;
+                            font-weight: 510;
+                            color: #AAA3AD;
+                            background-color: transparent;
+                            margin: 2px 8px; 
+                            border-radius: 6px;
+                            cursor: pointer;
+                        }
+                        QMenu::item:selected {
+                            background-color: #302C32;
+                            cursor: pointer;
+                        }
+                        QMenu::separator {
+                            height: 1px;
+                            background: #484848;
+                            margin: 5px 15px;
+                        }
+                    """
         self.tools_menu.setStyleSheet(menu_ss)
         self.actions_menu.setStyleSheet(menu_ss)
