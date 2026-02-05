@@ -193,6 +193,7 @@ class GraphsPage(QWidget):
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(12, 30, 0, 30)
         self.config = config
+        self.doc_path = None
 
         self.side_widget = QWidget()
         self.side_layout = QVBoxLayout(self.side_widget)
@@ -270,6 +271,10 @@ class GraphsPage(QWidget):
             self.sidebar.addItem(item)
 
         self.sidebar.itemClicked.connect(self.on_run_selected)
+
+    def update_config(self, new, path):
+        self.config = new
+        self.doc_path = path
 
     def refresh_runs(self):
         """Refreshes the run list from WandB and updates the sidebar."""

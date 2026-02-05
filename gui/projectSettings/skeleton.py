@@ -244,6 +244,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.doc_path = config_doc_path(self.uid)
         self.doc = self.fb.get_doc(self.doc_path)
         self.config = from_fs_doc(self.doc)
+        self.graph_page.update_config(self.config, self.doc_path)
         self.settings_page.update_config(self.config, self.doc_path)
         self.load_settings()
 
