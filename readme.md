@@ -44,4 +44,4 @@ python application.py
   * Normal Pytorch DDP support (torchrun commands)
 
 ### Dev tab latest update
-More gemini-like terminal interface (dark mode) and W&B graph rewiring
+Various UI updates
