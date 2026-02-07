@@ -333,7 +333,6 @@ class ProjectSettingsSkeleton(QMainWindow):
                 else:
                     file = command.split(" ")[1]
 
-                self.config.add_run([file, date, time])
         if command == "Ctrl+C":
             self.ssh_manager.send_interrupt()
             return

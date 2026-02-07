@@ -346,7 +346,7 @@ class GraphsPage(QWidget):
                         font-size: 17px;
                         font-weight: 520
                     }
-                    QPushButton:hover { background-color: #B5A1FF; }
+                    QPushButton:hover { background-color: #cec2f0; }
                 """)
 
         self.sidebar_container.setStyleSheet("""

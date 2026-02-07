@@ -317,6 +317,7 @@ class cmdPage(QWidget):
 
         self.chat_layout.addSpacing(10)
         self.chat_layout.addWidget(self.current_bubble)
+        self.chat_layout.addSpacing(10)
 
 
     def update_live_output(self, raw_text):
@@ -537,7 +538,7 @@ class cmdPage(QWidget):
         self.send_btn.setStyleSheet("""
                     QPushButton {
                         background: transparent;
-                        border-radius: 10px;
+                        border-radius: 15px;
                         padding: 8px 20px;
                         color: #7c757e;
                         font-size: 17px;
@@ -559,7 +560,7 @@ class cmdPage(QWidget):
 
         btn_style_sheet = """QPushButton {
                         background: transparent;
-                        border-radius: 10px;
+                        border-radius: 15px;
                         padding: 4px 15px;      /* Reduced horizontal padding */
                         color: #7c757e;
                         font-size: 17px;
@@ -733,7 +734,7 @@ class cmdPage(QWidget):
         self.send_btn.setStyleSheet("""
                             QPushButton {
                                 background: transparent;
-                                border-radius: 10px;
+                                border-radius: 15px;
                                 padding: 8px 20px;
                                 color: #978E97;
                                 font-size: 17px;
@@ -755,7 +756,7 @@ class cmdPage(QWidget):
 
         btn_style_sheet = """QPushButton {
                                 background: transparent;
-                                border-radius: 10px;
+                                border-radius: 15px;
                                 padding: 4px 15px;      /* Reduced horizontal padding */
                                 color: #978E97;
                                 font-size: 17px;
@@ -800,6 +801,7 @@ class cmdPage(QWidget):
                         QMenu {
                             background-color: #231E23; 
                             border-radius: 10px;
+                            border: 2.3px solid #111;
                             padding: 8px 0px;
                             margin: -1px;
                         }
