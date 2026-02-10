@@ -25,11 +25,7 @@ class SSHManager:
         self.channel = None
 
     def connect(self):
-        print("Connecting...")
-        print("Host: " + self.host)
-        print("User: " + self.user)
-        print("Password: " + self.password)
-        print("Port: " + str(self.port))
+
         try:
             self.client = paramiko.SSHClient()
             self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
