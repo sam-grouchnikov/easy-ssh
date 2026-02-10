@@ -12,7 +12,7 @@ Status: Development
 import re
 
 from PyQt6.QtCore import Qt, QTimer, QSize, QPoint
-from PyQt6.QtGui import QPixmap, QCursor, QIcon, QColor, QAction
+from PyQt6.QtGui import QCursor, QIcon, QColor, QAction
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect, QMenu, QSizePolicy
@@ -20,13 +20,14 @@ from PyQt6.QtWidgets import (
 
 
 class cmdPage(QWidget):
-    def __init__(self, shared_manager, run_func, connect_func):
+    def __init__(self, shared_manager, run_func, connect_func, setup_env):
         super().__init__()
         # Use the manager and function passed from content.py
         self.manager = shared_manager
         self.run_func = run_func
         self.connect_func = connect_func
         self.is_dark = False
+        self.setup_env = setup_env
         self.initUI()
 
     def initUI(self):
@@ -45,7 +46,6 @@ class cmdPage(QWidget):
         self.top_tab_layout = QHBoxLayout(self.top_bar)
         self.top_tab_layout.setContentsMargins(20, 3, 20, 3)
         self.top_tab_layout.setSpacing(10)
-
 
         self.dir_label = QLabel("Current Directory: None")
         self.dir_label.setFixedHeight(20)
@@ -82,10 +82,6 @@ class cmdPage(QWidget):
         # 5. Add to top layout centered
         self.top_tab_layout.addWidget(self.status_container, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-
-
-
-
         # self.status_layout.addWidget(self.status_label)
 
         self.top_tab_layout.addWidget(self.status_container)
@@ -110,8 +106,7 @@ class cmdPage(QWidget):
         self.chat_layout = QVBoxLayout(self.chat_container)
         self.chat_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.chat_layout.setSpacing(4)
-        self.chat_container.setContentsMargins(30,0,20,0)
-
+        self.chat_container.setContentsMargins(30, 0, 20, 0)
 
         self.scroll.setWidget(self.chat_container)
         self.container_layout.addWidget(self.scroll)
@@ -131,7 +126,6 @@ class cmdPage(QWidget):
         self.input_wrapper = QFrame()
         self.input_wrapper.setObjectName("InputWrapper")
 
-
         # Apply shadow to the whole wrapper, not just the text field
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(15)
@@ -147,7 +141,7 @@ class cmdPage(QWidget):
 
         # --- 3. Initialize Row 1: The Input Field ---
         self.input_field = QLineEdit()
-        self.input_field.setContentsMargins(10,0,0,0)
+        self.input_field.setContentsMargins(10, 0, 0, 0)
         self.input_field.setPlaceholderText("Enter command...")
         self.input_field.setCursor(QCursor(Qt.CursorShape.IBeamCursor))
         self.input_field.setStyleSheet("border: none; background: transparent; font-size: 16px;"
@@ -159,19 +153,15 @@ class cmdPage(QWidget):
 
         self.tools_btn = QPushButton(" Tools")
 
-
         self.actions_btn = QPushButton(" Actions")
-
 
         # --- Right Side Buttons ---
         self.connect_btn = QPushButton("  Connect")
 
         self.send_btn = QPushButton("  Run")
 
-
         self.actions_menu = QMenu(self)
         self.tools_menu = QMenu(self)
-
 
         # Make the Run button a bit more prominent
         self.send_btn.setStyleSheet("""
@@ -224,7 +214,7 @@ class cmdPage(QWidget):
             Qt.WindowType.NoDropShadowWindowHint
         )
         actions = [
-            ("Auto Environment Setup", self.dummy_func),
+            ("Auto Environment Setup", self.setup_env),
             ("Scan Dependency Imports", self.dummy_func),
             ("System Health Check", self.dummy_func),
             ("Clean Up Zombie Processes", self.dummy_func)
@@ -281,8 +271,6 @@ class cmdPage(QWidget):
     def dummy_func(self):
         print("Action: Auto Environment Setup triggered")
 
-
-
     def set_busy(self, busy):
         self.send_btn.setEnabled(not busy)
         self.input_field.setEnabled(not busy)
@@ -318,7 +306,6 @@ class cmdPage(QWidget):
         self.chat_layout.addSpacing(10)
         self.chat_layout.addWidget(self.current_bubble)
         self.chat_layout.addSpacing(10)
-
 
     def update_live_output(self, raw_text):
         if not hasattr(self, 'current_bubble') or self.current_bubble is None:
@@ -416,7 +403,6 @@ class cmdPage(QWidget):
         lbl = MessageBubble(text)
         lbl.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         lbl.adjustSize()
-
 
         if not self.is_dark:
             lbl.set_light_mode()
@@ -523,7 +509,7 @@ class cmdPage(QWidget):
                         border-radius: 24px;
                     }
                 """)
-        
+
         self.input_field.setStyleSheet("""
                     QLineEdit {
                         background: transparent;
@@ -600,8 +586,9 @@ class cmdPage(QWidget):
                 if hasattr(widget, "set_light_mode"):
                     widget.set_light_mode()
                 else:
-                    widget.setStyleSheet("color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
-                                         "font-size: 15px;")
+                    widget.setStyleSheet(
+                        "color: #000; font-family: 'Consolas', 'Monospace', 'Courier New'; margin-left:2px;"
+                        "font-size: 15px;")
 
         self.is_dark = False
         self.tools_btn.setStyleSheet(self.tools_btn.styleSheet() + """
@@ -648,7 +635,6 @@ class cmdPage(QWidget):
         self.connect_btn.setIconSize(QSize(19, 19))
         self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send.png'))
         self.send_btn.setIconSize(QSize(19, 19))
-
 
     def set_dark_mode(self):
         self.is_dark = True
@@ -830,12 +816,14 @@ class cmdPage(QWidget):
 
         self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench_dark.png'))
         self.tools_btn.setIconSize(QSize(20, 20))
-        self.actions_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action_dark.png'))
+        self.actions_btn.setIcon(
+            QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action_dark.png'))
         self.actions_btn.setIconSize(QSize(20, 20))
         self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link_dark.png'))
         self.connect_btn.setIconSize(QSize(19, 19))
         self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send_dark.png'))
         self.send_btn.setIconSize(QSize(19, 19))
+
 
 class MessageBubble(QLabel):
     def __init__(self, parent=None):
@@ -843,8 +831,9 @@ class MessageBubble(QLabel):
 
     def set_light_mode(self):
         self.setStyleSheet("color: #111; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
-                              "background-color: #F2ECF4; padding: 10px 10px; border-radius: 15px;"
-                              "font-size: 16px; font-weight: 500;")
+                           "background-color: #F2ECF4; padding: 10px 10px; border-radius: 15px;"
+                           "font-size: 16px; font-weight: 500;")
+
     def set_dark_mode(self):
         self.setStyleSheet("color: #eee; padding: 2px; font-family: 'Consolas', 'Monospace', 'Courier New';"
                            "background-color: #2D282E; padding: 10px 10px; border-radius: 15px;"

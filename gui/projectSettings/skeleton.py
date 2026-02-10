@@ -205,7 +205,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.stack = QStackedWidget(self)
         self.config = None
 
-        self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect)
+        self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect, self.setup_environment)
         self.file_tree_page = FileTreePage(self.global_run_command, self.home_dir, self.config, self.ssh_manager)
         self.settings_page = SettingsPage(self.config, self.reload_manager, self.fb)
         self.graph_page = GraphsPage(self.config)
@@ -295,6 +295,18 @@ class ProjectSettingsSkeleton(QMainWindow):
     def update_tree(self):
         find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
         self.global_run_command(find_cmd, is_tree_update=True)
+
+    def setup_environment(self):
+        wandb_api_key = self.config.get("wandb_api")
+        git_pat = self.config.get("git_pat")
+        git_repo = self.config.get("git_url")
+
+        wandb_cmd = f"export WANDB_API_KEY={wandb_api_key}"
+
+        # Chain it with your other commands in one session
+        full_setup = f"{wandb_cmd} && git clone https://{git_pat}@{git_repo.split('https://')[-1]}"
+
+        self.global_run_command(full_setup)
 
 
     def accumulate_tree_data(self, text):
