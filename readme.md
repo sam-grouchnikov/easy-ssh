@@ -44,4 +44,4 @@ python application.py
   * Normal Pytorch DDP support (torchrun commands)
 
 ### Dev tab latest update
-Various UI updates
+Auto environment setup functionalities
