@@ -9,8 +9,10 @@ Email: sam.grouchnikov@gmail.com
 Status: Development
 """
 
+from pathlib import Path
+
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QCursor, QIcon, QPixmap
+from PyQt6.QtGui import QColor, QCursor, QPixmap
 from PyQt6.QtWidgets import (
     QLabel, QHBoxLayout, QWidget, QFrame, QVBoxLayout,
     QLineEdit, QPushButton, QGraphicsDropShadowEffect, QSizePolicy
@@ -23,11 +25,12 @@ class SignUpWidget(QWidget):
         self.main_layout = QVBoxLayout(self)
         self.fb = fb
         self.nav = nav
+        self._asset_dir = Path(__file__).resolve().parent
 
         self.outer_container = QWidget()
         self.outer_container_layout = QVBoxLayout(self.outer_container)
-        self.outer_container_layout.setContentsMargins(30, 25, 30, 35)
-        self.outer_container.setFixedSize(450, 520)
+        self.outer_container_layout.setContentsMargins(34, 28, 34, 34)
+        self.outer_container.setFixedSize(460, 540)
         self.outer_container.setObjectName("outer_container")
 
 
@@ -57,11 +60,11 @@ class SignUpWidget(QWidget):
 
         self.outer_container_layout.addWidget(self.email_label)
         self.email_input = QLineEdit()
-        self.email_input.setFixedHeight(40)
+        self.email_input.setFixedHeight(44)
         self.email_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         shadow2 = QGraphicsDropShadowEffect()
-        shadow2.setBlurRadius(8)
+        shadow2.setBlurRadius(10)
         shadow2.setXOffset(0)
         shadow2.setYOffset(0)
         shadow2.setColor(QColor(0, 0, 0, 80))
@@ -90,30 +93,30 @@ class SignUpWidget(QWidget):
 
         # --- Password Input ---
         self.psw_input = QLineEdit()
-        self.psw_input.setFixedHeight(40)
+        self.psw_input.setFixedHeight(44)
         self.psw_input.setEchoMode(QLineEdit.EchoMode.Password)  # Hides text as dots
         self.psw_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
 
         # Unique shadow for password input
         shadow3 = QGraphicsDropShadowEffect()
-        shadow3.setBlurRadius(8)
+        shadow3.setBlurRadius(10)
         shadow3.setXOffset(0)
         shadow3.setYOffset(0)
         shadow3.setColor(QColor(0, 0, 0, 80))
         self.psw_input.setGraphicsEffect(shadow3)
 
         self.outer_container_layout.addWidget(self.psw_input)
-        self.outer_container_layout.addSpacing(30)
+        self.outer_container_layout.addSpacing(28)
 
         self.action_btn = QPushButton()
-        self.action_btn.setFixedHeight(40)
+        self.action_btn.setFixedHeight(46)
         self.action_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.action_btn.clicked.connect(self.account_managing)
 
         self.action_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.outer_container_layout.addWidget(self.action_btn)
-        self.outer_container_layout.addSpacing(12)
+        self.outer_container_layout.addSpacing(14)
 
 
         self.alt_actions = QWidget()
@@ -138,16 +141,16 @@ class SignUpWidget(QWidget):
         self.back = QPushButton("Back to Home")
         self.back.clicked.connect(lambda _, p="home": nav(p))
         self.back.setStyleSheet("""
-                                color: #6F83DC;
-                                font-size: 14px;
-                                font-weight: 510;
-                                padding: 0px;
-                                margin: 0px;
-                                text-decoration: underline;
-                                margin-left:4px;
-                                background:transparent;
-                                border:none;
-                        """)
+            color: #5B6ECF;
+            font-size: 14px;
+            font-weight: 510;
+            padding: 0px;
+            margin: 0px;
+            text-decoration: underline;
+            margin-left: 4px;
+            background: transparent;
+            border: none;
+        """)
         self.back.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.outer_container_layout.addStretch(1)
 
@@ -234,21 +237,21 @@ class SignUpWidget(QWidget):
 
     def set_light_mode(self):
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(15)
+        shadow.setBlurRadius(20)
         shadow.setXOffset(0)
         shadow.setYOffset(0)
         shadow.setColor(QColor(0, 0, 0, 80))
         self.outer_container.setGraphicsEffect(shadow)
         self.outer_container.setStyleSheet("""
                     QWidget#outer_container{
-                        border-radius: 25px;
-                        border: 1px solid #7a757f;
-                        background-color: #F8F2FA;
+                        border-radius: 26px;
+                        border: 1px solid #CAC0D8;
+                        background-color: rgba(255, 255, 255, 0.84);
                     }
                 """)
         self.create_label.setStyleSheet("""
-                   font-weight: 520;
-                   font-size: 28px;
+                   font-weight: 600;
+                   font-size: 30px;
                    color: #1D1B20;
                """)
         self.desc_label.setStyleSheet("""
@@ -256,7 +259,7 @@ class SignUpWidget(QWidget):
                            font-size: 15px;
                            color: #7A757F;
                        """)
-        self.pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\mail.png")
+        self.pix = QPixmap(str(self._asset_dir / "mail.png"))
         self.icon_label.setPixmap(self.pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -268,14 +271,14 @@ class SignUpWidget(QWidget):
                     color: #49454E;
                 """)
         self.email_input.setStyleSheet("""
-                    background-color: #F8F2FA;
-                    border-radius: 10px;
-                    border: 1px solid #7a757f;
-                    padding: 2px 8px;
-                    color: #49454E;
+                    background-color: #FAF7FF;
+                    border-radius: 12px;
+                    border: 1px solid #AFA1C5;
+                    padding: 4px 10px;
+                    color: #3A3347;
                     font-size: 15px;
                 """)
-        self.psw_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\lock.png")
+        self.psw_pix = QPixmap(str(self._asset_dir / "lock.png"))
         self.psw_icon_label.setPixmap(self.psw_pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -287,28 +290,28 @@ class SignUpWidget(QWidget):
                     color: #49454E;
                 """)
         self.psw_input.setStyleSheet("""
-                    background-color: #F8F2FA;
-                    border-radius: 10px;
-                    border: 1px solid #7a757f;
+                    background-color: #FAF7FF;
+                    border-radius: 12px;
+                    border: 1px solid #AFA1C5;
                     padding-left: 10px;
-                    padding: 2px 8px;
-                    color: #49454E;
+                    padding: 4px 10px;
+                    color: #3A3347;
                     font-size: 15px;
                 """)
         self.action_btn.setStyleSheet("""
                     QPushButton {
-                        background-color: #65558F;
-                        border: 1px solid #65558F;
+                        background-color: #5F4A97;
+                        border: 1px solid #5F4A97;
                         color: #fff;
-                        border-radius: 20px;
-                        font-size: 19px;
-                        font-weight: 515;
+                        border-radius: 22px;
+                        font-size: 18px;
+                        font-weight: 600;
                     }
                     QPushButton:hover {
-                        background-color: #75659E
+                        background-color: #6F57AD
                     }
                     QPushButton:pressed {
-                    background-color: #65558F
+                    background-color: #574488
                     }
                 """)
         self.alt_desc.setStyleSheet("""
@@ -317,7 +320,7 @@ class SignUpWidget(QWidget):
                     font-weight: 510;
                 """)
         self.switch_btn.setStyleSheet("""
-                        color: #6F83DC;
+                        color: #5B6ECF;
                         font-size: 14px;
                         font-weight: 510;
                         padding: 0px;
@@ -326,29 +329,29 @@ class SignUpWidget(QWidget):
                 """)
     def set_dark_mode(self):
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(12)
+        shadow.setBlurRadius(18)
         shadow.setXOffset(0)
         shadow.setYOffset(0)
         shadow.setColor(QColor("#999"))
         self.outer_container.setGraphicsEffect(shadow)
         self.outer_container.setStyleSheet("""
                             QWidget#outer_container{
-                                border-radius: 25px;
-                                border: 1px solid #484848;
-                                background-color: #2C292F;
+                                border-radius: 26px;
+                                border: 1px solid #3E3A49;
+                                background-color: rgba(43, 40, 50, 0.94);
                             }
                         """)
         self.create_label.setStyleSheet("""
-                           font-weight: 520;
-                           font-size: 28px;
-                           color: #D3BCFD;
+                           font-weight: 600;
+                           font-size: 30px;
+                           color: #DACBFA;
                        """)
         self.desc_label.setStyleSheet("""
                                    font-weight: normal;
                                    font-size: 15px;
                                    color: #948F99;
                                """)
-        self.pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\mail_dark.png")
+        self.pix = QPixmap(str(self._asset_dir / "mail_dark.png"))
         self.icon_label.setPixmap(self.pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -360,14 +363,14 @@ class SignUpWidget(QWidget):
                             color: #D3BCFD;
                         """)
         self.email_input.setStyleSheet("""
-                            background-color: #2C292F;
-                            border-radius: 10px;
-                            border: 1.5px solid #4B454D;
-                            padding: 2px 8px;
-                            color: #D3D3D3;
+                            background-color: #24212C;
+                            border-radius: 12px;
+                            border: 1px solid #5A5366;
+                            padding: 4px 10px;
+                            color: #ECE9F3;
                             font-size: 15px;
                         """)
-        self.psw_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\padlock_dark.png")
+        self.psw_pix = QPixmap(str(self._asset_dir / "padlock_dark.png"))
         self.psw_icon_label.setPixmap(self.psw_pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -379,28 +382,28 @@ class SignUpWidget(QWidget):
                             color: #D3BCFD;
                         """)
         self.psw_input.setStyleSheet("""
-                            background-color: #2C292F;
-                            border-radius: 10px;
-                            border: 1.5px solid #4B454D;
+                            background-color: #24212C;
+                            border-radius: 12px;
+                            border: 1px solid #5A5366;
                             padding-left: 10px;
-                            padding: 2px 8px;
-                            color: #D3D3D3;
+                            padding: 4px 10px;
+                            color: #ECE9F3;
                             font-size: 15px;
                         """)
         self.action_btn.setStyleSheet("""
                             QPushButton {
-                                background-color: #D3BCFD;
-                                border: 1px solid #D3BCFD;
-                                color: #39265C;
-                                border-radius: 20px;
-                                font-size: 19px;
-                                font-weight: 515;
+                                background-color: #CDB8F9;
+                                border: 1px solid #CDB8F9;
+                                color: #22123D;
+                                border-radius: 22px;
+                                font-size: 18px;
+                                font-weight: 600;
                             }
                             QPushButton:hover {
-                                background-color: #CAACFF
+                                background-color: #C4A2FF
                             }
                             QPushButton:pressed {
-                            background-color: #D3BCFD
+                            background-color: #B998F4
                             }
                         """)
         self.alt_desc.setStyleSheet("""
@@ -409,7 +412,7 @@ class SignUpWidget(QWidget):
                             font-weight: 510;
                         """)
         self.switch_btn.setStyleSheet("""
-                                color: #6F83DC;
+                                color: #83A0FF;
                                 font-size: 14px;
                                 font-weight: 510;
                                 padding: 0px;

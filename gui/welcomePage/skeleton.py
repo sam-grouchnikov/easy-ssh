@@ -9,9 +9,10 @@ Email: sam.grouchnikov@gmail.com
 Status: Development
 """
 
-import sys
-from PyQt6.QtCore import Qt, QSize, QPointF
-from PyQt6.QtGui import QPixmap, QColor, QCursor, QIcon, QPainter, QLinearGradient, QBrush
+from pathlib import Path
+
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QCursor, QIcon
 from PyQt6.QtWidgets import (
     QWidget, QMainWindow, QApplication,
     QLabel, QPushButton,
@@ -30,15 +31,16 @@ class HomepageSkeleton(QMainWindow):
         self.central_widget.setObjectName("mainContainer")
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setContentsMargins(0, 40, 0, 0)
+        self.main_layout.setContentsMargins(0, 28, 0, 0)
         self.main_layout.setSpacing(0)
         self.central_widget.setLayout(self.main_layout)
 
         self.top_bar = QWidget()
         self.top_bar_layout = QHBoxLayout()
-        self.top_bar_layout.setContentsMargins(35, 10, 25, 10)
+        self.top_bar_layout.setContentsMargins(20, 12, 20, 12)
         self.top_bar.setObjectName("top_bar")
-        self.top_bar.setFixedHeight(75)
+        self.top_bar.setFixedHeight(82)
+        self.top_bar.setFixedWidth(860)
         self.top_bar.setLayout(self.top_bar_layout)
         self.top_bar_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.top_bar_layout.setSpacing(20)
@@ -50,34 +52,34 @@ class HomepageSkeleton(QMainWindow):
         self.top_bar_layout.addWidget(self.mode_button)
 
         self.docs = QPushButton("Docs")
-        self.docs.setFixedSize(150,50)
+        self.docs.setFixedSize(150, 48)
         self.top_bar_layout.addWidget(self.docs)
         self.docs.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.github = QPushButton("GitHub")
-        self.github.setFixedSize(150, 50)
+        self.github.setFixedSize(150, 48)
         self.top_bar_layout.addWidget(self.github)
         self.github.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.sign_in_btn = QPushButton("Sign in")
-        self.sign_in_btn.setFixedSize(150, 50)
+        self.sign_in_btn.setFixedSize(150, 48)
         self.sign_in_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.sign_in_btn.clicked.connect(lambda _, p="create": navigate(p, signin = "true"))
         self.top_bar_layout.addWidget(self.sign_in_btn)
 
         self.main_layout.addWidget(self.top_bar, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.main_layout.addSpacing(125)
+        self.main_layout.addSpacing(110)
 
         self.easyssh = QLabel("Easy-SSH")
         self.main_layout.addWidget(self.easyssh, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.main_layout.addSpacing(30)
+        self.main_layout.addSpacing(24)
 
         self.description = QLabel("Your one stop shop for AI model training.")
         self.main_layout.addWidget(self.description, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.main_layout.addSpacing(45)
+        self.main_layout.addSpacing(40)
 
         self.get_started_btn = QPushButton("Get Started")
-        self.get_started_btn.setFixedSize(250, 50)
+        self.get_started_btn.setFixedSize(260, 52)
         self.get_started_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.get_started_btn.clicked.connect(lambda _, p="create": navigate(p, signin = "false"))
 
@@ -86,6 +88,7 @@ class HomepageSkeleton(QMainWindow):
         self.main_layout.addStretch(1)
 
         self.is_dark = False
+        self._icons_dir = Path(__file__).resolve().parents[1] / "icons"
         self.set_light_mode()
 
     def toggle_mode(self):
@@ -97,63 +100,70 @@ class HomepageSkeleton(QMainWindow):
 
     def set_light_mode(self):
         self.central_widget.setStyleSheet("""
-        QFrame#mainContainer{
+        QFrame#mainContainer {
             background-color: qlineargradient(
-                x1: 1, y1: 0, 
-                x2: 0, y2: 1, 
-                stop: 0 #A992FF, 
-                stop: 0.70 #D6C7FE, 
-                stop: 1 #DBCEFF
+                x1: 0, y1: 0,
+                x2: 1, y2: 1,
+                stop: 0 #F7F2FF,
+                stop: 0.48 #EEE4FF,
+                stop: 1 #E1D3FF
             );
-            }
+        }
         """)
 
         # UI Elements
-        self.top_bar.setStyleSheet("QWidget#top_bar { background-color: #F4E1FF; border-radius: 10px; }")
+        self.top_bar.setStyleSheet("QWidget#top_bar { background-color: rgba(255, 255, 255, 0.56); border-radius: 16px; border: 1px solid rgba(120, 99, 176, 0.23); }")
         self.mode_button.setStyleSheet("""
             QPushButton { background-color: transparent; border: none; padding: 5px; }
             QPushButton:hover { background-color: rgba(0, 0, 0, 20); border-radius: 15px; }
         """)
         self.docs.setStyleSheet("""
-                           QPushButton { background:transparent; font-size: 23px; font-weight: bold; border-radius: 15px; color:black; }
-                           QPushButton:hover { background-color: rgba(0, 0, 0, 20); }
-                           QPushButton:pressed {background-color: #D4C4FF; }
+                           QPushButton { background:transparent; font-size: 19px; font-weight: 600; border-radius: 12px; color:#231B33; }
+                           QPushButton:hover { background-color: rgba(49, 31, 80, 0.08); }
+                           QPushButton:pressed {background-color: rgba(49, 31, 80, 0.16); }
                        """)
         self.github.setStyleSheet("""
-                           QPushButton { background:transparent; font-size: 23px; font-weight: bold; border-radius: 15px; color:black; }
-                           QPushButton:hover { background-color: rgba(0, 0, 0, 20); }
-                           QPushButton:pressed {background-color: #D4C4FF; }
+                           QPushButton { background:transparent; font-size: 19px; font-weight: 600; border-radius: 12px; color:#231B33; }
+                           QPushButton:hover { background-color: rgba(49, 31, 80, 0.08); }
+                           QPushButton:pressed {background-color: rgba(49, 31, 80, 0.16); }
                        """)
 
         self.sign_in_btn.setStyleSheet("""
-            QPushButton { background-color: #D4C4FF; font-size: 23px; font-weight: bold; border-radius: 15px; color:black; }
-            QPushButton:hover { background-color: #DACCFF; }
-            QPushButton:pressed {background-color: #D4C4FF; }
+            QPushButton { background-color: #6F59B5; font-size: 18px; font-weight: 600; border-radius: 12px; color:white; border: none; }
+            QPushButton:hover { background-color: #7D66C4; }
+            QPushButton:pressed {background-color: #654EAA; }
         """)
 
-        self.easyssh.setStyleSheet("font-size: 65px; color: #000000; font-weight: bold;")
-        self.description.setStyleSheet("font-size: 35px; color: #000000; font-weight: bold;")
+        self.easyssh.setStyleSheet("font-size: 70px; color: #1B1230; font-weight: 700;")
+        self.description.setStyleSheet("font-size: 30px; color: #312050; font-weight: 500;")
         self.get_started_btn.setStyleSheet("""
-        QPushButton{background-color: black; color: white; font-size: 23px; border-radius: 25px; font-weight: 650px;}
-        QPushButton:hover{background-color: #222}"""
+        QPushButton{background-color: #241242; color: white; font-size: 20px; border-radius: 26px; font-weight: 600; border: none;}
+        QPushButton:hover{background-color: #301A53;}
+        QPushButton:pressed{background-color: #21103C;}"""
         )
 
 
 
         # Update Icon to "Light Mode" icon
-        icon_path = "C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\light mode.png"
+        icon_path = str(self._icons_dir / "light mode.png")
         self.mode_button.setIcon(QIcon(icon_path))
-        self.mode_button.setIconSize(QSize(40, 40))
+        self.mode_button.setIconSize(QSize(28, 28))
 
     def set_dark_mode(self):
         # Update smooth gradient colors
         self.central_widget.setStyleSheet("""
             QFrame#mainContainer{
-                background-color: #141318
+                background-color: qlineargradient(
+                    x1: 0, y1: 0,
+                    x2: 1, y2: 1,
+                    stop: 0 #121116,
+                    stop: 0.6 #161422,
+                    stop: 1 #1B1730
+                )
             }
         """)
 
-        self.top_bar.setStyleSheet("QWidget#top_bar { background-color: #2B2838; border-radius: 10px; }")
+        self.top_bar.setStyleSheet("QWidget#top_bar { background-color: rgba(43, 40, 56, 0.92); border-radius: 16px; border: 1px solid #3E3953; }")
         self.mode_button.setStyleSheet("""
             QPushButton { background-color: transparent; border: none; padding: 5px; }
             QPushButton:hover { background-color: #39354A; border-radius: 15px; }
@@ -163,9 +173,9 @@ class HomepageSkeleton(QMainWindow):
                             QPushButton { 
                                 background-color: #2B2838; 
                                 border: none;
-                                font-size: 23px; 
-                                font-weight: bold; 
-                                border-radius: 15px; 
+                                font-size: 19px; 
+                                font-weight: 600; 
+                                border-radius: 12px; 
                                 color: white; 
                             }
                             QPushButton:hover { background-color: #39354A; }
@@ -176,9 +186,9 @@ class HomepageSkeleton(QMainWindow):
                             QPushButton { 
                                 background-color: #2B2838; 
                                 border: none;
-                                font-size: 23px; 
-                                font-weight: bold; 
-                                border-radius: 15px; 
+                                font-size: 19px; 
+                                font-weight: 600; 
+                                border-radius: 12px; 
                                 color: white; 
                             }
                             QPushButton:hover { background-color: #39354A; }
@@ -186,19 +196,20 @@ class HomepageSkeleton(QMainWindow):
                         """)
 
         self.sign_in_btn.setStyleSheet("""
-            QPushButton { background-color: #3E375B; font-size: 23px; font-weight: bold; color: #FFFFFF; border-radius: 15px; }
+            QPushButton { background-color: #8D7AE0; font-size: 18px; font-weight: 600; color: #161225; border-radius: 12px; border: none; }
             QPushButton:hover { background-color: #494266; }
-            QPushButton:pressed { background-color: #3E375B; }
+            QPushButton:pressed { background-color: #7F6FD4; }
         """)
 
-        self.easyssh.setStyleSheet("font-size: 65px; color: #C392FF; font-weight: bold;")
-        self.description.setStyleSheet("font-size: 35px; color: #C392FF; font-weight: bold;")
+        self.easyssh.setStyleSheet("font-size: 70px; color: #D4C0FF; font-weight: 700;")
+        self.description.setStyleSheet("font-size: 30px; color: #B7A8DC; font-weight: 500;")
         self.get_started_btn.setStyleSheet("""
-            QPushButton{background-color: #D0C4FF; color: #141318; font-size: 23px; border-radius: 25px; font-weight: 650px;}
+            QPushButton{background-color: #D0C4FF; color: #141318; font-size: 20px; border-radius: 26px; font-weight: 600; border: none;}
             QPushButton:hover{background-color: #B7A3FF}
+            QPushButton:pressed{background-color: #A58BFA}
         """)
 
         # Update Icon to "Dark Mode" icon
-        icon_path = "C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\dark mode.png"
+        icon_path = str(self._icons_dir / "dark mode.png")
         self.mode_button.setIcon(QIcon(icon_path))
-        self.mode_button.setIconSize(QSize(40, 40))
+        self.mode_button.setIconSize(QSize(28, 28))
