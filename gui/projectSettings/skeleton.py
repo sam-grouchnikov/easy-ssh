@@ -305,13 +305,13 @@ class ProjectSettingsSkeleton(QMainWindow):
         # Chain it with your other commands in one session
         full_setup = f"{wandb_cmd} && git clone https://{git_pat}@{git_repo.split('https://')[-1]}"
 
-        self.global_run_command(full_setup)
+        self.global_run_command(full_setup, is_setup=True)
 
 
     def accumulate_tree_data(self, text):
         self.tree_data_accumulator += text
 
-    def global_run_command(self, command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False):
+    def global_run_command(self, command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False, is_setup=False):
         self.recent_cmd = command
         self.cmd_page.send_btn.setEnabled(False)
 
@@ -355,6 +355,24 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.worker.start()
             return
 
+        if command.startswith("rm"):
+            self.cmd_page.add_message(command)
+            self.worker.finished.connect(
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            )
+            self.worker.start()
+            return
+
+        if command.startswith("export"):
+            self.cmd_page.add_message("Easy-SSH Auto Environment Setup Success")
+
+            self.worker.finished.connect(
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            )
+            self.worker.start()
+            return
+
+
 
         if is_tree_update:
             self.tree_data_accumulator = ""
@@ -367,6 +385,13 @@ class ProjectSettingsSkeleton(QMainWindow):
             )
         elif is_file_save:
             pass
+        elif is_setup:
+            command = f"$ {command}"
+
+            self.cmd_page.add_message(command)
+            self.cmd_page.create_new_output_bubble()
+            self.cmd_page.update_live_output("Environment Successfully Setup")
+
         elif is_git_clone:
             self.update_tree()
             self.graph_page.refresh_runs()
