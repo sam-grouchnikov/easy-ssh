@@ -215,9 +215,9 @@ class cmdPage(QWidget):
         )
         actions = [
             ("Auto Environment Setup", self.setup_env),
-            ("Scan Dependency Imports", self.dummy_func),
-            ("System Health Check", self.dummy_func),
-            ("Clean Up Zombie Processes", self.dummy_func)
+            # ("Scan Dependency Imports", self.dummy_func),
+            # ("System Health Check", self.dummy_func),
+            # ("Clean Up Zombie Processes", self.dummy_func)
         ]
 
         for text, slot in actions:
@@ -248,7 +248,7 @@ class cmdPage(QWidget):
         actions = [
             ("Clear Console", self.clear_console),
             ("Terminate Run", self.handle_interrupt),
-            ("Clear all Server Files", self.dummy_func),
+            ("Disconnect", lambda: self.run_func("exit")),
         ]
 
         for text, slot in actions:
@@ -787,7 +787,7 @@ class cmdPage(QWidget):
                         QMenu {
                             background-color: #231E23; 
                             border-radius: 10px;
-                            border: 2.3px solid #111;
+                            border: 1.7px solid #111;
                             padding: 8px 0px;
                             margin: -1px;
                         }

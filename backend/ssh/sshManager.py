@@ -135,6 +135,7 @@ class SSHStreamWorker(QThread):
             if not self._is_running:
                 break
             if chunk:
+                print(chunk)
                 self.output_received.emit(chunk)
 
         self.finished.emit()

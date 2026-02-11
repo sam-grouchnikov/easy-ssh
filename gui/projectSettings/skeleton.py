@@ -183,7 +183,7 @@ class ProjectSettingsSkeleton(QMainWindow):
 
         # 2. The Username Label (Single Row)
         # self.profile_name_lbl = QLabel(config.get("User"))
-        self.profile_name_lbl = QLabel("")
+        self.profile_name_lbl = QLabel("Log Out")
         # Using 16px for a clean, readable look
         self.profile_name_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
@@ -250,7 +250,6 @@ class ProjectSettingsSkeleton(QMainWindow):
 
     def load_settings(self):
         self.settings_page.load_parts(self.config)
-        self.profile_name_lbl.setText(self.config.get("email"))
 
     def reload_manager(self):
         pass
@@ -317,9 +316,6 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.cmd_page.send_btn.setEnabled(False)
 
         if command == "exit":
-            self.cmd_page.add_message("$ exit\nSystem: Disconnected")
-            self.cmd_page.add_separator()
-
             # 1. Close the backend connection
             self.ssh_manager.close()
 
@@ -334,16 +330,6 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.file_tree_page.reset_editor_text()
             self.file_tree_page.file_name_label.setText("No File Selected")
             return
-
-        if command.startswith("python") or command.startswith("python3"):
-            if "venv" not in command:
-                now = datetime.now()
-                date = now.strftime("%B %d, %Y")
-                time = now.strftime("%I:%M %p")
-                if "-m" in command:
-                    file = command.split(" ")[2].split(".")[1] + ".py"
-                else:
-                    file = command.split(" ")[1]
 
         if command == "Ctrl+C":
             self.ssh_manager.send_interrupt()
@@ -396,6 +382,8 @@ class ProjectSettingsSkeleton(QMainWindow):
 
             self.cmd_page.add_message(command)
             self.cmd_page.create_new_output_bubble()
+
+            print(self.worker.output_received)
 
             self.worker.output_received.connect(self.cmd_page.update_live_output)
 
@@ -480,7 +468,8 @@ class ProjectSettingsSkeleton(QMainWindow):
                        border-radius: 8px;
                    }
                    QPushButton:hover {
-                       background-color: #E4E4E8;
+                       background-color: #ffdad6;
+                       color: #93000a;
                    }
                    QPushButton[selected="true"] {
                        background-color: #E3CDF7;
@@ -555,7 +544,7 @@ class ProjectSettingsSkeleton(QMainWindow):
                             }
                         """)
         self.line2.setStyleSheet("background-color: #C392FF;")
-        self.profile_name_lbl.setStyleSheet("font-size: 16px; color: #E8E3FF; background: transparent;")
+        self.profile_name_lbl.setStyleSheet("font-size: 16px; color: #ffdad6; background: transparent;")
 
         self.profile_btn.setStyleSheet("""
                            QPushButton {
@@ -563,10 +552,11 @@ class ProjectSettingsSkeleton(QMainWindow):
                                border-radius: 8px;
                            }
                            QPushButton:hover {
-                               background-color: #2F2A46;
+                               background-color: #5D191E;
+                               color: #ffdad6;
                            }
                            QPushButton[selected="true"] {
-                               background-color: #3E375B;
+                               background-color: #93000a;
                            }
                            QPushButton QLabel {
                             background-color: transparent;
