@@ -9,7 +9,7 @@ Email: sam.grouchnikov@gmail.com
 Status: Development
 """
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QCursor, QColor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit,
@@ -18,10 +18,13 @@ from PyQt6.QtWidgets import (
 
 
 class SettingsPage(QWidget):
-    def __init__(self, config):
+    def __init__(self, config, reload, fb):
         super().__init__()
         self.inputs = {}
         self.config = config
+        self.doc_path = None
+        self.fb = fb
+        self.reload = reload
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -42,6 +45,7 @@ class SettingsPage(QWidget):
         shadow.setColor(QColor(0, 0, 0, 80))
         self.save_btn.setGraphicsEffect(shadow)
         self.save_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.save_btn.clicked.connect(self.save_changes)
 
         self.row1_layout.addStretch()
         self.row1_layout.addWidget(self.save_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
@@ -59,12 +63,6 @@ class SettingsPage(QWidget):
         self.scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.scroll_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.profile_row = ProfileRowWidget()
-        self.profile_row.setContentsMargins(10, 0, 0, 0)
-        self.scroll_layout.addWidget(self.profile_row)
-
-        self.line2 = Line(2)
-        self.scroll_layout.addWidget(self.line2)
 
         self.connection_row = ConnectionRowWidget()
         self.connection_row.setContentsMargins(10, 0, 0, 0)
@@ -74,51 +72,64 @@ class SettingsPage(QWidget):
         self.scroll_layout.addWidget(self.line3)
 
         self.integrations_row = IntegrationsRowWidget()
+        self.integrations_row.setContentsMargins(10,0,0,0)
         self.scroll_layout.addWidget(self.integrations_row)
 
         self.scroll_area.setWidget(self.scroll_content)
 
         self.layout.addWidget(self.scroll_area)
 
-    def load_parts(self):
-        self.profile_row.username.input.setText(self.config.get("user"))
-        self.profile_row.password.input.setText(self.config.get("psw"))
-        self.profile_row.email.input.setText(self.config.get("email"))
+    def update_config(self, new, path):
+        self.config = new
+        self.doc_path = path
 
-        self.connection_row.username.input.setText(self.config.get("ssh_user"))
-        self.connection_row.ip.input.setText(self.config.get("ssh_ip"))
-        self.connection_row.password.input.setText(self.config.get("ssh_psw"))
-        self.connection_row.port.input.setText(self.config.get("ssh_port"))
+    def load_parts(self, config):
+        # self.profile_row.password_input.input.setText("placeholder")
+        # self.profile_row.email_input.input.setText(str(config.get("email")))
 
-        self.integrations_row.gitblock.git_url.input.setText(self.config.get("git_url"))
-        self.integrations_row.gitblock.git_pat.input.setText(self.config.get("git_pat"))
-        self.integrations_row.wandbblock.username.input.setText(self.config.get("wandb_user"))
-        self.integrations_row.wandbblock.proj.input.setText(self.config.get("wandb_proj"))
-        self.integrations_row.wandbblock.api_key.input.setText(self.config.get("wandb_api"))
+        self.connection_row.username.input.setText(str(config.get("ssh_user")))
+        self.connection_row.ip.input.setText(str(config.get("ssh_ip")))
+        self.connection_row.password.input.setText(str(config.get("ssh_psw")))
+        self.connection_row.port.input.setText(str(config.get("ssh_port")))
+
+        self.integrations_row.gitblock.git_url.input.setText(str(config.get("git_url")))
+        self.integrations_row.gitblock.git_pat.input.setText(str(config.get("git_pat")))
+        self.integrations_row.wandbblock.username.input.setText(str(config.get("wandb_user")))
+        self.integrations_row.wandbblock.proj.input.setText(str(config.get("wandb_proj")))
+        self.integrations_row.wandbblock.api_key.input.setText(str(config.get("wandb_api")))
 
     def save_changes(self):
-        self.config.set("user", self.profile_row.username.input.text())
-        self.config.set("psw", self.profile_row.password.input.text())
-        self.config.set("email", self.profile_row.email.input.text())
-        self.config.set("ssh_user", self.connection_row.username.input.text())
-        self.config.set("ssh_ip", self.connection_row.ip.input.text())
-        self.config.set("ssh_psw", self.connection_row.password.input.text())
-        self.config.set("ssh_port", self.connection_row.port.input.text())
-        self.config.set("git_url", self.integrations_row.gitblock.git_url.input.text())
-        self.config.set("git_pat", self.integrations_row.gitblock.git_pat.input.text())
-        self.config.set("wandb_user", self.integrations_row.wandbblock.username.input.text())
-        self.config.set("wandb_proj", self.integrations_row.wandbblock.proj.input.text())
-        self.config.set("wandb_api", self.integrations_row.wandbblock.api_key.input.text())
+        original_text = self.save_btn.text()
+
+        self.save_btn.setText("Saved ✓")
+        self.save_btn.setEnabled(False)
+        self.config["ssh_user"] = self.connection_row.username.input.text()
+        self.config["ssh_ip"] = self.connection_row.ip.input.text()
+        self.config["ssh_port"] = self.connection_row.port.input.text()
+        self.config["ssh_psw"] = self.connection_row.password.input.text()
+        self.config["git_url"] = self.integrations_row.gitblock.git_url.input.text()
+        self.config["git_pat"] = self.integrations_row.gitblock.git_pat.input.text()
+        self.config["wandb_user"] = self.integrations_row.wandbblock.username.input.text()
+        self.config["wandb_proj"] = self.integrations_row.wandbblock.proj.input.text()
+        self.config["wandb_api"] = self.integrations_row.wandbblock.api_key.input.text()
+        self.fb.set_doc(self.doc_path, self.config)
+
+        QTimer.singleShot(2350, lambda: self.revert_save_button(original_text))
+        self.reload()
+
+    def revert_save_button(self, original_text):
+        self.save_btn.setText(original_text)
+        self.save_btn.setEnabled(True)
 
 
     def set_light_mode(self):
         self.line1.set_light_mode()
-        self.profile_row.set_light_mode()
-        self.line2.set_light_mode()
+        # self.profile_row.set_light_mode()
+        # self.line2.set_light_mode()
         self.connection_row.set_light_mode()
         self.line3.set_light_mode()
         self.integrations_row.set_light_mode()
-        self.page_title.setStyleSheet("font-weight: 510; font-size: 18px; color: #343434")
+        self.page_title.setStyleSheet("font-weight: 510; font-size: 21px; color: #343434")
         self.save_btn.setStyleSheet("""
                     QPushButton {
                         background-color: #e9ddff;
@@ -135,7 +146,7 @@ class SettingsPage(QWidget):
                         background-color: #e9ddff;
                     }
                 """)
-        self.save_btn.clicked.connect(self.save_changes)
+
 
         self.scroll_area.setStyleSheet("""
                             QScrollArea{ 
@@ -169,12 +180,12 @@ class SettingsPage(QWidget):
                 """)
     def set_dark_mode(self):
         self.line1.set_dark_mode()
-        self.profile_row.set_dark_mode()
-        self.line2.set_dark_mode()
+        # self.profile_row.set_dark_mode()
+        # self.line2.set_dark_mode()
         self.connection_row.set_dark_mode()
         self.line3.set_dark_mode()
         self.integrations_row.set_dark_mode()
-        self.page_title.setStyleSheet("font-weight: 510; font-size: 18px; color: #B1B1B1")
+        self.page_title.setStyleSheet("font-weight: 510; font-size: 21px; color: #B1B1B1")
         self.save_btn.setStyleSheet("""
                             QPushButton {
                                 background-color: #4E3D75;
@@ -297,12 +308,12 @@ class TwoRowLabel(QWidget):
         main_layout.addWidget(self.l2)
 
     def set_light_mode(self):
-        self.l1.setStyleSheet("color: #434343; font-size: 22px; font-weight: 520")
-        self.l2.setStyleSheet("color: #656565; font-size: 15px; font-weight: 510")
+        self.l1.setStyleSheet("color: #434343; font-size: 23px; font-weight: 520")
+        self.l2.setStyleSheet("color: #656565; font-size: 17px; font-weight: 510")
 
     def set_dark_mode(self):
-        self.l1.setStyleSheet("color: #C4C4C4; font-size: 22px; font-weight: 520")
-        self.l2.setStyleSheet("color: #9D9D9D; font-size: 15px; font-weight: 510")
+        self.l1.setStyleSheet("color: #C4C4C4; font-size: 23px; font-weight: 520")
+        self.l2.setStyleSheet("color: #9D9D9D; font-size: 17px; font-weight: 510")
 
 
 
@@ -319,29 +330,25 @@ class ProfileRowWidget(QWidget):
         self.inputs_vbox_layout = QVBoxLayout(self.inputs_vbox)
         self.inputs_r1 = QHBoxLayout()
         self.inputs_r1.setSpacing(10)
-        self.username = FormItem("Username", 285)
-        self.password = FormItem("Password", 285)
-        self.inputs_r1.addWidget(self.username)
-        self.inputs_r1.addWidget(self.password)
+        self.email_input = FormItem("Email", 600)
+        self.inputs_r1.addWidget(self.email_input)
         self.inputs_vbox_layout.addLayout(self.inputs_r1)
         self.inputs_r2 = QHBoxLayout()
-        self.email = FormItem("Email", 600)
-        self.inputs_r2.addWidget(self.email)
+        self.password_input = FormItem("Password", 600)
+        self.inputs_r2.addWidget(self.password_input)
         self.inputs_vbox_layout.addLayout(self.inputs_r2)
 
         self.layout.addWidget(self.inputs_vbox)
 
     def set_light_mode(self):
         self.label_side.set_light_mode()
-        self.username.set_light_mode()
-        self.password.set_light_mode()
-        self.email.set_light_mode()
+        self.email_input.set_light_mode()
+        self.password_input.set_light_mode()
 
     def set_dark_mode(self):
         self.label_side.set_dark_mode()
-        self.username.set_dark_mode()
-        self.password.set_dark_mode()
-        self.email.set_dark_mode()
+        self.email_input.set_dark_mode()
+        self.password_input.set_dark_mode()
 
 class ConnectionRowWidget(QWidget):
     def __init__(self):
@@ -425,17 +432,17 @@ class GitBlock(QWidget):
         self.inputs_r1.addWidget(self.git_url)
         self.inputs_vbox_layout.addLayout(self.inputs_r1)
         self.inputs_r2 = QHBoxLayout()
-        self.git_pat = FormItem("Email", 600)
+        self.git_pat = FormItem("Personal Access Token", 600)
         self.inputs_r2.addWidget(self.git_pat)
         self.inputs_vbox_layout.addLayout(self.inputs_r2)
 
     def set_light_mode(self):
-        self.github_label.setStyleSheet("color: #434343; font-size: 25px; font-weight: 520; padding-left: 2px;")
+        self.github_label.setStyleSheet("color: #434343; font-size: 22px; font-weight: 520; padding-left: 2px;")
         self.git_url.set_light_mode()
         self.git_pat.set_light_mode()
 
     def set_dark_mode(self):
-        self.github_label.setStyleSheet("color: #C4C4C4; font-size: 25px; font-weight: 520; padding-left: 2px;")
+        self.github_label.setStyleSheet("color: #C4C4C4; font-size: 22px; font-weight: 520; padding-left: 2px;")
         self.git_url.set_dark_mode()
         self.git_pat.set_dark_mode()
 
@@ -459,13 +466,13 @@ class WandbBlock(QWidget):
         self.inputs_vbox_layout.addLayout(self.inputs_r2)
 
     def set_light_mode(self):
-        self.github_label.setStyleSheet("color: #434343; font-size: 25px; font-weight: 520; padding-left: 2px;")
+        self.github_label.setStyleSheet("color: #434343; font-size: 22px; font-weight: 520; padding-left: 2px;")
         self.username.set_light_mode()
         self.proj.set_light_mode()
         self.api_key.set_light_mode()
 
     def set_dark_mode(self):
-        self.github_label.setStyleSheet("color: #C4C4C4; font-size: 25px; font-weight: 520; padding-left: 2px;")
+        self.github_label.setStyleSheet("color: #C4C4C4; font-size: 22px; font-weight: 520; padding-left: 2px;")
         self.username.set_dark_mode()
         self.proj.set_dark_mode()
         self.api_key.set_dark_mode()

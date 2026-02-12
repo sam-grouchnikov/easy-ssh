@@ -62,6 +62,7 @@ class HomepageSkeleton(QMainWindow):
         self.sign_in_btn = QPushButton("Sign in")
         self.sign_in_btn.setFixedSize(150, 50)
         self.sign_in_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.sign_in_btn.clicked.connect(lambda _, p="create": navigate(p, signin = "true"))
         self.top_bar_layout.addWidget(self.sign_in_btn)
 
         self.main_layout.addWidget(self.top_bar, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -78,7 +79,7 @@ class HomepageSkeleton(QMainWindow):
         self.get_started_btn = QPushButton("Get Started")
         self.get_started_btn.setFixedSize(250, 50)
         self.get_started_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.get_started_btn.clicked.connect(lambda _, p="create": navigate(p))
+        self.get_started_btn.clicked.connect(lambda _, p="create": navigate(p, signin = "false"))
 
         self.main_layout.addWidget(self.get_started_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 

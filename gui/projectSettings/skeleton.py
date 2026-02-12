@@ -25,23 +25,22 @@ from gui.projectSettings.pages.cmd import cmdPage
 from gui.projectSettings.pages.graphs import GraphsPage
 from gui.projectSettings.pages.settings import SettingsPage
 
+from firebase import _from_fs_value, _to_fs_value, from_fs_doc
+def config_doc_path(uid: str) -> str:
+    return f"users/{uid}/config/main"
+
 class ProjectSettingsSkeleton(QMainWindow):
-    def __init__(self, navigate, config, toggle_theme_func):
+    def __init__(self, navigate, toggle_theme_func, fb):
         super().__init__()
         self.project_name = None
         self.setWindowTitle("Homepage")
         self.setGeometry(100, 100, 1300, 700)
         self.setMinimumSize(600, 400)
         self.cloned = False
-        self.config = config
-        if self.config.is_complete():
-            server = config.get("ssh_ip")
-            user = config.get("ssh_user")
-            port = config.get("ssh_port")
-            psw = config.get("ssh_psw")
-            self.ssh_manager = SSHManager(server, user, port, psw)
-        else:
-            self.ssh_manager = None
+        self.uid = None
+        self.fb = fb
+
+        self.ssh_manager = None
         self.home_dir = None
         self.current_dir = None
         self.recent_cmd = None
@@ -179,10 +178,12 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.profile_icon_lbl.setPixmap(
             self.profile_pix.scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         self.profile_icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.profile_btn.clicked.connect(lambda _, p="home": navigate(p))
 
 
         # 2. The Username Label (Single Row)
-        self.profile_name_lbl = QLabel(config.get("User"))
+        # self.profile_name_lbl = QLabel(config.get("User"))
+        self.profile_name_lbl = QLabel("Log Out")
         # Using 16px for a clean, readable look
         self.profile_name_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
@@ -202,10 +203,11 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.content_layout.addWidget(self.sidebar)
 
         self.stack = QStackedWidget(self)
+        self.config = None
 
-        self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect)
+        self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect, self.setup_environment)
         self.file_tree_page = FileTreePage(self.global_run_command, self.home_dir, self.config, self.ssh_manager)
-        self.settings_page = SettingsPage(self.config)
+        self.settings_page = SettingsPage(self.config, self.reload_manager, self.fb)
         self.graph_page = GraphsPage(self.config)
 
         # self.cmd_page = QWidget()
@@ -222,7 +224,6 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.content_layout.addWidget(self.stack)
 
         def handle_navigation(index):
-            print("Navigating to index ", index)
             self.stack.setCurrentIndex(index)
 
             # 2. Update the visual highlight for all items
@@ -238,14 +239,24 @@ class ProjectSettingsSkeleton(QMainWindow):
         handle_navigation(0)
         self.set_light_mode()
 
+    def update_uid(self, new):
+        self.uid = new
+        self.doc_path = config_doc_path(self.uid)
+        self.doc = self.fb.get_doc(self.doc_path)
+        self.config = from_fs_doc(self.doc)
+        self.graph_page.update_config(self.config, self.doc_path)
+        self.settings_page.update_config(self.config, self.doc_path)
+        self.load_settings()
+
     def load_settings(self):
-        self.settings_page.load_parts()
-        self.profile_name_lbl.setText(self.config.get("user"))
+        self.settings_page.load_parts(self.config)
+
+    def reload_manager(self):
+        pass
 
     def global_handle_connect(self):
-        self.cmd_page.connect_btn.setText("Connecting")
+        self.cmd_page.connect_btn.setText(" Connecting")
         QCoreApplication.processEvents()
-        print("Loaded data")
         if self.ssh_manager is None and self.config.get("user") != "":
             server_new = self.config.get("ssh_ip")
             user_new = self.config.get("ssh_user")
@@ -254,61 +265,57 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
 
         success, msg = self.ssh_manager.connect()
-        print("connected")
         self.cmd_page.add_message(f"System: {msg}")
-        print(1)
         self.cmd_page.add_separator()
-        print(2)
         self.cmd_page.update_connection_status(success)
-        print("added")
 
         if success:
-            # 1. Get the path first so we know where we are
-            print("getting path")
             new_path = self.ssh_manager.get_pwd_silently()
-            print("Got path")
             self.home_dir = new_path
             self.current_dir = new_path
 
             # 2. Update UI displays
             self.file_tree_page.update_home(new_path)
-            print("Updated home")
             self.cmd_page.update_directory_display(new_path)
-            print("End clone")
             find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
-            print("Tree update")
             self.global_run_command(find_cmd, is_tree_update=True)
-            print("Tree update done")
 
             new_path = self.ssh_manager.get_pwd_silently()
             self.home_dir = new_path
             self.file_tree_page.update_home(new_path)
             self.current_dir = new_path
             self.cmd_page.update_directory_display(new_path)
-            self.cmd_page.connect_btn.setText("Connect")
+            self.cmd_page.connect_btn.setText(" Connect")
             self.cmd_page.connect_btn.setEnabled(False)
             self.cmd_page.send_btn.setEnabled(True)
         else:
-            self.cmd_page.connect_btn.setText("Connect")
+            self.cmd_page.connect_btn.setText(" Connect")
 
     def update_tree(self):
         find_cmd = "find . -not -path '*/.*' -not -path '*__pycache__*' -not -path '*venv*' -not -path '*wandb*'"
         self.global_run_command(find_cmd, is_tree_update=True)
 
+    def setup_environment(self):
+        wandb_api_key = self.config.get("wandb_api")
+        git_pat = self.config.get("git_pat")
+        git_repo = self.config.get("git_url")
+
+        wandb_cmd = f"export WANDB_API_KEY={wandb_api_key}"
+
+        # Chain it with your other commands in one session
+        full_setup = f"{wandb_cmd} && git clone https://{git_pat}@{git_repo.split('https://')[-1]}"
+
+        self.global_run_command(full_setup, is_setup=True)
+
 
     def accumulate_tree_data(self, text):
         self.tree_data_accumulator += text
 
-    def global_run_command(self, command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False):
-        # 1. Don't run if already busy
+    def global_run_command(self, command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False, is_setup=False):
         self.recent_cmd = command
-        print("Command: ", command)
         self.cmd_page.send_btn.setEnabled(False)
 
         if command == "exit":
-            self.cmd_page.add_message("$ exit\nSystem: Disconnected")
-            self.cmd_page.add_separator()
-
             # 1. Close the backend connection
             self.ssh_manager.close()
 
@@ -324,22 +331,13 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.file_tree_page.file_name_label.setText("No File Selected")
             return
 
-        if command.startswith("python") or command.startswith("python3"):
-            if "venv" not in command:
-                now = datetime.now()
-                date = now.strftime("%B %d, %Y")
-                time = now.strftime("%I:%M %p")
-                if "-m" in command:
-                    file = command.split(" ")[2].split(".")[1] + ".py"
-                else:
-                    file = command.split(" ")[1]
-
-                self.config.add_run([file, date, time])
         if command == "Ctrl+C":
-            print("Sending interrupt")
             self.ssh_manager.send_interrupt()
-            print("Sent")
             return
+
+        if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
+            return
+        self.worker = SSHStreamWorker(self.ssh_manager, command)
 
         if command.startswith("cd"):
             appended = command.split(' ')[1]
@@ -347,10 +345,35 @@ class ProjectSettingsSkeleton(QMainWindow):
                 self.current_dir = self.home_dir
             else:
                 self.current_dir += f"/{appended}"
+            command = f"$ {command}"
 
-        if hasattr(self, 'worker') and self.worker and self.worker.isRunning():
+            self.cmd_page.add_message(command)
+            self.worker.finished.connect(
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            )
+
+            self.worker.start()
             return
-        self.worker = SSHStreamWorker(self.ssh_manager, command)
+
+        if command.startswith("rm"):
+            self.cmd_page.add_message(command)
+            self.worker.finished.connect(
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            )
+            self.worker.start()
+            return
+
+        if command.startswith("export"):
+            self.cmd_page.add_message("Easy-SSH Auto Environment Setup Success")
+
+            self.worker.finished.connect(
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            )
+            self.worker.start()
+            return
+
+
+
         if is_tree_update:
             self.tree_data_accumulator = ""
 
@@ -362,11 +385,16 @@ class ProjectSettingsSkeleton(QMainWindow):
             )
         elif is_file_save:
             pass
+        elif is_setup:
+            command = f"$ {command}"
+
+            self.cmd_page.add_message(command)
+            self.cmd_page.create_new_output_bubble()
+            self.cmd_page.update_live_output("Environment Successfully Setup")
+
         elif is_git_clone:
             self.update_tree()
-            print("Updated tree")
             self.graph_page.refresh_runs()
-            print("refreshed runs")
             pass
 
         elif is_file_read:
@@ -375,11 +403,13 @@ class ProjectSettingsSkeleton(QMainWindow):
             # Connect output DIRECTLY to the editor's append function
             self.worker.output_received.connect(self.file_tree_page.display_file_content)
         else:
+            command = f"$ {command}"
+
+            self.cmd_page.add_message(command)
             self.cmd_page.create_new_output_bubble()
 
-            command = f"$ {command}\n"
+            print(self.worker.output_received)
 
-            self.cmd_page.update_live_output(command)
             self.worker.output_received.connect(self.cmd_page.update_live_output)
 
         self.worker.finished.connect(
@@ -400,7 +430,6 @@ class ProjectSettingsSkeleton(QMainWindow):
             add_bubble = True
         if is_git_clone:
             add_bubble = False
-        print("CMD: ", self.recent_cmd, " ADD: ", add_bubble)
         self.cmd_page.on_command_finished(add_bubble)
 
         self.cmd_page.update_directory_display(self.current_dir)
@@ -414,7 +443,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.graph_page.set_light_mode()
         self.light_text_lbl.setText("Light Mode")
         self.central_widget.setStyleSheet("background-color: #F9F9FF;")
-        self.sidebar.setStyleSheet("background-color: #EDEDF4")
+        self.sidebar.setStyleSheet("background-color:#eee6ee")
         self.easy_ssh_label.setStyleSheet("color: black; font-weight: bold; font-size: 38px")
         self.line.setStyleSheet("background-color: #555;")
         self.pages_label.setStyleSheet("color: black; font-size: 26px; font-weight: 570;")
@@ -464,7 +493,8 @@ class ProjectSettingsSkeleton(QMainWindow):
                        border-radius: 8px;
                    }
                    QPushButton:hover {
-                       background-color: #E4E4E8;
+                       background-color: #ffdad6;
+                       color: #93000a;
                    }
                    QPushButton[selected="true"] {
                        background-color: #E3CDF7;
@@ -539,7 +569,7 @@ class ProjectSettingsSkeleton(QMainWindow):
                             }
                         """)
         self.line2.setStyleSheet("background-color: #C392FF;")
-        self.profile_name_lbl.setStyleSheet("font-size: 16px; color: #E8E3FF; background: transparent;")
+        self.profile_name_lbl.setStyleSheet("font-size: 16px; color: #ffdad6; background: transparent;")
 
         self.profile_btn.setStyleSheet("""
                            QPushButton {
@@ -547,10 +577,11 @@ class ProjectSettingsSkeleton(QMainWindow):
                                border-radius: 8px;
                            }
                            QPushButton:hover {
-                               background-color: #2F2A46;
+                               background-color: #5D191E;
+                               color: #ffdad6;
                            }
                            QPushButton[selected="true"] {
-                               background-color: #3E375B;
+                               background-color: #93000a;
                            }
                            QPushButton QLabel {
                             background-color: transparent;

@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (
 from backend.config.ConfigWiring import AppConfig
 
 
+
 class Application(QMainWindow):
 
     def __init__(self):
@@ -51,7 +52,6 @@ class Application(QMainWindow):
         if central is None:
             raise ValueError("Skeleton has no central widget")
 
-        central.setParent(None)
 
         self._pages[name] = central
 
@@ -72,9 +72,12 @@ class Application(QMainWindow):
 
         self._stack.setCurrentWidget(self._pages[name])
 
+        if name == "create" and skeleton and kwargs["signin"] == "true":
+            skeleton.setSignIn()
+
         if name == "project" and skeleton:
-            if hasattr(skeleton, "load_settings"):
-                skeleton.load_settings()
+            skeleton.update_uid(kwargs["uid"])
+
 
 
 
@@ -86,27 +89,32 @@ class Application(QMainWindow):
 def run():
     app = QApplication(sys.argv)
     window = Application()
-    config = AppConfig("user_data.json")
-    from gui.projectSettings.skeleton import ProjectSettingsSkeleton
 
+    config = {}
+    API_KEY = "AIzaSyCM5k5OWiIMUPeDqA_hhmHN3mnpuguGvcE"
+    PROJECT_ID = "easy-ssh"
+
+    from firebase import FirebaseClient
+
+    fb = FirebaseClient(API_KEY, PROJECT_ID)
+
+
+    from gui.projectSettings.skeleton import ProjectSettingsSkeleton
     from gui.createProject.skeleton import CreateSkeleton
     from gui.welcomePage.skeleton import HomepageSkeleton
     home = HomepageSkeleton(window.show_page, window.toggle_theme)
-    create = CreateSkeleton(window.show_page, window.toggle_theme, config)
-    project = ProjectSettingsSkeleton(window.show_page, config, window.toggle_theme)
+    create = CreateSkeleton(window.show_page, window.toggle_theme, fb)
 
-    window.add_skeleton("create", create)
     window.add_skeleton("home", home)
+    window.add_skeleton("create", create)
+
+    project = ProjectSettingsSkeleton(window.show_page, window.toggle_theme, fb)
     window.add_skeleton("project", project)
 
     if window.is_dark:
         window.toggle_theme()
 
-    if config.is_complete():
-
-        window.show_page("project")
-    else:
-        window.show_page("home")
+    window.show_page("home")
     window.show()
 
     sys.exit(app.exec())

@@ -42,6 +42,3 @@ python application.py
 * Support for more AI model training libraries
   * Tensorflow + Tensorboard workflows
   * Normal Pytorch DDP support (torchrun commands)
-
-### Dev tab latest update
-UI and functionality updates

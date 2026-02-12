@@ -193,6 +193,7 @@ class GraphsPage(QWidget):
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(12, 30, 0, 30)
         self.config = config
+        self.doc_path = None
 
         self.side_widget = QWidget()
         self.side_layout = QVBoxLayout(self.side_widget)
@@ -234,10 +235,16 @@ class GraphsPage(QWidget):
 
         self.runs = []
         print("Project is not none")
-        user = self.config.get("wandbuser")
-        proj = self.config.get("wandbproj")
-        api = wandb.Api()
-        wandb_project = f"{user}/{proj}"
+        try:
+            user = self.config.get("wandbuser")
+            proj = self.config.get("wandbproj")
+            api = wandb.Api()
+            wandb_project = f"{user}/{proj}"
+        except:
+            user = None
+            proj = None
+            api = None
+            wandb_project = None
         if user:
             print(f"Details: user: {user}, project: {wandb_project}")
             self.runs = list(api.runs(wandb_project))
@@ -264,6 +271,10 @@ class GraphsPage(QWidget):
             self.sidebar.addItem(item)
 
         self.sidebar.itemClicked.connect(self.on_run_selected)
+
+    def update_config(self, new, path):
+        self.config = new
+        self.doc_path = path
 
     def refresh_runs(self):
         """Refreshes the run list from WandB and updates the sidebar."""
@@ -335,7 +346,7 @@ class GraphsPage(QWidget):
                         font-size: 17px;
                         font-weight: 520
                     }
-                    QPushButton:hover { background-color: #B5A1FF; }
+                    QPushButton:hover { background-color: #cec2f0; }
                 """)
 
         self.sidebar_container.setStyleSheet("""
