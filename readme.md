@@ -2,7 +2,7 @@ Your one stop shop for AI model training: manage your SSH connections, AI model 
 **Important**: You may use, clone, and modify the app to your liking. However you may NOT close-source any of the source code, nor may you sell this as a service. See full terms in LICENSE.md.
 
 ## Recent News
-**Release 1.1.0** - Major UI Updates
+**Release 1.2.0** - Functionality & UI Updates
 
 
 ## How to install
@@ -32,13 +32,3 @@ python application.py
   * When a training loop is ran, only the progress bar is displayed on screen
   * Not all commands' outputs are fully displayed correctly
   * Terminal output only shows progress bar for model training loops (will fix soon)
-
-## Future Releases/Features
-* Small bug fixes
-    * Button UI updates in certain situations
-    * cat-based file editor fixes
-* Authentic terminal experience
-  * Mirrored experience from Windows PowerShell
-* Support for more AI model training libraries
-  * Tensorflow + Tensorboard workflows
-  * Normal Pytorch DDP support (torchrun commands)
