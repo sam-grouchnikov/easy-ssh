@@ -269,7 +269,11 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.settings_page.load_parts(self.config)
 
     def reload_manager(self):
-        pass
+        server_new = self.config.get("ssh_ip")
+        user_new = self.config.get("ssh_user")
+        port_new = self.config.get("ssh_port")
+        psw_new = self.config.get("ssh_psw")
+        self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
 
     def global_handle_connect(self):
         self.cmd_page.connect_btn.setText(" Connecting")
@@ -279,6 +283,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             user_new = self.config.get("ssh_user")
             port_new = self.config.get("ssh_port")
             psw_new = self.config.get("ssh_psw")
+            print(server_new, " ", user_new, " ", port_new, " ", psw_new)
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
 
         success, msg = self.ssh_manager.connect()
@@ -331,6 +336,9 @@ class ProjectSettingsSkeleton(QMainWindow):
     def global_run_command(self, command, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False, is_setup=False):
         self.recent_cmd = command
         self.cmd_page.send_btn.setEnabled(False)
+        cd_fail = False
+        prev_dir = None
+        is_cd_cmd = command.startswith("cd ")
 
         if command == "exit":
             # 1. Close the backend connection
@@ -356,19 +364,32 @@ class ProjectSettingsSkeleton(QMainWindow):
             return
         self.worker = SSHStreamWorker(self.ssh_manager, command)
 
-        if command.startswith("cd"):
-            appended = command.split(' ')[1]
-            if appended == '~':
+        if is_cd_cmd:
+            prev_dir = self.current_dir
+
+            parts = command.split(" ", 1)
+            appended = parts[1].strip() if len(parts) > 1 else ""
+            if appended == "~":
                 self.current_dir = self.home_dir
-            else:
-                self.current_dir += f"/{appended}"
-            command = f"$ {command}"
+            elif appended:
+                self.current_dir = f"{self.current_dir}/{appended}".replace("//", "/")
 
-            self.cmd_page.add_message(command)
+            self.cmd_page.add_message(f"$ {command}")
+
+            # Detect failure from streamed output
+            def _cd_output_probe(text: str):
+                nonlocal cd_fail
+                if "can't cd to" in text.lower() or "no such file or directory" in text.lower():
+                    cd_fail = True
+                self.cmd_page.create_new_output_bubble()
+                self.cmd_page.update_live_output(text)
+
+            self.worker.output_received.connect(_cd_output_probe)
+
             self.worker.finished.connect(
-                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+                lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone, cd_fail,
+                                             prev_dir)
             )
-
             self.worker.start()
             return
 
@@ -391,7 +412,7 @@ class ProjectSettingsSkeleton(QMainWindow):
 
 
 
-        if is_tree_update:
+        if is_tree_update or is_setup or command.startswith("rm"):
             self.tree_data_accumulator = ""
 
             self.worker.output_received.connect(self.accumulate_tree_data)
@@ -420,36 +441,44 @@ class ProjectSettingsSkeleton(QMainWindow):
             # Connect output DIRECTLY to the editor's append function
             self.worker.output_received.connect(self.file_tree_page.display_file_content)
         else:
-            command = f"$ {command}"
-
-            self.cmd_page.add_message(command)
+            self.cmd_page.add_message(f"$ {command}")
             self.cmd_page.create_new_output_bubble()
 
-            print(self.worker.output_received)
+            def _output_probe(text: str):
+                nonlocal cd_fail
+                if "can't cd to" in text.lower():
+                    cd_fail = True
+                else:
+                    self.cmd_page.update_live_output(text)
 
-            self.worker.output_received.connect(self.cmd_page.update_live_output)
+            self.worker.output_received.connect(_output_probe)
 
         self.worker.finished.connect(
-            lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
+            lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone, cd_fail)
         )
 
         self.worker.start()
 
-    def global_finished(self, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False):
+    def global_finished(self, is_tree_update=False, is_file_read=False, is_file_save=False, is_git_clone=False, cd_fail=False
+                        , prev_dir=None):
         if is_tree_update or is_file_read or is_file_save or is_git_clone:
             self.cmd_page.update_directory_display(self.current_dir)
             return
 
-        # Normal terminal finish logic
+        if cd_fail and prev_dir is not None:
+            self.current_dir = prev_dir
+            self.cmd_page.update_directory_display(self.current_dir)
+        else:
+            self.cmd_page.update_directory_display(self.current_dir)
+
         cmd_start = self.recent_cmd.split(' ')[0]
         add_bubble = cmd_start not in ["cat", "ssh", "git", "find"]
         if self.recent_cmd.startswith("git pull"):
             add_bubble = True
         if is_git_clone:
             add_bubble = False
-        self.cmd_page.on_command_finished(add_bubble)
 
-        self.cmd_page.update_directory_display(self.current_dir)
+        self.cmd_page.on_command_finished(add_bubble)
         self.cmd_page.send_btn.setEnabled(True)
 
     def set_light_mode(self):

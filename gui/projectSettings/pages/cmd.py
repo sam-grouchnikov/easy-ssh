@@ -232,6 +232,7 @@ class cmdPage(QWidget):
         )
         actions = [
             ("Auto Environment Setup", self.setup_env),
+            ("Reset Directory",  lambda: self.run_func("cd ~"))
             # ("Scan Dependency Imports", self.dummy_func),
             # ("System Health Check", self.dummy_func),
             # ("Clean Up Zombie Processes", self.dummy_func)

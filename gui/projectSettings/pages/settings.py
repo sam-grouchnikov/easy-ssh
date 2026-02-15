@@ -112,9 +112,10 @@ class SettingsPage(QWidget):
         self.config["wandb_user"] = self.integrations_row.wandbblock.username.input.text()
         self.config["wandb_proj"] = self.integrations_row.wandbblock.proj.input.text()
         self.config["wandb_api"] = self.integrations_row.wandbblock.api_key.input.text()
+        print(self.config)
         self.fb.set_doc(self.doc_path, self.config)
 
-        QTimer.singleShot(2350, lambda: self.revert_save_button(original_text))
+        QTimer.singleShot(1800, lambda: self.revert_save_button(original_text))
         self.reload()
 
     def revert_save_button(self, original_text):
