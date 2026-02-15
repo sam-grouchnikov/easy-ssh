@@ -150,6 +150,9 @@ class SignUpWidget(QWidget):
         self.alt_actions_layout.addStretch(1)
         self.outer_container_layout.addWidget(self.alt_actions)
 
+        self.error_lbl = QLabel("")
+        self.outer_container_layout.addWidget(self.error_lbl)
+
 
         self.back = QPushButton("Back to Home")
         self.back.clicked.connect(lambda _, p="home": nav(p))
@@ -209,11 +212,11 @@ class SignUpWidget(QWidget):
                 self.psw_input.setText("")
                 self.fb.set_doc(doc_path, DEFAULT_CONFIG)
                 self.nav("project", uid=uid)
+                self.error_lbl.setText("")
 
             except Exception as e:
                 print("\n Sign-up failed")
-                print(e)
-                raise SystemExit(1)
+                self.error_lbl.setText(str(e))
         else:
             try:
                 print("C1")
@@ -226,10 +229,11 @@ class SignUpWidget(QWidget):
                 print(f"UID: {uid_ind}")
                 self.email_input.setText("")
                 self.psw_input.setText("")
+                self.error_lbl.setText("")
+
             except Exception as e:
                 print("\n Sign-in failed")
-                print(e)
-                raise SystemExit(1)
+                self.error_lbl.setText(str(e))
 
     def set_to_sign_up(self):
         self.mode = "signup"
@@ -334,6 +338,12 @@ class SignUpWidget(QWidget):
                     font-size: 14px;
                     font-weight: 510;
                 """)
+        self.error_lbl.setStyleSheet("""
+                                    color: #ba1a1a;
+                                    font-size: 14px;
+                                    font-weight: 510;
+                                    margin-left:4px;
+                """)
         self.switch_btn.setStyleSheet("""
                         color: #6F83DC;
                         font-size: 14px;
@@ -429,6 +439,12 @@ class SignUpWidget(QWidget):
                             font-size: 14px;
                             font-weight: 510;
                         """)
+        self.error_lbl.setStyleSheet("""
+                            color: #ffdad6;
+                            font-size: 14px;
+                            font-weight: 510;
+                            margin-left:4px;
+        """)
         self.switch_btn.setStyleSheet("""
                                 color: #6F83DC;
                                 font-size: 14px;
