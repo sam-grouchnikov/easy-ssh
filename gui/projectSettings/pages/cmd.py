@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.2.0
+Version: 1.2.1
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -17,6 +17,23 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect, QMenu, QSizePolicy
 )
+
+from pathlib import Path
+import sys
+def resource_path(relative_path: str) -> str:
+    # PyInstaller onefile
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)
+    else:
+        # Walk upward until we find the project root marker(s)
+        here = Path(__file__).resolve()
+        for p in [here] + list(here.parents):
+            if (p / "application.py").exists() or (p / "pyproject.toml").exists() or (p / ".git").exists():
+                base = p
+                break
+        else:
+            base = here.parent  # fallback
+    return str(base / relative_path)
 
 
 class cmdPage(QWidget):
@@ -627,13 +644,14 @@ class cmdPage(QWidget):
         self.tools_menu.setStyleSheet(menu_ss)
         self.actions_menu.setStyleSheet(menu_ss)
 
-        self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench.png'))
+        self.tools_btn.setIcon(QIcon(resource_path("gui/icons/wrench.png")))
+
         self.tools_btn.setIconSize(QSize(20, 20))
-        self.actions_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action.png'))
+        self.actions_btn.setIcon(QIcon(resource_path("gui/icons/action.png")))
         self.actions_btn.setIconSize(QSize(20, 20))
-        self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link.png'))
+        self.connect_btn.setIcon(QIcon(resource_path("gui/icons/link.png")))
         self.connect_btn.setIconSize(QSize(19, 19))
-        self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send.png'))
+        self.send_btn.setIcon(QIcon(resource_path("gui/icons/send.png")))
         self.send_btn.setIconSize(QSize(19, 19))
 
     def set_dark_mode(self):
@@ -814,14 +832,13 @@ class cmdPage(QWidget):
         self.tools_menu.setStyleSheet(menu_ss)
         self.actions_menu.setStyleSheet(menu_ss)
 
-        self.tools_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\wrench_dark.png'))
+        self.tools_btn.setIcon(QIcon(resource_path("gui/icons/wrench_dark.png")))
         self.tools_btn.setIconSize(QSize(20, 20))
-        self.actions_btn.setIcon(
-            QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\action_dark.png'))
+        self.actions_btn.setIcon(QIcon(resource_path("gui/icons/action_dark.png")))
         self.actions_btn.setIconSize(QSize(20, 20))
-        self.connect_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\link_dark.png'))
+        self.connect_btn.setIcon(QIcon(resource_path("gui/icons/link_dark.png")))
         self.connect_btn.setIconSize(QSize(19, 19))
-        self.send_btn.setIcon(QIcon('C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\icons\\send_dark.png'))
+        self.send_btn.setIcon(QIcon(resource_path("gui/icons/send_dark.png")))
         self.send_btn.setIconSize(QSize(19, 19))
 
 

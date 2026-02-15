@@ -2,7 +2,7 @@ Your one stop shop for AI model training: manage your SSH connections, AI model 
 **Important**: You may use, clone, and modify the app to your liking. However you may NOT close-source any of the source code, nor may you sell this as a service. See full terms in LICENSE.md.
 
 ## Recent News
-**Release 1.2.0** - Functionality & UI Updates
+**Release 1.2.1** - Pyinstaller icon fixes
 
 
 ## How to install

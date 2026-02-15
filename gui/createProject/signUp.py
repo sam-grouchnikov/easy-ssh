@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.2.0
+Version: 1.2.1
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -15,7 +15,23 @@ from PyQt6.QtWidgets import (
     QLabel, QHBoxLayout, QWidget, QFrame, QVBoxLayout,
     QLineEdit, QPushButton, QGraphicsDropShadowEffect, QSizePolicy
 )
+from pathlib import Path
+import sys
 
+def resource_path(relative_path: str) -> str:
+    # PyInstaller onefile
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)
+    else:
+        # Walk upward until we find the project root marker(s)
+        here = Path(__file__).resolve()
+        for p in [here] + list(here.parents):
+            if (p / "application.py").exists() or (p / "pyproject.toml").exists() or (p / ".git").exists():
+                base = p
+                break
+        else:
+            base = here.parent  # fallback
+    return str(base / relative_path)
 
 class SignUpWidget(QWidget):
     def __init__(self, fb, nav):
@@ -256,7 +272,8 @@ class SignUpWidget(QWidget):
                            font-size: 15px;
                            color: #7A757F;
                        """)
-        self.pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\mail.png")
+        self.pix = QPixmap(str(resource_path("gui/createProject/mail.png")))
+
         self.icon_label.setPixmap(self.pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -275,7 +292,8 @@ class SignUpWidget(QWidget):
                     color: #49454E;
                     font-size: 15px;
                 """)
-        self.psw_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\lock.png")
+        self.psw_pix = QPixmap(str(resource_path("gui/createProject/lock.png")))
+
         self.psw_icon_label.setPixmap(self.psw_pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -323,6 +341,7 @@ class SignUpWidget(QWidget):
                         padding: 0px;
                         margin: 0px;
                         text-decoration: underline;
+                        background: transparent;
                 """)
     def set_dark_mode(self):
         shadow = QGraphicsDropShadowEffect()
@@ -348,7 +367,8 @@ class SignUpWidget(QWidget):
                                    font-size: 15px;
                                    color: #948F99;
                                """)
-        self.pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\mail_dark.png")
+        self.pix = QPixmap(str(resource_path("gui/createProject/mail_dark.png")))
+
         self.icon_label.setPixmap(self.pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,
@@ -367,7 +387,8 @@ class SignUpWidget(QWidget):
                             color: #D3D3D3;
                             font-size: 15px;
                         """)
-        self.psw_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\ssh-runner-app\\gui\\createProject\\padlock_dark.png")
+        self.psw_pix = QPixmap(str(resource_path("gui/createProject/padlock_dark.png")))
+
         self.psw_icon_label.setPixmap(self.psw_pix.scaled(
             19, 19,
             Qt.AspectRatioMode.KeepAspectRatio,

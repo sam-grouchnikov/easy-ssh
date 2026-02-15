@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.2.0
+Version: 1.2.1
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -14,6 +14,23 @@ from PyQt6.QtGui import QPixmap, QCursor
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
 )
+from pathlib import Path
+from pathlib import Path
+import sys
+def resource_path(relative_path: str) -> str:
+    # PyInstaller onefile
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)
+    else:
+        # Walk upward until we find the project root marker(s)
+        here = Path(__file__).resolve()
+        for p in [here] + list(here.parents):
+            if (p / "application.py").exists() or (p / "pyproject.toml").exists() or (p / ".git").exists():
+                base = p
+                break
+        else:
+            base = here.parent  # fallback
+    return str(base / relative_path)
 
 
 class NavItem(QWidget):
@@ -36,7 +53,7 @@ class NavItem(QWidget):
         self.icon_label = QLabel()
         self.icon_label.setFixedSize(22, 22)
 
-        self.pix = QPixmap(icon_path)
+        self.pix = QPixmap(str(icon_path))
         if not self.pix.isNull():
             self.icon_label.setPixmap(self.pix.scaled(
                 22, 22,
@@ -89,7 +106,7 @@ class NavItem(QWidget):
         """)
 
     def update_icon(self, new_path):
-        self.pix = QPixmap(new_path)
+        self.pix = QPixmap(str(new_path))
         if not self.pix.isNull():
             self.icon_label.setPixmap(self.pix.scaled(
                 22, 22,
@@ -153,18 +170,20 @@ class SideNavBar(QWidget):
         self.nb_layout.setSpacing(5)
 
         # Using raw strings for Windows paths
+
+
         self.light_items_data = [
-            ("Terminal", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\terminal_light.png"),
-            ("File Tree", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\code_light.png"),
-            ("Graphs", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\graph_light.png"),
-            ("Project Settings", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\settings_light.png"),
+            ("Terminal", resource_path("gui/icons/terminal_light.png")),
+            ("File Tree", resource_path("gui/icons/code_light.png")),
+            ("Graphs", resource_path("gui/icons/graph_light.png")),
+            ("Project Settings", resource_path("gui/icons/settings_light.png")),
         ]
 
         self.dark_items_data = [
-            ("Terminal", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\terminal_dark.png"),
-            ("File Tree", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\code_dark.png"),
-            ("Graphs", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\graph-dark.png"),
-            ("Project Settings", r"C:\Users\samgr\PycharmProjects\easy-ssh-ui-remake\gui\icons\settings_dark.png"),
+            ("Terminal", resource_path("gui/icons/terminal_dark.png")),
+            ("File Tree", resource_path("gui/icons/code_dark.png")),
+            ("Graphs", resource_path("gui/icons/graph-dark.png")),
+            ("Project Settings", resource_path("gui/icons/settings_dark.png")),
         ]
 
         self.nav_items = []

@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.2.0
+Version: 1.2.1
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -17,6 +17,23 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton,
     QVBoxLayout, QHBoxLayout, QFrame
 )
+from pathlib import Path
+import sys
+
+def resource_path(relative_path: str) -> str:
+    # PyInstaller onefile
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)
+    else:
+        # Walk upward until we find the project root marker(s)
+        here = Path(__file__).resolve()
+        for p in [here] + list(here.parents):
+            if (p / "application.py").exists() or (p / "pyproject.toml").exists() or (p / ".git").exists():
+                base = p
+                break
+        else:
+            base = here.parent
+    return str(base / relative_path)
 
 class HomepageSkeleton(QMainWindow):
     def __init__(self, navigate, toggle_theme_func):
@@ -138,11 +155,11 @@ class HomepageSkeleton(QMainWindow):
         QPushButton:hover{background-color: #222}"""
         )
 
+        path = resource_path("gui/icons/light mode.png")
+        print("ICON PATH:", path)
+        print("EXISTS:", Path(path).exists())
+        self.mode_button.setIcon(QIcon(resource_path("gui/icons/light mode.png")))
 
-
-        # Update Icon to "Light Mode" icon
-        icon_path = "C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\light mode.png"
-        self.mode_button.setIcon(QIcon(icon_path))
         self.mode_button.setIconSize(QSize(40, 40))
 
     def set_dark_mode(self):
@@ -198,7 +215,6 @@ class HomepageSkeleton(QMainWindow):
             QPushButton:hover{background-color: #B7A3FF}
         """)
 
-        # Update Icon to "Dark Mode" icon
-        icon_path = "C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\dark mode.png"
-        self.mode_button.setIcon(QIcon(icon_path))
+        self.mode_button.setIcon(QIcon(resource_path("gui/icons/dark mode.png")))
+
         self.mode_button.setIconSize(QSize(40, 40))

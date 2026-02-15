@@ -4,7 +4,7 @@
 """
 Author: Sam Grouchnikov
 License: GPL-3.0
-Version: 1.2.0
+Version: 1.2.1
 Email: sam.grouchnikov@gmail.com
 Status: Development
 """
@@ -28,6 +28,23 @@ from gui.projectSettings.pages.settings import SettingsPage
 from firebase import _from_fs_value, _to_fs_value, from_fs_doc
 def config_doc_path(uid: str) -> str:
     return f"users/{uid}/config/main"
+
+from pathlib import Path
+import sys
+def resource_path(relative_path: str) -> str:
+    # PyInstaller onefile
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)
+    else:
+        # Walk upward until we find the project root marker(s)
+        here = Path(__file__).resolve()
+        for p in [here] + list(here.parents):
+            if (p / "application.py").exists() or (p / "pyproject.toml").exists() or (p / ".git").exists():
+                base = p
+                break
+        else:
+            base = here.parent  # fallback
+    return str(base / relative_path)
 
 class ProjectSettingsSkeleton(QMainWindow):
     def __init__(self, navigate, toggle_theme_func, fb):
@@ -503,17 +520,16 @@ class ProjectSettingsSkeleton(QMainWindow):
                         background-color: transparent;
                     }
                """)
-        self.profile_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\user.png")
+        self.profile_pix = QPixmap(resource_path("gui/icons/user.png"))
         self.profile_icon_lbl.setPixmap(
             self.profile_pix.scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio,
                                     Qt.TransformationMode.SmoothTransformation))
 
         self.icon_lbl.setPixmap(
-            QPixmap("C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\google-docs.png").scaled(25, 25,
-                                                                                                                 Qt.AspectRatioMode.KeepAspectRatio))
+            QPixmap(resource_path("gui/icons/google-docs.png")).scaled(25, 25, Qt.AspectRatioMode.KeepAspectRatio))
         self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
-        self.light_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\light mode.png")
+        self.light_pix = QPixmap(resource_path("gui/icons/light mode.png"))
         self.light_icon_lbl.setPixmap(
             self.light_pix.scaled(27, 27, Qt.AspectRatioMode.KeepAspectRatio,
                                   Qt.TransformationMode.SmoothTransformation))
@@ -587,17 +603,16 @@ class ProjectSettingsSkeleton(QMainWindow):
                             background-color: transparent;
                             }
                        """)
-        self.profile_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\user_dark.png")
+        self.profile_pix = QPixmap(resource_path("gui/icons/user_dark.png"))
         self.profile_icon_lbl.setPixmap(
             self.profile_pix.scaled(24, 24, Qt.AspectRatioMode.KeepAspectRatio,
                                     Qt.TransformationMode.SmoothTransformation))
 
         self.icon_lbl.setPixmap(
-            QPixmap("C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\google-docs-dark.png").scaled(25, 25,
-                                                                                                                 Qt.AspectRatioMode.KeepAspectRatio))
+            QPixmap(resource_path("gui/icons/google-docs-dark.png")).scaled(25, 25,Qt.AspectRatioMode.KeepAspectRatio))
         self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
-        self.light_pix = QPixmap("C:\\Users\\samgr\\PycharmProjects\\easy-ssh-ui-remake\\gui\\icons\\dark mode.png")
+        self.light_pix = QPixmap(resource_path("gui/icons/dark mode.png"))
         self.light_icon_lbl.setPixmap(
             self.light_pix.scaled(23, 23, Qt.AspectRatioMode.KeepAspectRatio,
                                   Qt.TransformationMode.SmoothTransformation))
