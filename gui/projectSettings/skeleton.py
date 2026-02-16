@@ -274,6 +274,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         port_new = self.config.get("ssh_port")
         psw_new = self.config.get("ssh_psw")
         self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
+        self.cmd_page.reload_manager(self.ssh_manager)
 
     def global_handle_connect(self):
         self.cmd_page.connect_btn.setText(" Connecting")
@@ -285,6 +286,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             psw_new = self.config.get("ssh_psw")
             print(server_new, " ", user_new, " ", port_new, " ", psw_new)
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
+            self.cmd_page.reload_manager(self.ssh_manager)
 
         success, msg = self.ssh_manager.connect()
         self.cmd_page.add_message(f"System: {msg}")

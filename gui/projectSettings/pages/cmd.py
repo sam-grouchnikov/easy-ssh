@@ -219,8 +219,6 @@ class cmdPage(QWidget):
         self.send_btn.clicked.connect(self.handle_send)
         self.input_field.returnPressed.connect(self.handle_send)
         self.connect_btn.clicked.connect(self.handle_connect)
-        # Note: Re-linked actions_btn to handle_interrupt as per your code
-        self.actions_btn.clicked.connect(self.handle_interrupt)
 
     def setup_tools_menu(self):
         self.tools_menu.setObjectName("toolsMenu")
@@ -265,7 +263,7 @@ class cmdPage(QWidget):
         )
         actions = [
             ("Clear Console", self.clear_console),
-            ("Terminate Run", self.handle_interrupt),
+            ("Terminate Run", lambda _=False: self.handle_interrupt()),
             ("Disconnect", lambda: self.run_func("exit")),
         ]
 
@@ -307,7 +305,11 @@ class cmdPage(QWidget):
         self.run_func(text)
 
     def handle_interrupt(self):
+        print("TERMINATING RUN")
         self.manager.send_interrupt()
+
+    def reload_manager(self, manager):
+        self.manager = manager
 
     def create_new_output_bubble(self):
         self.current_bubble = QLabel("")
@@ -358,21 +360,20 @@ class cmdPage(QWidget):
 
         # 2. DECIDE: Overwrite or Append?
         try:
-            if '\r' in clean_text:
+            if '\r' in clean_text and "epoch" in clean_text:
                 # Most training bars use \r. Take the latest segment.
                 parts = clean_text.split('\r')
                 latest = parts[-1].strip()
                 if latest:
                     self.current_bubble.setText(latest)
 
+
             elif is_progress_bar:
-                # For Testing or Training lines that use \n but are clearly bars
                 val = clean_text.strip()
                 if val:
                     self.current_bubble.setText(val)
 
             else:
-                # Everything else (Normal Logs/Prints) -> APPEND
                 current_val = self.current_bubble.text()
                 self.current_bubble.setText(current_val + clean_text)
 
