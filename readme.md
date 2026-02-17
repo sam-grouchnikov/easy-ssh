@@ -19,6 +19,8 @@ git clone https://github.com/sam-grouchnikov/easy-ssh.git
 python application.py
 ```
 
+Or simply go to the latest release (v1.2.1), download the .exe file, and run it (only Windows support as of now)
+
 ## Features
 * Connect to a specified remote server via SSH
 * View log graphs from the Weights & Biases API
