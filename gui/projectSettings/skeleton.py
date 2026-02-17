@@ -15,6 +15,7 @@ from PyQt6.QtGui import QIcon, QPixmap, QCursor
 from PyQt6.QtWidgets import (
     QVBoxLayout, QLabel, QSizePolicy, QStackedWidget, QWidget, QHBoxLayout, QFrame, QPushButton, QMainWindow
 )
+from urllib.parse import urlparse
 
 
 from backend.ssh.sshManager import SSHStreamWorker, SSHManager
@@ -330,6 +331,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         full_setup = f"{wandb_cmd} && git clone https://{git_pat}@{git_repo.split('https://')[-1]}"
 
         self.global_run_command(full_setup, is_setup=True)
+        self.update_tree()
 
 
     def accumulate_tree_data(self, text):
@@ -401,15 +403,18 @@ class ProjectSettingsSkeleton(QMainWindow):
                 lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
             )
             self.worker.start()
+            self.update_tree()
             return
 
         if command.startswith("export"):
-            self.cmd_page.add_message("Easy-SSH Auto Environment Setup Success")
+            self.cmd_page.add_message("Easy-SSH Auto Environment Setup")
 
             self.worker.finished.connect(
                 lambda: self.global_finished(is_tree_update, is_file_read, is_file_save, is_git_clone)
             )
             self.worker.start()
+            self.cmd_page.create_new_output_bubble()
+            self.cmd_page.update_live_output("Status: Success!")
             return
 
 
@@ -474,7 +479,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             self.cmd_page.update_directory_display(self.current_dir)
 
         cmd_start = self.recent_cmd.split(' ')[0]
-        add_bubble = cmd_start not in ["cat", "ssh", "git", "find"]
+        add_bubble = cmd_start not in ["cat", "ssh", "find"]
         if self.recent_cmd.startswith("git pull"):
             add_bubble = True
         if is_git_clone:
