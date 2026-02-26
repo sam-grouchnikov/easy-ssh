@@ -19,7 +19,36 @@ from PyQt6.QtWidgets import (
     QPushButton, QPlainTextEdit, QFileDialog, QMessageBox, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect
 )
 from scp import SCPClient
-from PyQt6.QtWidgets import QStyle
+
+
+class CustomButton(QPushButton):
+    def __init__(self, text, icon_size, parent=None):
+        super().__init__(parent)
+        self._icon_size = icon_size
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.button_layout = QHBoxLayout(self)
+        self.button_layout.setContentsMargins(10, 0, 10, 0)
+        self.button_layout.setSpacing(12)
+
+        self.icon_label = QLabel()
+        self.icon_label.setStyleSheet("background: transparent; border: none;")
+
+        self.text_label = QLabel(text)
+
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.icon_label)
+        self.button_layout.addWidget(self.text_label)
+        self.button_layout.addStretch()
+
+    def set_icon(self, icon_path):
+        pixmap = QPixmap(icon_path).scaled(
+            self._icon_size.width(),
+            self._icon_size.height(),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+        self.icon_label.setPixmap(pixmap)
 
 
 class PythonHighlighter(QSyntaxHighlighter):
@@ -96,14 +125,34 @@ class FileTreePage(QWidget):
         self.home_dir = home_dir
         self.config = config
         self.ssh_manager = ssh_manager
+        self.current_open_path = None
 
-        # UI Setup
-        self.main_layout = QHBoxLayout(self)
+        self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
-        self.main_layout.setSpacing(5)
+        self.main_layout.setSpacing(0)
 
+        self.top_row = QWidget()
+        self.top_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+
+        self.content_row = QWidget()
+        self.content_layout = QHBoxLayout(self.content_row)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setSpacing(5)
+
+        self.bottom_row = QWidget()
+        self.bottom_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+
+        self.main_layout.addWidget(self.top_row)
+        self.main_layout.addWidget(self.content_row)
+        self.main_layout.addWidget(self.bottom_row)
+
+        self._setup_tree_container()
+        self._setup_editor_container()
+        self._wire_signals()
+        self.highlighter = PythonHighlighter(self.editor.document())
+
+    def _setup_tree_container(self):
         self.tree_container = QWidget()
-        # This creates the internal padding for the "Files" title and tree
         self.tree_container.setContentsMargins(3, 10, 3, 10)
         self.tree_container.setFixedWidth(450)
         self.tree_container.setObjectName("tree_container")
@@ -113,7 +162,7 @@ class FileTreePage(QWidget):
         self.tree_container.setLayout(self.tree_container_layout)
 
         self.files_title = QLabel("Files")
-        self.files_title.setContentsMargins(30,0,0,0)
+        self.files_title.setContentsMargins(30, 0, 0, 0)
         self.tree_container_layout.addWidget(self.files_title)
         self.tree_container_layout.addSpacing(5)
 
@@ -123,130 +172,60 @@ class FileTreePage(QWidget):
         self.line1.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.tree_container_layout.addWidget(self.line1)
 
-
-
-
-        # 1. Initialize Model and Tree
         self.model = QStandardItemModel()
-
         self.tree_layout = QVBoxLayout()
         self.tree_layout.setContentsMargins(23, 0, 0, 0)
 
         self.tree = QTreeView()
-        self.tree.setContentsMargins(0,0,0,0)
+        self.tree.setContentsMargins(0, 0, 0, 0)
         self.tree.setModel(self.model)
-
-        # Styling and Configuration
         self.tree.setHeaderHidden(True)
         self.tree.setIndentation(25)
         self.tree.setIconSize(QSize(22, 22))
-
-
-
-        # 2. Wire the double-click event
-        self.tree.doubleClicked.connect(self.on_item_double_clicked)
         self.tree_layout.addWidget(self.tree)
 
         self.tree_container_layout.addLayout(self.tree_layout)
-        self.main_layout.addWidget(self.tree_container)
+        self.content_layout.addWidget(self.tree_container)
 
-
-        # ---- Editor Container ----
+    def _setup_editor_container(self):
         self.editor_widget = QWidget()
-        editor_shadow = QGraphicsDropShadowEffect()
-        editor_shadow.setBlurRadius(4)
-        editor_shadow.setXOffset(0)
-        editor_shadow.setYOffset(0)
-        editor_shadow.setColor(QColor(0, 0, 0, 80))
-        self.editor_widget.setGraphicsEffect(editor_shadow)
         self.editor_widget.setObjectName("EditorContainer")
         self.editor_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.editor_widget.setGraphicsEffect(self._build_shadow(4, 80))
 
         self.editor_layout = QVBoxLayout(self.editor_widget)
         self.editor_layout.setContentsMargins(4, 4, 0, 4)
         self.editor_layout.setSpacing(0)
 
-        # ---- Editor Header ----
+        self._setup_editor_header()
+        self._setup_editor_area()
+        self.content_layout.addWidget(self.editor_widget)
+
+    def _setup_editor_header(self):
         self.editor_header = QWidget()
         self.editor_header_layout = QHBoxLayout(self.editor_header)
         self.editor_header_layout.setContentsMargins(25, 23, 20, 0)
         self.editor_header.setStyleSheet("border: none;")
         self.editor_header_layout.setSpacing(15)
 
-        # Title (File Name)
         self.file_name_label = QLabel("No File Selected")
-
         self.editor_header_layout.addWidget(self.file_name_label)
-
         self.editor_header_layout.addStretch()
 
-        self.save_button = QPushButton()
+        self.save_button = CustomButton("Save Changes", QSize(18, 18))
         self.save_button.clicked.connect(self.save_remote_file)
         self.save_button.setEnabled(False)
         self.save_button.setFixedSize(180, 35)
+        self.save_button.setGraphicsEffect(self._build_shadow(4, 30))
 
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(4)
-        shadow.setXOffset(0)
-        shadow.setYOffset(0)
-        shadow.setColor(QColor(0, 0, 0, 30))
-        self.save_button.setGraphicsEffect(shadow)
-
-        self.save_btn_layout = QHBoxLayout(self.save_button)
-        self.save_btn_layout.setContentsMargins(10, 0, 10, 0)
-        self.save_btn_layout.setSpacing(12)
-
-        self.save_icon_label = QLabel()
-
-        self.save_icon_label.setStyleSheet("background: transparent; border: none;")
-
-        # 4. Save Text Label
-        self.save_text_label = QLabel("Save Changes")
-
-
-        # 5. Assemble the internal parts
-        self.save_btn_layout.addStretch()
-        self.save_btn_layout.addWidget(self.save_icon_label)
-        self.save_btn_layout.addWidget(self.save_text_label)
-        self.save_btn_layout.addStretch()
-        self.save_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-        self.transfer_button = QPushButton()
-        shadow2 = QGraphicsDropShadowEffect()
-        shadow2.setBlurRadius(4)
-        shadow2.setXOffset(0)
-        shadow2.setYOffset(0)
-        shadow2.setColor(QColor(0, 0, 0, 30))
-        self.transfer_button.setGraphicsEffect(shadow2)
-        self.transfer_button.setEnabled(False)
+        self.transfer_button = CustomButton("Download", QSize(17, 17))
         self.transfer_button.clicked.connect(self.transfer_remote_file)
+        self.transfer_button.setEnabled(False)
         self.transfer_button.setFixedSize(155, 35)
-        self.transfer_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.transfer_button.setGraphicsEffect(self._build_shadow(4, 30))
 
-
-
-        self.transfer_btn_layout = QHBoxLayout(self.transfer_button)
-        self.transfer_btn_layout.setContentsMargins(15, 0, 15, 0)
-        self.transfer_btn_layout.setSpacing(12)
-
-        self.transfer_icon_label = QLabel()
-
-        self.transfer_icon_label.setStyleSheet("background: transparent; border: none;")
-
-        self.transfer_text_label = QLabel("Download")
-
-
-        self.transfer_btn_layout.addStretch()
-        self.transfer_btn_layout.addWidget(self.transfer_icon_label)
-        self.transfer_btn_layout.addWidget(self.transfer_text_label)
-        self.transfer_btn_layout.addStretch()
-
-
-        # Add buttons to the horizontal header layout
         self.editor_header_layout.addWidget(self.save_button)
         self.editor_header_layout.addWidget(self.transfer_button)
-
-        # --- Add the header and the line to the main editor layout ---
         self.editor_layout.addWidget(self.editor_header)
         self.editor_layout.addSpacing(10)
 
@@ -256,10 +235,12 @@ class FileTreePage(QWidget):
         self.line2.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.editor_layout.addWidget(self.line2)
 
-        self.editor_wrapper= QWidget()
+    def _setup_editor_area(self):
+        self.editor_wrapper = QWidget()
         self.editor_wrapper.setStyleSheet("border: none")
-        self.editor_wrapper.setContentsMargins(0,0,0,5)
+        self.editor_wrapper.setContentsMargins(0, 0, 0, 5)
         self.editor_wrapper_layout = QVBoxLayout(self.editor_wrapper)
+
         self.editor = QPlainTextEdit()
         self.editor.document().setDocumentMargin(19)
         self.editor.setReadOnly(True)
@@ -268,18 +249,19 @@ class FileTreePage(QWidget):
         font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
         self.editor.setFont(font)
 
-        self.editor_widget.setObjectName("EditorContainer")
         self.editor_wrapper_layout.addWidget(self.editor)
         self.editor_layout.addWidget(self.editor_wrapper)
 
+    def _build_shadow(self, blur_radius, alpha):
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(blur_radius)
+        shadow.setXOffset(0)
+        shadow.setYOffset(0)
+        shadow.setColor(QColor(0, 0, 0, alpha))
+        return shadow
 
-
-        self.highlighter = PythonHighlighter(self.editor.document())
-        self.main_layout.addWidget(self.editor_widget)
-        self.current_open_path = None
-
-        # --- 3. Connections ---
-        # Triggered when clicking an item
+    def _wire_signals(self):
+        self.tree.doubleClicked.connect(self.on_item_double_clicked)
         self.tree.clicked.connect(self.on_file_selected)
 
 
@@ -326,7 +308,7 @@ class FileTreePage(QWidget):
         self.run_func(command, is_file_save=True)
 
         # Reset button after a short delay or via the 'finished' signal
-        self.save_text_label.setText("Save Changes")
+        self.save_button.text_label.setText("Save Changes")
         self.save_button.setEnabled(True)
 
     def transfer_remote_file(self):
@@ -475,7 +457,7 @@ class FileTreePage(QWidget):
                         color: #AAAAAA;
                     }
                 """)
-        self.save_text_label.setStyleSheet("""
+        self.save_button.text_label.setStyleSheet("""
                     font-size: 16px; 
                     font-weight: 500; 
                     background: transparent; 
@@ -493,7 +475,7 @@ class FileTreePage(QWidget):
                     }
                     QPushButton:pressed { background-color: #ECDCFF}
                 """)
-        self.transfer_text_label.setStyleSheet("""
+        self.transfer_button.text_label.setStyleSheet("""
                     font-size: 16px; 
                     font-weight: 500; 
                     background: transparent; 
@@ -539,18 +521,8 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.save_pixmap = QPixmap("gui/icons/diskette.png").scaled(
-            18, 18,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )
-        self.save_icon_label.setPixmap(self.save_pixmap)
-        self.transfer_pixmap = QPixmap("gui/icons/download.png").scaled(
-            17, 17,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )
-        self.transfer_icon_label.setPixmap(self.transfer_pixmap)
+        self.save_button.set_icon("gui/icons/diskette.png")
+        self.transfer_button.set_icon("gui/icons/download.png")
 
 
 
@@ -627,7 +599,7 @@ class FileTreePage(QWidget):
                                 color: #AAAAAA;
                             }
                         """)
-        self.save_text_label.setStyleSheet("""
+        self.save_button.text_label.setStyleSheet("""
                             font-size: 16px; 
                             font-weight: 500; 
                             background: transparent; 
@@ -645,7 +617,7 @@ class FileTreePage(QWidget):
                             }
                             QPushButton:pressed { background-color: #493E76}
                         """)
-        self.transfer_text_label.setStyleSheet("""
+        self.transfer_button.text_label.setStyleSheet("""
                             font-size: 16px; 
                             font-weight: 500; 
                             background: transparent; 
@@ -691,15 +663,5 @@ class FileTreePage(QWidget):
                                 background: none;
                             }
                         """)
-        self.save_pixmap = QPixmap("gui/icons/save_dark.png").scaled(
-            18, 18,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )
-        self.save_icon_label.setPixmap(self.save_pixmap)
-        self.transfer_pixmap = QPixmap("gui/icons/download_dark.png").scaled(
-            17, 17,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )
-        self.transfer_icon_label.setPixmap(self.transfer_pixmap)
+        self.save_button.set_icon("gui/icons/save_dark.png")
+        self.transfer_button.set_icon("gui/icons/download_dark.png")
