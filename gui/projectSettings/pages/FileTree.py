@@ -22,24 +22,27 @@ from scp import SCPClient
 
 
 class CustomButton(QPushButton):
-    def __init__(self, text, icon_size, parent=None):
+    def __init__(self, text, icon_size, spacing, cursor, parent=None):
         super().__init__(parent)
         self._icon_size = icon_size
-        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        if cursor:
+            self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.button_layout = QHBoxLayout(self)
-        self.button_layout.setContentsMargins(10, 0, 10, 0)
-        self.button_layout.setSpacing(12)
+
+        # ADJUST PADDING HERE:
+        # (Left, Top, Right, Bottom) -> 5px sides, 2px top/bottom
+        self.button_layout.setContentsMargins(12, 2, 12, 2)
+        self.button_layout.setSpacing(spacing)
+
+        self.button_layout.setSizeConstraint(QHBoxLayout.SizeConstraint.SetFixedSize)
 
         self.icon_label = QLabel()
         self.icon_label.setStyleSheet("background: transparent; border: none;")
-
         self.text_label = QLabel(text)
 
-        self.button_layout.addStretch()
         self.button_layout.addWidget(self.icon_label)
         self.button_layout.addWidget(self.text_label)
-        self.button_layout.addStretch()
 
     def set_icon(self, icon_path):
         pixmap = QPixmap(icon_path).scaled(
@@ -132,7 +135,11 @@ class FileTreePage(QWidget):
         self.main_layout.setSpacing(0)
 
         self.top_row = QWidget()
-        self.top_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        self.top_layout = QHBoxLayout(self.top_row)
+        self.top_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.top_row.setFixedHeight(35)
+        self.top_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        self.top_layout.setContentsMargins(0,0,0,0)
 
         self.content_row = QWidget()
         self.content_layout = QHBoxLayout(self.content_row)
@@ -140,16 +147,49 @@ class FileTreePage(QWidget):
         self.content_layout.setSpacing(5)
 
         self.bottom_row = QWidget()
-        self.bottom_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        self.bottom_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.bottom_row.setFixedHeight(25)
 
         self.main_layout.addWidget(self.top_row)
         self.main_layout.addWidget(self.content_row)
         self.main_layout.addWidget(self.bottom_row)
 
+        self.setup_top_row()
         self._setup_tree_container()
         self._setup_editor_container()
         self._wire_signals()
         self.highlighter = PythonHighlighter(self.editor.document())
+
+    def setup_top_row(self):
+
+        self.reload_button = CustomButton("Reload", QSize(14, 14), 2, False)
+        self.reload_button.adjustSize()
+        self.reload_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
+        self.scan_button = CustomButton("Scan for Errors", QSize(14, 14), 2, False)
+        self.scan_button.adjustSize()
+        self.scan_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
+        self.suggest_button = CustomButton("Suggest Improvements", QSize(14, 14), 2, False)
+        self.suggest_button.adjustSize()
+        self.suggest_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+
+        self.save_button = CustomButton("Save Changes", QSize(14, 14), 12, True)
+        self.save_button.clicked.connect(self.save_remote_file)
+        self.save_button.setEnabled(False)
+
+        self.transfer_button = CustomButton("Download", QSize(14, 14), 12, True)
+        self.transfer_button.clicked.connect(self.transfer_remote_file)
+        self.transfer_button.setEnabled(False)
+
+        self.top_layout.addWidget(self.reload_button)
+        self.top_layout.addSpacing(362)
+        self.top_layout.addWidget(self.scan_button)
+        self.top_layout.addWidget(self.suggest_button)
+        self.top_layout.addStretch()
+        self.top_layout.addWidget(self.save_button)
+        self.top_layout.addWidget(self.transfer_button)
+
 
     def _setup_tree_container(self):
         self.tree_container = QWidget()
@@ -212,20 +252,6 @@ class FileTreePage(QWidget):
         self.editor_header_layout.addWidget(self.file_name_label)
         self.editor_header_layout.addStretch()
 
-        self.save_button = CustomButton("Save Changes", QSize(18, 18))
-        self.save_button.clicked.connect(self.save_remote_file)
-        self.save_button.setEnabled(False)
-        self.save_button.setFixedSize(180, 35)
-        self.save_button.setGraphicsEffect(self._build_shadow(4, 30))
-
-        self.transfer_button = CustomButton("Download", QSize(17, 17))
-        self.transfer_button.clicked.connect(self.transfer_remote_file)
-        self.transfer_button.setEnabled(False)
-        self.transfer_button.setFixedSize(155, 35)
-        self.transfer_button.setGraphicsEffect(self._build_shadow(4, 30))
-
-        self.editor_header_layout.addWidget(self.save_button)
-        self.editor_header_layout.addWidget(self.transfer_button)
         self.editor_layout.addWidget(self.editor_header)
         self.editor_layout.addSpacing(10)
 
@@ -394,7 +420,7 @@ class FileTreePage(QWidget):
                         border-radius: 12px;
                         border: 1px solid #E0D5E0;
                     }
-                    QWidget { background-color: #f8f1fa; } 
+                    QWidget { background-color: #ffffff; } 
                 """)
         self.files_title.setStyleSheet("font-size: 32px; font-weight: 520; color: #583068")
         self.line1.setStyleSheet("background-color: #CBCBCB")
@@ -434,29 +460,24 @@ class FileTreePage(QWidget):
                                     background: none;
                                 }
                             """)
+
         self.editor_widget.setStyleSheet("""
                     QWidget#EditorContainer {
-                        background-color: #F9F9FF;
+                        background-color: #ffffff;
                         border-radius: 12px;
                     }
+                """)
+
+        self.editor_wrapper.setStyleSheet("""
+            background-color: #ffffff
+        """)
+        self.editor_header.setStyleSheet("""
+                    background-color: #ffffff
                 """)
         self.file_name_label.setStyleSheet(
             "font-size: 32px; font-weight: 520; color: #583068; border: none"
         )
-        self.save_button.setStyleSheet("""
-                    QPushButton { 
-                        background-color: #f3ecf4;
-                        border-radius: 15px; 
-                        color: #444;
-                    }
-                    QPushButton:hover {
-                        background-color: #ede6ee
-                    }
-                    QPushButton:pressed { background-color: #f3ecf4; }
-                    QPushButton:disabled {
-                        color: #AAAAAA;
-                    }
-                """)
+
         self.save_button.text_label.setStyleSheet("""
                     font-size: 16px; 
                     font-weight: 500; 
@@ -466,7 +487,7 @@ class FileTreePage(QWidget):
                 """)
         self.transfer_button.setStyleSheet("""
                     QPushButton { 
-                        border-radius: 15px; 
+                        border-radius: 7px; 
                         background-color: #ECDCFF; 
                         color: #444;
                     }
@@ -476,12 +497,36 @@ class FileTreePage(QWidget):
                     QPushButton:pressed { background-color: #ECDCFF}
                 """)
         self.transfer_button.text_label.setStyleSheet("""
-                    font-size: 16px; 
-                    font-weight: 500; 
-                    background: transparent; 
-                    border: none; 
-                    color: inherit;
+                    font-size: 13px; 
+                            font-weight: 515; 
+                            background: transparent; 
+                            border: none; 
+                            color: inherit;
+                            padding-bottom: 2px;
                 """)
+        for button in [self.reload_button, self.suggest_button, self.scan_button, self.save_button]:
+            button.setStyleSheet("""
+                    QPushButton { 
+                                background-color: rgba(0, 0, 0, 0);
+                                border-radius: 7px; 
+                                color: #444;
+                                padding: 5px 0px;
+                            }
+                            QPushButton:hover {
+                                background-color: #f3ecf4
+                            }
+                            QPushButton:pressed {
+                                background-color: rgba(0,0,0,0);
+                            }
+            """)
+            button.text_label.setStyleSheet("""
+                            font-size: 13px; 
+                            font-weight: 515; 
+                            background: transparent; 
+                            border: none; 
+                            color: inherit;
+                            padding-bottom: 2px;
+            """)
         self.line2.setStyleSheet("background-color: #D7D7D7")
         self.editor.setStyleSheet("""
                     QPlainTextEdit {
@@ -521,8 +566,11 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.save_button.set_icon("gui/icons/diskette.png")
-        self.transfer_button.set_icon("gui/icons/download.png")
+        self.save_button.set_icon("gui/icons/editor/save_light.png")
+        self.transfer_button.set_icon("gui/icons/editor/download_light.png")
+        self.reload_button.set_icon("gui/icons/editor/refresh_light.png")
+        self.scan_button.set_icon("gui/icons/editor/scan_light.png")
+        self.suggest_button.set_icon("gui/icons/editor/suggest_light.png")
 
 
 
