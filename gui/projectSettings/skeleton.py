@@ -224,7 +224,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.config = None
 
         self.cmd_page = cmdPage(self.ssh_manager, self.global_run_command, self.global_handle_connect, self.setup_environment)
-        self.file_tree_page = FileTreePage(self.global_run_command, self.home_dir, self.config, self.ssh_manager)
+        self.file_tree_page = FileTreePage(self.global_run_command, self.home_dir, self.config, self.ssh_manager, self.update_tree)
         self.settings_page = SettingsPage(self.config, self.reload_manager, self.fb)
         self.graph_page = GraphsPage(self.config)
 

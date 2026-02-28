@@ -90,14 +90,10 @@ def build_nested_dict(paths):
     tree = {}
 
     for path in paths:
-        # 1. Clean the individual string
         clean_path = path.strip()
-
-        # 2. Skip useless entries
         if not clean_path or clean_path == ".":
             continue
 
-        # 3. Standardize paths
         if clean_path.startswith("./"):
             clean_path = clean_path[2:]
         elif clean_path.startswith("."):
@@ -106,22 +102,31 @@ def build_nested_dict(paths):
         parts = clean_path.split('/')
         current_level = tree
 
-        for part in parts:
+        # Iterate through all parts except the very last one
+        for i in range(len(parts)):
+            part = parts[i]
             if not part:
                 continue
 
-            # 4. Use setdefault to merge folders
-            if part not in current_level:
-                current_level[part] = {}
+            is_last = (i == len(parts) - 1)
 
-            current_level = current_level[part]
+            if is_last:
+                # If it's the last part, and it's not already a folder, mark as file
+                if part not in current_level:
+                    current_level[part] = None  # None indicates a file
+            else:
+                # If it's not the last part, it MUST be a folder
+                if part not in current_level or not isinstance(current_level[part], dict):
+                    current_level[part] = {}
+                current_level = current_level[part]
 
     return tree
 
 
 class FileTreePage(QWidget):
-    def __init__(self, run_func, home_dir, config, ssh_manager):
+    def __init__(self, run_func, home_dir, config, ssh_manager, update_func):
         super().__init__()
+        self.update_func = update_func
         self.run_func = run_func
         self.home_dir = home_dir
         self.config = config
@@ -141,16 +146,12 @@ class FileTreePage(QWidget):
 
         self.content_row = QWidget()
         self.content_layout = QHBoxLayout(self.content_row)
-        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setContentsMargins(3, 3, 3, 3)
         self.content_layout.setSpacing(5)
 
-        self.bottom_row = QWidget()
-        self.bottom_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        self.bottom_row.setFixedHeight(25)
 
         self.main_layout.addWidget(self.top_row)
         self.main_layout.addWidget(self.content_row)
-        self.main_layout.addWidget(self.bottom_row)
 
         self.setup_top_row()
         self._setup_tree_container()
@@ -163,6 +164,7 @@ class FileTreePage(QWidget):
         self.reload_button = CustomButton("Reload", QSize(14, 14), 2, False)
         self.reload_button.adjustSize()
         self.reload_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.reload_button.clicked.connect(self.update_func)
 
         self.scan_button = CustomButton("Scan for Errors", QSize(14, 14), 2, False)
         self.scan_button.adjustSize()
@@ -198,6 +200,7 @@ class FileTreePage(QWidget):
         self.tree_container_layout = QVBoxLayout()
         self.tree_container_layout.setContentsMargins(0, 0, 0, 0)
         self.tree_container.setLayout(self.tree_container_layout)
+        self.tree_container.setGraphicsEffect(self._build_shadow(blur_radius=15, alpha=30))
 
         self.tree_header = QWidget()
         self.tree_header_layout = QHBoxLayout(self.tree_header)
@@ -237,14 +240,16 @@ class FileTreePage(QWidget):
 
         self.model = QStandardItemModel()
         self.tree_layout = QVBoxLayout()
-        self.tree_layout.setContentsMargins(23, 0, 0, 0)
+        self.tree_layout.setContentsMargins(15, 0, 15, 0)
 
         self.tree = QTreeView()
+        self.tree.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.tree.setAllColumnsShowFocus(True)
         self.tree.setContentsMargins(0, 0, 0, 0)
         self.tree.setModel(self.model)
         self.tree.setHeaderHidden(True)
         self.tree.setIndentation(25)
-        self.tree.setIconSize(QSize(22, 22))
+        self.tree.setIconSize(QSize(17, 17))
         self.tree_layout.addWidget(self.tree)
 
         self.tree_container_layout.addLayout(self.tree_layout)
@@ -258,6 +263,7 @@ class FileTreePage(QWidget):
         self.editor_layout = QVBoxLayout(self.editor_widget)
         self.editor_layout.setContentsMargins(1, 4, 1, 4)
         self.editor_layout.setSpacing(0)
+        self.editor_widget.setGraphicsEffect(self._build_shadow(blur_radius=15, alpha=30))
 
         self._setup_editor_header()
         self._setup_editor_area()
@@ -266,7 +272,7 @@ class FileTreePage(QWidget):
     def _setup_editor_header(self):
         self.editor_header = QWidget()
         self.editor_header_layout = QHBoxLayout(self.editor_header)
-        self.editor_header_layout.setContentsMargins(10, 5, 20, 0)
+        self.editor_header_layout.setContentsMargins(25, 5, 20, 0)
         self.editor_header.setStyleSheet("border: none;")
         self.editor_header_layout.setSpacing(15)
 
@@ -290,7 +296,7 @@ class FileTreePage(QWidget):
         self.editor_wrapper_layout = QVBoxLayout(self.editor_wrapper)
 
         self.editor = QPlainTextEdit()
-        self.editor.document().setDocumentMargin(19)
+        self.editor.document().setDocumentMargin(17)
         self.editor.setReadOnly(True)
         self.editor.setPlaceholderText("Select a file to view and edit its contents...")
 
@@ -401,11 +407,25 @@ class FileTreePage(QWidget):
             item_path = f"{current_full_path}/{name}" if current_full_path else name
             item.setData(item_path, Qt.ItemDataRole.UserRole)
 
-            if data_dict[name]:
-                item.setIcon(QIcon("gui/icons/folder.png"))
+            # 1. Folder Check: Must be a dictionary
+            if isinstance(data_dict[name], dict):
+                item.setData("folder", Qt.ItemDataRole.UserRole + 1)
+                item.setIcon(QIcon("gui/icons/editor/folder_light.png"))
                 parent_item.appendRow(item)
-                self.populate_tree(item, data_dict[name], item_path)
+
+                # Only recurse if the folder actually has contents
+                if data_dict[name]:
+                    self.populate_tree(item, data_dict[name], item_path)
+
+            # 2. Python File Check: Must NOT be a dict, and end in .py
+            elif name.lower().endswith(".py"):
+                item.setData("python", Qt.ItemDataRole.UserRole + 1)
+                item.setIcon(QIcon("gui/icons/editor/python.png"))
+                parent_item.appendRow(item)
+
+            # 3. Generic File Check
             else:
+                item.setData("file", Qt.ItemDataRole.UserRole + 1)
                 item.setIcon(QIcon("gui/icons/document.png"))
                 parent_item.appendRow(item)
 
@@ -422,20 +442,26 @@ class FileTreePage(QWidget):
 
     def update_tree_icons(self, folder_icon_path, file_icon_path):
         root = self.model.invisibleRootItem()
+        python_icon_path = "gui/icons/editor/python.png"
 
         def traverse(item):
             for i in range(item.rowCount()):
                 child = item.child(i)
-                if child.hasChildren():
+                item_type = child.data(Qt.ItemDataRole.UserRole + 1)
+
+                if item_type == "folder":
                     child.setIcon(QIcon(folder_icon_path))
-                    traverse(child)
+                elif item_type == "python":
+                    child.setIcon(QIcon(python_icon_path))
                 else:
                     child.setIcon(QIcon(file_icon_path))
+
+                traverse(child)
 
         traverse(root)
 
     def set_light_mode(self):
-        self.update_tree_icons("gui/icons/folder.png", "gui/icons/document.png")
+        self.update_tree_icons("gui/icons/editor/folder_light.png", "gui/icons/document.png")
         self.tree_container.setStyleSheet("""
                     QWidget#tree_container {
 
@@ -446,11 +472,14 @@ class FileTreePage(QWidget):
         self.line1.setStyleSheet("background-color: #CBCBCB")
         self.tree.setStyleSheet("""
                                 QTreeView {
-                                    color: black; font-size: 16px; border: none;
+                                    color: black; font-size: 15px; border: none;
+                                    show-decoration-selected: 1;
+                                    outline: 0;
                                 }
                                 QTreeView::item {
                                 padding-top: 4px;
                                 padding-bottom: 4px;
+                                padding-left: 3px;
                                 }
                                 QScrollBar:vertical {
                                     border: none;
@@ -458,6 +487,23 @@ class FileTreePage(QWidget):
                                     width: 13px;
                                     margin: 0px 0px 0px 0px;
                                 }
+                                QTreeView::item:selected {
+                                    background-color: #E7EFFD; /* Subtle blue */
+                                    color: #121212;
+                                    border-radius: 4px;
+                                    border: none;
+                                }
+                                QTreeView::item:selected:!active {
+                                    background-color: #F2F2F2;
+                                }
+                                QTreeView::item:hover {
+                                    background-color: #F5F5F5;
+                                    border-radius: 4px;
+                                }
+                                QTreeView::item:focus {
+    outline: none;
+    border: none;
+}
 
                     QScrollBar::handle:vertical {
                                     background: #D7D7D7;
@@ -595,7 +641,7 @@ class FileTreePage(QWidget):
 
 
     def set_dark_mode(self):
-        self.update_tree_icons("gui/icons/folder_dark.png", "gui/icons/document_dark.png")
+        self.update_tree_icons("gui/icons/editor/folder_light", "gui/icons/document_dark.png")
         self.tree_container.setStyleSheet("""
                             QWidget#tree_container {
 
@@ -603,7 +649,6 @@ class FileTreePage(QWidget):
                             }
                             QWidget { background-color: #1A1921; } 
                         """)
-        self.files_title.setStyleSheet("font-size: 32px; font-weight: 520; color: #CC98E1")
         self.line1.setStyleSheet("background-color: #4E4E4E; border: none")
         self.tree.setStyleSheet("""
                                         QTreeView {
@@ -611,7 +656,8 @@ class FileTreePage(QWidget):
                                         }
                                         QTreeView::item {
                                         padding-top: 4px;
-                                        padding-bottom: 4px;
+                                        padding-bottom: 6px;
+                                        padding-left: 5px;
                                         }
                                         QScrollBar:vertical {
                                             border: none;
