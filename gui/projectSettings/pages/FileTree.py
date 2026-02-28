@@ -30,8 +30,6 @@ class CustomButton(QPushButton):
 
         self.button_layout = QHBoxLayout(self)
 
-        # ADJUST PADDING HERE:
-        # (Left, Top, Right, Bottom) -> 5px sides, 2px top/bottom
         self.button_layout.setContentsMargins(12, 2, 12, 2)
         self.button_layout.setSpacing(spacing)
 
@@ -137,9 +135,9 @@ class FileTreePage(QWidget):
         self.top_row = QWidget()
         self.top_layout = QHBoxLayout(self.top_row)
         self.top_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        self.top_row.setFixedHeight(35)
+        self.top_row.setFixedHeight(28)
         self.top_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
-        self.top_layout.setContentsMargins(0,0,0,0)
+        self.top_layout.setContentsMargins(0,0,5,0)
 
         self.content_row = QWidget()
         self.content_layout = QHBoxLayout(self.content_row)
@@ -174,11 +172,11 @@ class FileTreePage(QWidget):
         self.suggest_button.adjustSize()
         self.suggest_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-        self.save_button = CustomButton("Save Changes", QSize(14, 14), 12, True)
+        self.save_button = CustomButton("Save Changes", QSize(14, 14), 2, True)
         self.save_button.clicked.connect(self.save_remote_file)
         self.save_button.setEnabled(False)
 
-        self.transfer_button = CustomButton("Download", QSize(14, 14), 12, True)
+        self.transfer_button = CustomButton("Download", QSize(14, 14), 2, True)
         self.transfer_button.clicked.connect(self.transfer_remote_file)
         self.transfer_button.setEnabled(False)
 
@@ -193,18 +191,43 @@ class FileTreePage(QWidget):
 
     def _setup_tree_container(self):
         self.tree_container = QWidget()
-        self.tree_container.setContentsMargins(3, 10, 3, 10)
+        self.tree_container.setContentsMargins(1, 10, 1, 10)
         self.tree_container.setFixedWidth(450)
         self.tree_container.setObjectName("tree_container")
 
         self.tree_container_layout = QVBoxLayout()
-        self.tree_container_layout.setContentsMargins(0, 16, 0, 0)
+        self.tree_container_layout.setContentsMargins(0, 0, 0, 0)
         self.tree_container.setLayout(self.tree_container_layout)
 
-        self.files_title = QLabel("Files")
-        self.files_title.setContentsMargins(30, 0, 0, 0)
-        self.tree_container_layout.addWidget(self.files_title)
-        self.tree_container_layout.addSpacing(5)
+        self.tree_header = QWidget()
+        self.tree_header_layout = QHBoxLayout(self.tree_header)
+        self.tree_header_layout.setContentsMargins(15, 0, 15, 0)
+        self.tree_header_layout.setSpacing(7)
+        self.tree_header_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        self.file_icon = QLabel()
+        self.file_icon.setContentsMargins(0,2,0,0)
+        pixmap = QPixmap("gui/icons/editor/files_light.png").scaled(
+            19,
+            19,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+        self.file_icon.setPixmap(pixmap)
+        self.tree_header_layout.addWidget(self.file_icon)
+
+        self.files_label = QLabel("Files")
+        self.files_label.setStyleSheet("font-weight: 520; color: #303030; font-size: 16px")
+        self.tree_header_layout.addWidget(self.files_label)
+
+        self.tree_header_layout.addStretch()
+
+        self.path_label = QLabel("sam@192.xxx.xx.xx:/~")
+        self.path_label.setStyleSheet("color: #888; font-weight: 510; font-size: 14.5px")
+        self.tree_header_layout.addWidget(self.path_label)
+
+        # IMPORTANT: Add the widget, not just the layout
+        self.tree_container_layout.addWidget(self.tree_header)
 
         self.line1 = QFrame()
         self.line1.setFrameShape(QFrame.Shape.HLine)
@@ -231,10 +254,9 @@ class FileTreePage(QWidget):
         self.editor_widget = QWidget()
         self.editor_widget.setObjectName("EditorContainer")
         self.editor_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.editor_widget.setGraphicsEffect(self._build_shadow(4, 80))
 
         self.editor_layout = QVBoxLayout(self.editor_widget)
-        self.editor_layout.setContentsMargins(4, 4, 0, 4)
+        self.editor_layout.setContentsMargins(1, 4, 1, 4)
         self.editor_layout.setSpacing(0)
 
         self._setup_editor_header()
@@ -244,7 +266,7 @@ class FileTreePage(QWidget):
     def _setup_editor_header(self):
         self.editor_header = QWidget()
         self.editor_header_layout = QHBoxLayout(self.editor_header)
-        self.editor_header_layout.setContentsMargins(25, 23, 20, 0)
+        self.editor_header_layout.setContentsMargins(10, 5, 20, 0)
         self.editor_header.setStyleSheet("border: none;")
         self.editor_header_layout.setSpacing(15)
 
@@ -253,7 +275,7 @@ class FileTreePage(QWidget):
         self.editor_header_layout.addStretch()
 
         self.editor_layout.addWidget(self.editor_header)
-        self.editor_layout.addSpacing(10)
+        self.editor_layout.addSpacing(7)
 
         self.line2 = QFrame()
         self.line2.setFrameShape(QFrame.Shape.HLine)
@@ -418,11 +440,9 @@ class FileTreePage(QWidget):
                     QWidget#tree_container {
 
                         border-radius: 12px;
-                        border: 1px solid #E0D5E0;
                     }
                     QWidget { background-color: #ffffff; } 
                 """)
-        self.files_title.setStyleSheet("font-size: 32px; font-weight: 520; color: #583068")
         self.line1.setStyleSheet("background-color: #CBCBCB")
         self.tree.setStyleSheet("""
                                 QTreeView {
@@ -475,7 +495,7 @@ class FileTreePage(QWidget):
                     background-color: #ffffff
                 """)
         self.file_name_label.setStyleSheet(
-            "font-size: 32px; font-weight: 520; color: #583068; border: none"
+            "font-size: 16px; font-weight: 520; color: #583068; border: none"
         )
 
         self.save_button.text_label.setStyleSheet("""
@@ -487,7 +507,7 @@ class FileTreePage(QWidget):
                 """)
         self.transfer_button.setStyleSheet("""
                     QPushButton { 
-                        border-radius: 7px; 
+                        border-radius: 10px; 
                         background-color: #ECDCFF; 
                         color: #444;
                     }
@@ -498,7 +518,7 @@ class FileTreePage(QWidget):
                 """)
         self.transfer_button.text_label.setStyleSheet("""
                     font-size: 13px; 
-                            font-weight: 515; 
+                            font-weight: 520; 
                             background: transparent; 
                             border: none; 
                             color: inherit;
@@ -532,7 +552,6 @@ class FileTreePage(QWidget):
                     QPlainTextEdit {
                         color: #444;
                         border: none; 
-                        border-bottom: 1px solid #555555;
                         border-top-left-radius: 10px;
                         border-top-right-radius: 10px;
                         font-family: 'Consolas', 'Monospace', 'Courier New';
@@ -581,7 +600,6 @@ class FileTreePage(QWidget):
                             QWidget#tree_container {
 
                                 border-radius: 12px;
-                                border: 1px solid #2A2A2A;
                             }
                             QWidget { background-color: #1A1921; } 
                         """)
@@ -627,7 +645,6 @@ class FileTreePage(QWidget):
                             QWidget#EditorContainer {
                                 background-color: #141318;
                                 border-radius: 12px;
-                                border: 1px solid #2C2C2C
                             }
                         """)
         self.file_name_label.setStyleSheet(
@@ -677,7 +694,6 @@ class FileTreePage(QWidget):
                             QPlainTextEdit {
                                 color: #ddd;
                                 border: none; 
-                                border-bottom: 1px solid #555555;
                                 border-top-left-radius: 10px;
                                 border-top-right-radius: 10px;
                                 font-family: 'Consolas', 'Monospace', 'Courier New';
