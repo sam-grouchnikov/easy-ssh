@@ -56,34 +56,112 @@ class PythonHighlighter(QSyntaxHighlighter):
     def __init__(self, parent):
         super().__init__(parent)
         self.rules = []
+        self.tri_string_format = QTextCharFormat()
+        self.tri_single_re = QRegularExpression("'''")
+        self.tri_double_re = QRegularExpression('"""')
 
-        # Keyword Format (e.g., def, class, if, else)
+        # Default to a balanced theme on initialization
+        self.set_theme({
+            'keyword': '#C586C0',
+            'builtin': '#569CD6',
+            'function': '#B9B96F',
+            'class': '#4EC9B0',
+            'string': '#CE9178',
+            'comment': '#6A9955',
+            'number': '#B5CEA8',
+            'decorator': '#DCDCAA'
+        })
+
+    def set_theme(self, colors):
+        self.rules = []
+
+        # 1. Keywords
         keyword_format = QTextCharFormat()
-        keyword_format.setForeground(QColor("#569CD6"))  # Light Blue
-        keywords = ["def", "class", "import", "from", "if", "else", "return", "for", "while", "try", "except", "with",
-                    "len", "with", "self"]
-
+        keyword_format.setForeground(QColor(colors['keyword']))
+        keywords = [
+            "def", "class", "import", "from", "if", "else", "elif", "return",
+            "for", "while", "try", "except", "finally", "with", "as", "lambda",
+            "yield", "break", "continue", "pass", "assert", "raise"
+        ]
         for word in keywords:
-            pattern = QRegularExpression(f"\\b{word}\\b")
-            self.rules.append((pattern, keyword_format))
+            self.rules.append((QRegularExpression(f"\\b{word}\\b"), keyword_format))
 
-        # String Format (anything between quotes)
+        # 2. Built-ins and Constants
+        builtin_format = QTextCharFormat()
+        builtin_format.setForeground(QColor(colors['builtin']))
+        builtins = ["self", "None", "True", "False", "print", "len", "range", "enumerate"]
+        for word in builtins:
+            self.rules.append((QRegularExpression(f"\\b{word}\\b"), builtin_format))
+
+        # 3. Function Definitions (Capture group 1)
+        func_format = QTextCharFormat()
+        func_format.setForeground(QColor(colors['function']))
+        self.rules.append((QRegularExpression(r"\bdef\s+([a-zA-Z_][a-zA-Z0-9_]*)"), func_format))
+
+        # 4. Class Definitions (Capture group 1)
+        class_format = QTextCharFormat()
+        class_format.setForeground(QColor(colors['class']))
+        self.rules.append((QRegularExpression(r"\bclass\s+([a-zA-Z_][a-zA-Z0-9_]*)"), class_format))
+
+        # 5. Strings
         string_format = QTextCharFormat()
-        string_format.setForeground(QColor("#CE9178"))
-        self.rules.append((QRegularExpression("\".*\""), string_format))
-        self.rules.append((QRegularExpression("'.*'"), string_format))
+        string_format.setForeground(QColor(colors['string']))
+        self.rules.append((QRegularExpression(r"\"[^\"\\]*(\\.[^\"\\]*)*\""), string_format))
+        self.rules.append((QRegularExpression(r"'[^'\\]*(\\.[^'\\]*)*'"), string_format))
 
-        # Comment Format (# text)
+        # 6. Comments
         comment_format = QTextCharFormat()
-        comment_format.setForeground(QColor("#6A9955"))
-        self.rules.append((QRegularExpression("#.*"), comment_format))
+        comment_format.setForeground(QColor(colors['comment']))
+        self.rules.append((QRegularExpression(r"#[^\n]*"), comment_format))
+
+        # 7. Numbers
+        number_format = QTextCharFormat()
+        number_format.setForeground(QColor(colors['number']))
+        self.rules.append((QRegularExpression(r"\b[0-9]+\b"), number_format))
+
+        # 8. Decorators
+        decorator_format = QTextCharFormat()
+        decorator_format.setForeground(QColor(colors['decorator']))
+        self.rules.append((QRegularExpression(r"@[a-zA-Z_][a-zA-Z0-9_]*"), decorator_format))
+
+        # Update multi-line string color
+        self.tri_string_format.setForeground(QColor(colors['string']))
+
+        self.rehighlight()
 
     def highlightBlock(self, text):
-        for pattern, format in self.rules:
+        for pattern, fmt in self.rules:
             iterator = pattern.globalMatch(text)
             while iterator.hasNext():
                 match = iterator.next()
-                self.setFormat(match.capturedStart(), match.capturedLength(), format)
+                if match.lastCapturedIndex() > 0:
+                    self.setFormat(match.capturedStart(1), match.capturedLength(1), fmt)
+                else:
+                    self.setFormat(match.capturedStart(), match.capturedLength(), fmt)
+
+        # Multi-line strings state management
+        self.setCurrentBlockState(0)
+        start_index = 0
+        if self.previousBlockState() != 1:
+            start_index = text.find('"""')
+            if start_index == -1:
+                start_index = text.find("'''")
+
+        while start_index >= 0:
+            end_match = self.tri_double_re.match(text, start_index + 3)
+            if not end_match.hasMatch():
+                end_match = self.tri_single_re.match(text, start_index + 3)
+
+            if not end_match.hasMatch():
+                self.setCurrentBlockState(1)
+                self.setFormat(start_index, len(text) - start_index, self.tri_string_format)
+                break
+            else:
+                length = end_match.capturedEnd() - start_index
+                self.setFormat(start_index, length, self.tri_string_format)
+                start_index = text.find('"""', start_index + length)
+                if start_index == -1:
+                    start_index = text.find("'''", start_index + length)
 
 
 def build_nested_dict(paths):
@@ -210,23 +288,16 @@ class FileTreePage(QWidget):
 
         self.file_icon = QLabel()
         self.file_icon.setContentsMargins(0,2,0,0)
-        pixmap = QPixmap("gui/icons/editor/files_light.png").scaled(
-            19,
-            19,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
-        )
-        self.file_icon.setPixmap(pixmap)
+
         self.tree_header_layout.addWidget(self.file_icon)
 
         self.files_label = QLabel("Files")
-        self.files_label.setStyleSheet("font-weight: 520; color: #303030; font-size: 16px")
+
         self.tree_header_layout.addWidget(self.files_label)
 
         self.tree_header_layout.addStretch()
 
         self.path_label = QLabel("sam@192.xxx.xx.xx:/~")
-        self.path_label.setStyleSheet("color: #888; font-weight: 510; font-size: 14.5px")
         self.tree_header_layout.addWidget(self.path_label)
 
         # IMPORTANT: Add the widget, not just the layout
@@ -426,7 +497,7 @@ class FileTreePage(QWidget):
             # 3. Generic File Check
             else:
                 item.setData("file", Qt.ItemDataRole.UserRole + 1)
-                item.setIcon(QIcon("gui/icons/document.png"))
+                item.setIcon(QIcon("gui/icons/file.png"))
                 parent_item.appendRow(item)
 
     def on_item_double_clicked(self, index):
@@ -461,7 +532,17 @@ class FileTreePage(QWidget):
         traverse(root)
 
     def set_light_mode(self):
-        self.update_tree_icons("gui/icons/editor/folder_light.png", "gui/icons/document.png")
+        self.highlighter.set_theme({
+            'keyword': '#6666BE',  # Pure Blue
+            'builtin': '#267F99',  # Dark Cyan
+            'function': '#795E26',  # Dark Gold
+            'class': '#267F99',  # Dark Cyan
+            'string': '#A31515',  # Deep Red
+            'comment': '#008000',  # Pure Green
+            'number': '#098658',  # Emerald Green
+            'decorator': '#795E26'  # Dark Gold
+        })
+        self.update_tree_icons("gui/icons/editor/folder_light.png", "gui/icons/file.png")
         self.tree_container.setStyleSheet("""
                     QWidget#tree_container {
 
@@ -543,6 +624,9 @@ class FileTreePage(QWidget):
         self.file_name_label.setStyleSheet(
             "font-size: 16px; font-weight: 520; color: #583068; border: none"
         )
+        self.files_label.setStyleSheet("font-weight: 520; color: #303030; font-size: 16px")
+        self.path_label.setStyleSheet("color: #9B9393; font-weight: 510; font-size: 14.5px")
+
 
         self.save_button.text_label.setStyleSheet("""
                     font-size: 16px; 
@@ -555,7 +639,7 @@ class FileTreePage(QWidget):
                     QPushButton { 
                         border-radius: 10px; 
                         background-color: #ECDCFF; 
-                        color: #444;
+                        color: #303030;
                     }
                     QPushButton:hover {
                         background-color: #E1C7FF
@@ -567,7 +651,7 @@ class FileTreePage(QWidget):
                             font-weight: 520; 
                             background: transparent; 
                             border: none; 
-                            color: inherit;
+                            color: #303030;
                             padding-bottom: 2px;
                 """)
         for button in [self.reload_button, self.suggest_button, self.scan_button, self.save_button]:
@@ -636,142 +720,199 @@ class FileTreePage(QWidget):
         self.reload_button.set_icon("gui/icons/editor/refresh_light.png")
         self.scan_button.set_icon("gui/icons/editor/scan_light.png")
         self.suggest_button.set_icon("gui/icons/editor/suggest_light.png")
-
-
-
+        pixmap = QPixmap("gui/icons/editor/files_light.png").scaled(
+            19,
+            19,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+        self.file_icon.setPixmap(pixmap)
 
     def set_dark_mode(self):
-        self.update_tree_icons("gui/icons/editor/folder_light", "gui/icons/document_dark.png")
-        self.tree_container.setStyleSheet("""
-                            QWidget#tree_container {
-
-                                border-radius: 12px;
-                            }
-                            QWidget { background-color: #1A1921; } 
-                        """)
-        self.line1.setStyleSheet("background-color: #4E4E4E; border: none")
-        self.tree.setStyleSheet("""
-                                        QTreeView {
-                                            color: #A2A2A2; font-size: 16px; border: none;
-                                        }
-                                        QTreeView::item {
-                                        padding-top: 4px;
-                                        padding-bottom: 6px;
-                                        padding-left: 5px;
-                                        }
-                                        QScrollBar:vertical {
-                                            border: none;
-                                            background: #312D39;
-                                            width: 10px;
-                                            margin: 0px 0px 0px 0px;
-                                        }
-
-                            QScrollBar::handle:vertical {
-                                            background: #211E29;
-                                            min-height: 20px;
-                                            border-radius: 5px;
-                                            margin: 2px;
-                                        }
-
-                            QScrollBar::handle:vertical:hover {
-                                            background: #1A1723;
-                                        }
-
-                                        /* Remove the buttons (arrows) at the top and bottom */
-                                        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                                            height: 0px;
-                                        }
-
-                                        /* Remove the background area above and below the handle */
-                                        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                                            background: none;
-                                        }
-                                    """)
-        self.editor_widget.setStyleSheet("""
-                            QWidget#EditorContainer {
-                                background-color: #141318;
-                                border-radius: 12px;
-                            }
-                        """)
-        self.file_name_label.setStyleSheet(
-            "font-size: 32px; font-weight: 520; color: #CC98E1; border: none"
+        self.highlighter.set_theme({
+            'keyword': '#C586C0',  # Purple
+            'builtin': '#569CD6',  # Blue
+            'function': '#DCDCAA',  # Yellow
+            'class': '#4EC9B0',  # Teal
+            'string': '#CE9178',  # Salmon
+            'comment': '#6A9955',  # Green
+            'number': '#B5CEA8',  # Light Green
+            'decorator': '#DCDCAA'  # Yellow
+        })
+        # 1. Updated Icons (Added missing reload, scan, suggest icons)
+        self.update_tree_icons("gui/icons/editor/folder_light.png", "gui/icons/file_dark.png")
+        self.save_button.set_icon("gui/icons/editor/save_dark.png")
+        self.transfer_button.set_icon("gui/icons/editor/download_dark.png")
+        self.reload_button.set_icon("gui/icons/editor/refresh_dark.png")
+        self.scan_button.set_icon("gui/icons/editor/scan_dark.png")
+        self.suggest_button.set_icon("gui/icons/editor/suggest_dark.png")
+        pixmap = QPixmap("gui/icons/editor/files_dark.png").scaled(
+            19,
+            19,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
         )
-        self.save_button.setStyleSheet("""
-                            QPushButton { 
-                                background-color: #342E39;
-                                border-radius: 15px; 
-                                color: #EADCFB;
-                            }
-                            QPushButton:hover {
-                                background-color: #443C4A
-                            }
-                            QPushButton:pressed { background-color: #342E39; }
-                            QPushButton:disabled {
-                                color: #AAAAAA;
-                            }
-                        """)
-        self.save_button.text_label.setStyleSheet("""
-                            font-size: 16px; 
-                            font-weight: 500; 
-                            background: transparent; 
-                            border: none; 
-                            color: #EADCFB;
-                        """)
+        self.file_icon.setPixmap(pixmap)
+
+        # 2. Containers
+        self.tree_container.setStyleSheet("""
+                    QWidget#tree_container {
+                        border-radius: 12px;
+                    }
+                    QWidget { background-color: #231E23; } 
+                """)
+
+        self.editor_widget.setStyleSheet("""
+                    QWidget#EditorContainer {
+                        background-color: #231E23;
+                        border-radius: 12px;
+                    }
+                """)
+        self.files_label.setStyleSheet("font-weight: 520; color: #979797; font-size: 16px")
+        self.path_label.setStyleSheet("color: #696262; font-weight: 510; font-size: 14.5px")
+
+        # Missing in previous dark mode: Editor wrapper and header
+        self.editor_wrapper.setStyleSheet("background-color: #231E23;")
+        self.editor_header.setStyleSheet("background-color: #231E23;")
+
+        self.line1.setStyleSheet("background-color: #373737; border: none")
+        self.line2.setStyleSheet("background-color: #373737; border: none")
+
+        # 3. Tree Styling (Synced padding and added missing selection/hover states)
+        self.tree.setStyleSheet("""
+                    QTreeView {
+                        color: #BDBDBD; 
+                        font-size: 15px; 
+                        border: none;
+                        show-decoration-selected: 1;
+                        outline: 0;
+                    }
+                    QTreeView::item {
+                        padding-top: 4px;
+                        padding-bottom: 4px;
+                        padding-left: 3px;
+                    }
+                    QTreeView::item:selected {
+                        background-color: #352B48;
+                        border-radius: 4px;
+                    }
+                    QTreeView::item:selected:!active {
+                        background-color: #302C35;
+                    }
+                    QTreeView::item:hover {
+                        background-color: #302C35;
+                        border-radius: 4px;
+                    }
+                    QTreeView::item:focus {
+                        outline: none;
+                        border: none;
+                    }
+                    QScrollBar:vertical {
+                        border: none;
+                        background: #312D39;
+                        width: 13px;
+                        margin: 0px;
+                    }
+                    QScrollBar::handle:vertical {
+                        background: #211E29;
+                        min-height: 20px;
+                        border-radius: 5px;
+                        margin: 2px;
+                    }
+                    QScrollBar::handle:vertical:hover {
+                        background: #1A1723;
+                    }
+                    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                        height: 0px;
+                    }
+                    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                        background: none;
+                    }
+                """)
+
+        # 4. Labels
+        self.file_name_label.setStyleSheet(
+            "font-size: 16px; font-weight: 520; color: #BDBDBD; border: none"
+        )
+
+        # 5. Buttons (Synced the loop and specific transfer button style)
         self.transfer_button.setStyleSheet("""
-                            QPushButton { 
-                                border-radius: 15px; 
-                                background-color: #493E76; 
-                                color: #FCFCFC;
-                            }
-                            QPushButton:hover {
-                                background-color: #544983
-                            }
-                            QPushButton:pressed { background-color: #493E76}
-                        """)
+                    QPushButton { 
+                        border-radius: 10px; 
+                        background-color: #2D274A; 
+                        color: #B3B3B3;
+                    }
+                    QPushButton:hover {
+                        background-color: #393158
+                    }
+                    QPushButton:disabled {
+                        color: #B3B3B3;
+                    }
+                    QPushButton:pressed { background-color: #2D274A}
+                """)
         self.transfer_button.text_label.setStyleSheet("""
-                            font-size: 16px; 
-                            font-weight: 500; 
-                            background: transparent; 
-                            border: none; 
-                            color: #FCFCFC;
-                        """)
-        self.line2.setStyleSheet("background-color: #434343; border: none")
+                    font-size: 13px; 
+                    font-weight: 520; 
+                    background: transparent; 
+                    border: none; 
+                    color: #B3B3B3;
+                    padding-bottom: 2px;
+                """)
+
+        for button in [self.reload_button, self.suggest_button, self.scan_button, self.save_button]:
+            button.setStyleSheet("""
+                    QPushButton { 
+                        background-color: rgba(0, 0, 0, 0);
+                        border-radius: 7px; 
+                        color: #979797;
+                        padding: 5px 0px;
+                    }
+                    QPushButton:hover {
+                        background-color: #323039;
+                    }
+                    QPushButton:pressed {
+                        background-color: rgba(0,0,0,0);
+                    }
+            """)
+            button.text_label.setStyleSheet("""
+                    font-size: 13px; 
+                    font-weight: 515; 
+                    background: transparent; 
+                    border: none; 
+                    color: inherit;
+                    padding-bottom: 2px;
+                    color: #979797;
+            """)
+
+        # 6. Editor Style
         self.editor.setStyleSheet("""
-                            QPlainTextEdit {
-                                color: #ddd;
-                                border: none; 
-                                border-top-left-radius: 10px;
-                                border-top-right-radius: 10px;
-                                font-family: 'Consolas', 'Monospace', 'Courier New';
-                                font-size: 14px;
-                            }
-                            QScrollBar:vertical {
-                                            border: none;
-                                            background: #312D39;
-                                            width: 13px;
-                                            margin: 0px 0px 0px 0px;
-                                        }
-
-                            QScrollBar::handle:vertical {
-                                            background: #211E29;
-                                            min-height: 20px;
-                                            border-radius: 5px;
-                                            margin: 2px;
-                                        }
-
-                            QScrollBar::handle:vertical:hover {
-                                            background: #1A1723;
-                                        }
-
-                            /* Remove the buttons (arrows) at the top and bottom */
-                            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                                height: 0px;
-                            }
-
-                            /* Remove the background area above and below the handle */
-                            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                                background: none;
-                            }
-                        """)
-        self.save_button.set_icon("gui/icons/save_dark.png")
-        self.transfer_button.set_icon("gui/icons/download_dark.png")
+                    QPlainTextEdit {
+                        color: #ddd;
+                        border: none; 
+                        border-top-left-radius: 10px;
+                        border-top-right-radius: 10px;
+                        font-family: 'Consolas', 'Monospace', 'Courier New';
+                        font-size: 14px;
+                    }
+                    QScrollBar:vertical {
+                        border: none;
+                        background: #312D39;
+                        width: 13px;
+                        margin: 0px;
+                    }
+                    QScrollBar::handle:vertical {
+                        background: #211E29;
+                        min-height: 20px;
+                        border-radius: 5px;
+                        margin: 2px;
+                    }
+                    QScrollBar::handle:vertical:hover {
+                        background: #1A1723;
+                    }
+                    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                        height: 0px;
+                    }
+                    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                        background: none;
+                    }
+                """)
