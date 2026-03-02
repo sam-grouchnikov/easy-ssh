@@ -207,7 +207,7 @@ class FileTreePage(QWidget):
         self.update_func = update_func
         self.run_func = run_func
         self.home_dir = home_dir
-        self.config = config
+        self.config = ""
         self.ssh_manager = ssh_manager
         self.current_open_path = None
 
@@ -297,7 +297,10 @@ class FileTreePage(QWidget):
 
         self.tree_header_layout.addStretch()
 
-        self.path_label = QLabel("sam@192.xxx.xx.xx:/~")
+        if self.config:
+            self.path_label = QLabel(f"{self.config.get("ssh_user")}@{self.config.get("ssh_ip")}")
+        else:
+            self.path_label = QLabel("none@none")
         self.tree_header_layout.addWidget(self.path_label)
 
         # IMPORTANT: Add the widget, not just the layout
@@ -359,6 +362,9 @@ class FileTreePage(QWidget):
         self.line2.setFixedHeight(2)
         self.line2.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.editor_layout.addWidget(self.line2)
+
+    def update_config(self, user, ip):
+        self.path_label.setText(f"{user}@{ip}")
 
     def _setup_editor_area(self):
         self.editor_wrapper = QWidget()

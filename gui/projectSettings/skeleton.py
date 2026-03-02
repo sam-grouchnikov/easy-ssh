@@ -264,6 +264,7 @@ class ProjectSettingsSkeleton(QMainWindow):
         self.config = from_fs_doc(self.doc)
         self.graph_page.update_config(self.config, self.doc_path)
         self.settings_page.update_config(self.config, self.doc_path)
+        self.file_tree_page.update_config(self.config)
         self.load_settings()
 
     def load_settings(self):
@@ -285,6 +286,7 @@ class ProjectSettingsSkeleton(QMainWindow):
             user_new = self.config.get("ssh_user")
             port_new = self.config.get("ssh_port")
             psw_new = self.config.get("ssh_psw")
+            self.file_tree_page.update_config(user_new, server_new)
             print(server_new, " ", user_new, " ", port_new, " ", psw_new)
             self.ssh_manager = SSHManager(server_new, user_new, port_new, psw_new)
             self.cmd_page.reload_manager(self.ssh_manager)
