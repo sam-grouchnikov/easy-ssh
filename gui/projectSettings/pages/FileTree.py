@@ -10,13 +10,15 @@ Status: Development
 """
 
 
+import ast
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QCursor, QPixmap
 from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
-    QPushButton, QPlainTextEdit, QFileDialog, QMessageBox, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect
+    QPushButton, QPlainTextEdit, QFileDialog, QMessageBox, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect,
+    QListWidget, QListWidgetItem
 )
 from scp import SCPClient
 
@@ -210,6 +212,8 @@ class FileTreePage(QWidget):
         self.config = ""
         self.ssh_manager = ssh_manager
         self.current_open_path = None
+        self.current_file_is_python = False
+        self.syntax_warnings = []
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
@@ -247,6 +251,7 @@ class FileTreePage(QWidget):
         self.scan_button = CustomButton("Scan for Errors", QSize(14, 14), 2, False)
         self.scan_button.adjustSize()
         self.scan_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.scan_button.clicked.connect(self.run_syntax_check)
 
         self.suggest_button = CustomButton("Suggest Improvements", QSize(14, 14), 2, False)
         self.suggest_button.adjustSize()
@@ -298,7 +303,7 @@ class FileTreePage(QWidget):
         self.tree_header_layout.addStretch()
 
         if self.config:
-            self.path_label = QLabel(f"{self.config.get("ssh_user")}@{self.config.get("ssh_ip")}")
+            self.path_label = QLabel(f"{self.config.get('ssh_user')}@{self.config.get('ssh_ip')}")
         else:
             self.path_label = QLabel("none@none")
         self.tree_header_layout.addWidget(self.path_label)
@@ -354,6 +359,12 @@ class FileTreePage(QWidget):
         self.editor_header_layout.addWidget(self.file_name_label)
         self.editor_header_layout.addStretch()
 
+        self.syntax_warning_breadcrumb = QPushButton("Warnings: 0")
+        self.syntax_warning_breadcrumb.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.syntax_warning_breadcrumb.setFlat(True)
+        self.syntax_warning_breadcrumb.clicked.connect(self.toggle_syntax_panel)
+        self.editor_header_layout.addWidget(self.syntax_warning_breadcrumb)
+
         self.editor_layout.addWidget(self.editor_header)
         self.editor_layout.addSpacing(7)
 
@@ -371,6 +382,8 @@ class FileTreePage(QWidget):
         self.editor_wrapper.setStyleSheet("border: none")
         self.editor_wrapper.setContentsMargins(0, 0, 0, 5)
         self.editor_wrapper_layout = QVBoxLayout(self.editor_wrapper)
+        self.editor_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        self.editor_wrapper_layout.setSpacing(0)
 
         self.editor = QPlainTextEdit()
         self.editor.document().setDocumentMargin(17)
@@ -381,7 +394,24 @@ class FileTreePage(QWidget):
         self.editor.setFont(font)
 
         self.editor_wrapper_layout.addWidget(self.editor)
+
+        self.syntax_panel = QWidget()
+        self.syntax_panel_layout = QVBoxLayout(self.syntax_panel)
+        self.syntax_panel_layout.setContentsMargins(15, 12, 15, 12)
+        self.syntax_panel_layout.setSpacing(8)
+
+        self.syntax_panel_title = QLabel("Syntax warnings")
+        self.syntax_panel_layout.addWidget(self.syntax_panel_title)
+
+        self.syntax_list = QListWidget()
+        self.syntax_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.syntax_panel_layout.addWidget(self.syntax_list)
+        self.syntax_panel.setVisible(False)
+
+        self.editor_wrapper_layout.addWidget(self.syntax_panel)
         self.editor_layout.addWidget(self.editor_wrapper)
+
+        self.editor.textChanged.connect(self.on_editor_text_changed)
 
     def _build_shadow(self, blur_radius, alpha):
         shadow = QGraphicsDropShadowEffect()
@@ -418,12 +448,78 @@ class FileTreePage(QWidget):
         self.editor.setPlainText("Select a file to view and edit its contents...")
         self.transfer_button.setEnabled(False)
         self.save_button.setEnabled(False)
+        self.current_file_is_python = False
+        self.syntax_warnings = []
+        self.update_syntax_warning_breadcrumb()
+        self.refresh_syntax_panel()
+        self.set_syntax_panel_open(False)
 
     def display_file_content(self, content):
         self.editor.setPlainText(content)
         self.editor.setReadOnly(False)
         self.save_button.setEnabled(True)
         self.transfer_button.setEnabled(True)
+        self.current_file_is_python = bool(self.current_open_path and self.current_open_path.lower().endswith(".py"))
+        self.run_syntax_check()
+
+    def on_editor_text_changed(self):
+        if self.current_file_is_python and not self.editor.isReadOnly():
+            self.run_syntax_check()
+
+    def run_syntax_check(self):
+        if not self.current_file_is_python:
+            self.syntax_warnings = []
+            self.update_syntax_warning_breadcrumb()
+            self.refresh_syntax_panel()
+            return
+
+        content = self.editor.toPlainText()
+        warnings = []
+
+        try:
+            ast.parse(content)
+        except SyntaxError as error:
+            line_number = error.lineno or 0
+            message = error.msg or "Invalid syntax"
+            warnings.append({"line": line_number, "message": message})
+
+        self.syntax_warnings = warnings
+        self.update_syntax_warning_breadcrumb()
+        self.refresh_syntax_panel()
+
+    def update_syntax_warning_breadcrumb(self):
+        if not self.current_file_is_python:
+            self.syntax_warning_breadcrumb.setText("Warnings: --")
+            self.syntax_warning_breadcrumb.setEnabled(False)
+            return
+
+        self.syntax_warning_breadcrumb.setEnabled(True)
+        warning_count = len(self.syntax_warnings)
+        label = "warning" if warning_count == 1 else "warnings"
+        self.syntax_warning_breadcrumb.setText(f"{warning_count} {label}")
+
+    def refresh_syntax_panel(self):
+        self.syntax_list.clear()
+        if not self.current_file_is_python:
+            self.syntax_list.addItem(QListWidgetItem("Syntax checker is available for Python files."))
+            return
+
+        if not self.syntax_warnings:
+            self.syntax_list.addItem(QListWidgetItem("No syntax warnings found."))
+            return
+
+        for warning in self.syntax_warnings:
+            line_number = warning.get("line", 0)
+            message = warning.get("message", "Invalid syntax")
+            self.syntax_list.addItem(QListWidgetItem(f"Line {line_number}: {message}"))
+
+    def toggle_syntax_panel(self):
+        if not self.current_file_is_python:
+            return
+        self.set_syntax_panel_open(not self.syntax_panel.isVisible())
+
+    def set_syntax_panel_open(self, is_open):
+        self.syntax_panel.setVisible(is_open)
 
     def save_remote_file(self):
         if not self.current_open_path:
@@ -630,6 +726,9 @@ class FileTreePage(QWidget):
         self.file_name_label.setStyleSheet(
             "font-size: 16px; font-weight: 520; color: #583068; border: none"
         )
+        self.syntax_warning_breadcrumb.setStyleSheet(
+            "font-size: 13px; color: #6A4A7A; border: none; font-weight: 520;"
+        )
         self.files_label.setStyleSheet("font-weight: 520; color: #303030; font-size: 16px")
         self.path_label.setStyleSheet("color: #9B9393; font-weight: 510; font-size: 14.5px")
 
@@ -719,6 +818,19 @@ class FileTreePage(QWidget):
                     /* Remove the background area above and below the handle */
                     QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
                         background: none;
+                    }
+                """)
+        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-top: 1px solid #E7DFF0;")
+        self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #6A4A7A; font-weight: 600;")
+        self.syntax_list.setStyleSheet("""
+                    QListWidget {
+                        border: none;
+                        background-color: transparent;
+                        color: #4A3B52;
+                        font-size: 12px;
+                    }
+                    QListWidget::item {
+                        padding: 3px 2px;
                     }
                 """)
         self.save_button.set_icon("gui/icons/editor/save_light.png")
@@ -840,6 +952,9 @@ class FileTreePage(QWidget):
         self.file_name_label.setStyleSheet(
             "font-size: 16px; font-weight: 520; color: #BDBDBD; border: none"
         )
+        self.syntax_warning_breadcrumb.setStyleSheet(
+            "font-size: 13px; color: #AD8FD0; border: none; font-weight: 520;"
+        )
 
         # 5. Buttons (Synced the loop and specific transfer button style)
         self.transfer_button.setStyleSheet("""
@@ -920,5 +1035,18 @@ class FileTreePage(QWidget):
                     }
                     QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
                         background: none;
+                    }
+                """)
+        self.syntax_panel.setStyleSheet("background-color: #2B2630; border-top: 1px solid #3A3442;")
+        self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #C4A3E8; font-weight: 600;")
+        self.syntax_list.setStyleSheet("""
+                    QListWidget {
+                        border: none;
+                        background-color: transparent;
+                        color: #CFC8D8;
+                        font-size: 12px;
+                    }
+                    QListWidget::item {
+                        padding: 3px 2px;
                     }
                 """)
