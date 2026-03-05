@@ -382,7 +382,7 @@ class FileTreePage(QWidget):
         self.editor_wrapper.setStyleSheet("border: none")
         self.editor_wrapper.setContentsMargins(0, 0, 0, 5)
         self.editor_wrapper_layout = QVBoxLayout(self.editor_wrapper)
-        self.editor_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        self.editor_wrapper_layout.setContentsMargins(5, 0, 5, 0)
         self.editor_wrapper_layout.setSpacing(0)
 
         self.editor = QPlainTextEdit()
@@ -396,8 +396,10 @@ class FileTreePage(QWidget):
         self.editor_wrapper_layout.addWidget(self.editor)
 
         self.syntax_panel = QWidget()
+        self.syntax_panel.setContentsMargins(0,5,0,0)
+        self.syntax_panel.setMaximumHeight(180)
         self.syntax_panel_layout = QVBoxLayout(self.syntax_panel)
-        self.syntax_panel_layout.setContentsMargins(15, 12, 15, 12)
+        self.syntax_panel_layout.setContentsMargins(25, 12, 25, 12)
         self.syntax_panel_layout.setSpacing(8)
 
         self.syntax_panel_title = QLabel("Syntax warnings")
@@ -408,8 +410,8 @@ class FileTreePage(QWidget):
         self.syntax_panel_layout.addWidget(self.syntax_list)
         self.syntax_panel.setVisible(False)
 
-        self.editor_wrapper_layout.addWidget(self.syntax_panel)
         self.editor_layout.addWidget(self.editor_wrapper)
+        self.editor_wrapper_layout.addWidget(self.syntax_panel)
 
         self.editor.textChanged.connect(self.on_editor_text_changed)
 
@@ -820,7 +822,7 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-top: 1px solid #E7DFF0;")
+        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 5px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #6A4A7A; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
                     QListWidget {
@@ -1017,14 +1019,15 @@ class FileTreePage(QWidget):
                     }
                     QScrollBar:vertical {
                         border: none;
+                        border-radius: 5px;
                         background: #312D39;
                         width: 13px;
-                        margin: 0px;
+                        margin-bottom: 5px;
                     }
                     QScrollBar::handle:vertical {
                         background: #211E29;
                         min-height: 20px;
-                        border-radius: 5px;
+                        border-radius: 10px;
                         margin: 2px;
                     }
                     QScrollBar::handle:vertical:hover {
@@ -1037,7 +1040,7 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.syntax_panel.setStyleSheet("background-color: #2B2630; border-top: 1px solid #3A3442;")
+        self.syntax_panel.setStyleSheet("background-color: #2B2630; border-radius: 5px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #C4A3E8; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
                     QListWidget {
