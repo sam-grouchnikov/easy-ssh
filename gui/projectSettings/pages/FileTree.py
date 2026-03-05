@@ -11,6 +11,8 @@ Status: Development
 
 
 import ast
+import re
+
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtCore import Qt, QSize, QRect
 from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QCursor, QPixmap, QPainter
@@ -18,7 +20,7 @@ from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QTex
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
     QPushButton, QPlainTextEdit, QFileDialog, QMessageBox, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect,
-    QListWidget, QListWidgetItem
+    QListWidget, QListWidgetItem, QTextEdit
 )
 from scp import SCPClient
 
@@ -136,7 +138,7 @@ class CodeEditor(QPlainTextEdit):
             self.setExtraSelections([])
             return
 
-        line_selection = QPlainTextEdit.ExtraSelection()
+        line_selection = QTextEdit.ExtraSelection()
         line_selection.format.setBackground(self.palette().base().color().lighter(104))
         line_selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
         line_selection.cursor = self.textCursor()
@@ -472,7 +474,7 @@ class FileTreePage(QWidget):
         self.editor_wrapper.setStyleSheet("border: none")
         self.editor_wrapper.setContentsMargins(0, 0, 0, 0)
         self.editor_wrapper_layout = QVBoxLayout(self.editor_wrapper)
-        self.editor_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        self.editor_wrapper_layout.setContentsMargins(8, 0, 8, 8)
         self.editor_wrapper_layout.setSpacing(10)
 
         self.editor = CodeEditor()
@@ -493,7 +495,7 @@ class FileTreePage(QWidget):
 
         self.syntax_panel = QWidget()
         self.syntax_panel.setObjectName("SyntaxPanel")
-        self.syntax_panel.setContentsMargins(0, 0, 0, 0)
+        self.syntax_panel.setContentsMargins(5, 0, 5, 0)
         self.syntax_panel.setMaximumHeight(180)
         self.syntax_panel_layout = QVBoxLayout(self.syntax_panel)
         self.syntax_panel_layout.setContentsMargins(20, 12, 20, 12)
@@ -555,7 +557,12 @@ class FileTreePage(QWidget):
         self.set_syntax_panel_open(False)
 
     def display_file_content(self, content):
-        self.editor.setPlainText(content)
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        clean_content = ansi_escape.sub('', content)
+        clean_content = clean_content.strip()
+
+        self.editor.setPlainText(clean_content)
+
         self.editor.setReadOnly(False)
         self.save_button.setEnabled(True)
         self.transfer_button.setEnabled(True)
@@ -924,7 +931,7 @@ class FileTreePage(QWidget):
                 """)
         self.editor_shell.setStyleSheet("background-color: #ffffff; border-radius: 10px;")
         self.editor.line_number_area.setStyleSheet("background-color: #F3EEF8;")
-        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 10px;")
+        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 15px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #6A4A7A; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
                     QListWidget {
