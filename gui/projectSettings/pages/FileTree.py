@@ -796,15 +796,16 @@ class FileTreePage(QWidget):
                     }
                     QScrollBar:vertical {
                                     border: none;
+                                    border-radius: 8px;
                                     background: #E9E9E9;
                                     width: 13px;
-                                    margin: 0px 0px 0px 0px;
+                                    margin: 8px 0px 8px 0px;
                                 }
 
                     QScrollBar::handle:vertical {
                                     background: #D7D7D7;
                                     min-height: 20px;
-                                    border-radius: 5px;
+                                    border-radius: 8px;
                                     margin: 2px;
                                 }
 
@@ -1019,15 +1020,15 @@ class FileTreePage(QWidget):
                     }
                     QScrollBar:vertical {
                         border: none;
-                        border-radius: 5px;
+                        border-radius: 8px;
                         background: #312D39;
                         width: 13px;
-                        margin-bottom: 5px;
+                        margin: 8px 0px 8px 0px;
                     }
                     QScrollBar::handle:vertical {
                         background: #211E29;
                         min-height: 20px;
-                        border-radius: 10px;
+                        border-radius: 8px;
                         margin: 2px;
                     }
                     QScrollBar::handle:vertical:hover {
