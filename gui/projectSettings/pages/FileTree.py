@@ -12,9 +12,9 @@ Status: Development
 
 import ast
 from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QCursor, QPixmap
-from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+from PyQt6.QtCore import Qt, QSize, QRect
+from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QCursor, QPixmap, QPainter
+from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QTextFormat
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
     QPushButton, QPlainTextEdit, QFileDialog, QMessageBox, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect,
@@ -52,6 +52,96 @@ class CustomButton(QPushButton):
             Qt.TransformationMode.SmoothTransformation
         )
         self.icon_label.setPixmap(pixmap)
+
+
+class LineNumberArea(QWidget):
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.editor = editor
+
+    def sizeHint(self):
+        return QSize(self.editor.line_number_area_width(), 0)
+
+    def paintEvent(self, event):
+        self.editor.line_number_area_paint_event(event)
+
+
+class CodeEditor(QPlainTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.line_number_area = LineNumberArea(self)
+
+        self.blockCountChanged.connect(self.update_line_number_area_width)
+        self.updateRequest.connect(self.update_line_number_area)
+        self.cursorPositionChanged.connect(self.highlight_current_line)
+
+        self.update_line_number_area_width(0)
+        self.highlight_current_line()
+
+    def line_number_area_width(self):
+        digits = len(str(max(1, self.blockCount())))
+        return 12 + self.fontMetrics().horizontalAdvance('9') * digits
+
+    def update_line_number_area_width(self, _):
+        self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
+
+    def update_line_number_area(self, rect, dy):
+        if dy:
+            self.line_number_area.scroll(0, dy)
+        else:
+            self.line_number_area.update(0, rect.y(), self.line_number_area.width(), rect.height())
+
+        if rect.contains(self.viewport().rect()):
+            self.update_line_number_area_width(0)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        contents_rect = self.contentsRect()
+        self.line_number_area.setGeometry(QRect(
+            contents_rect.left(),
+            contents_rect.top(),
+            self.line_number_area_width(),
+            contents_rect.height(),
+        ))
+
+    def line_number_area_paint_event(self, event):
+        painter = QPainter(self.line_number_area)
+        painter.fillRect(event.rect(), self.palette().alternateBase())
+
+        block = self.firstVisibleBlock()
+        block_number = block.blockNumber()
+        top = round(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
+        bottom = top + round(self.blockBoundingRect(block).height())
+
+        while block.isValid() and top <= event.rect().bottom():
+            if block.isVisible() and bottom >= event.rect().top():
+                number = str(block_number + 1)
+                painter.setPen(self.palette().mid().color())
+                painter.drawText(
+                    0,
+                    top,
+                    self.line_number_area.width() - 6,
+                    self.fontMetrics().height(),
+                    Qt.AlignmentFlag.AlignRight,
+                    number,
+                )
+
+            block = block.next()
+            top = bottom
+            bottom = top + round(self.blockBoundingRect(block).height())
+            block_number += 1
+
+    def highlight_current_line(self):
+        if self.isReadOnly():
+            self.setExtraSelections([])
+            return
+
+        line_selection = QPlainTextEdit.ExtraSelection()
+        line_selection.format.setBackground(self.palette().base().color().lighter(104))
+        line_selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
+        line_selection.cursor = self.textCursor()
+        line_selection.cursor.clearSelection()
+        self.setExtraSelections([line_selection])
 
 
 class PythonHighlighter(QSyntaxHighlighter):
@@ -380,12 +470,12 @@ class FileTreePage(QWidget):
     def _setup_editor_area(self):
         self.editor_wrapper = QWidget()
         self.editor_wrapper.setStyleSheet("border: none")
-        self.editor_wrapper.setContentsMargins(0, 0, 0, 5)
+        self.editor_wrapper.setContentsMargins(0, 0, 0, 0)
         self.editor_wrapper_layout = QVBoxLayout(self.editor_wrapper)
-        self.editor_wrapper_layout.setContentsMargins(5, 0, 5, 0)
-        self.editor_wrapper_layout.setSpacing(0)
+        self.editor_wrapper_layout.setContentsMargins(0, 0, 0, 0)
+        self.editor_wrapper_layout.setSpacing(10)
 
-        self.editor = QPlainTextEdit()
+        self.editor = CodeEditor()
         self.editor.document().setDocumentMargin(17)
         self.editor.setReadOnly(True)
         self.editor.setPlaceholderText("Select a file to view and edit its contents...")
@@ -393,13 +483,20 @@ class FileTreePage(QWidget):
         font = QFont("Consolas", 12) if "Consolas" in QFont().families() else QFont("Monospace", 12)
         self.editor.setFont(font)
 
-        self.editor_wrapper_layout.addWidget(self.editor)
+        self.editor_shell = QWidget()
+        self.editor_shell.setObjectName("EditorShell")
+        self.editor_shell_layout = QVBoxLayout(self.editor_shell)
+        self.editor_shell_layout.setContentsMargins(5, 0, 5, 5)
+        self.editor_shell_layout.setSpacing(0)
+        self.editor_shell_layout.addWidget(self.editor)
+        self.editor_wrapper_layout.addWidget(self.editor_shell)
 
         self.syntax_panel = QWidget()
-        self.syntax_panel.setContentsMargins(0,5,0,0)
+        self.syntax_panel.setObjectName("SyntaxPanel")
+        self.syntax_panel.setContentsMargins(0, 0, 0, 0)
         self.syntax_panel.setMaximumHeight(180)
         self.syntax_panel_layout = QVBoxLayout(self.syntax_panel)
-        self.syntax_panel_layout.setContentsMargins(25, 12, 25, 12)
+        self.syntax_panel_layout.setContentsMargins(20, 12, 20, 12)
         self.syntax_panel_layout.setSpacing(8)
 
         self.syntax_panel_title = QLabel("Syntax warnings")
@@ -408,10 +505,11 @@ class FileTreePage(QWidget):
         self.syntax_list = QListWidget()
         self.syntax_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.syntax_panel_layout.addWidget(self.syntax_list)
+        self.syntax_panel.setGraphicsEffect(self._build_shadow(blur_radius=15, alpha=25))
         self.syntax_panel.setVisible(False)
+        self.editor_wrapper_layout.addWidget(self.syntax_panel)
 
         self.editor_layout.addWidget(self.editor_wrapper)
-        self.editor_wrapper_layout.addWidget(self.syntax_panel)
 
         self.editor.textChanged.connect(self.on_editor_text_changed)
 
@@ -720,7 +818,8 @@ class FileTreePage(QWidget):
                 """)
 
         self.editor_wrapper.setStyleSheet("""
-            background-color: #ffffff
+            background-color: #ffffff;
+            border: none;
         """)
         self.editor_header.setStyleSheet("""
                     background-color: #ffffff
@@ -823,7 +922,9 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 5px;")
+        self.editor_shell.setStyleSheet("background-color: #ffffff; border-radius: 10px;")
+        self.editor.line_number_area.setStyleSheet("background-color: #F3EEF8;")
+        self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 10px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #6A4A7A; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
                     QListWidget {
@@ -894,6 +995,7 @@ class FileTreePage(QWidget):
 
         # Missing in previous dark mode: Editor wrapper and header
         self.editor_wrapper.setStyleSheet("background-color: #231E23;")
+        self.editor_shell.setStyleSheet("background-color: #1F1D23; border-radius: 10px;")
         self.editor_header.setStyleSheet("background-color: #231E23;")
 
         self.line1.setStyleSheet("background-color: #373737; border: none")
@@ -1041,7 +1143,8 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.syntax_panel.setStyleSheet("background-color: #2B2630; border-radius: 5px;")
+        self.editor.line_number_area.setStyleSheet("background-color: #2A2732;")
+        self.syntax_panel.setStyleSheet("background-color: #2B2630; border-radius: 10px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #C4A3E8; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
                     QListWidget {
