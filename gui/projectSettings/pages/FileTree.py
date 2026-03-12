@@ -15,7 +15,7 @@ import re
 
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtCore import Qt, QSize, QRect
-from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QCursor, QPixmap, QPainter
+from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QCursor, QPixmap, QPainter, QPalette
 from PyQt6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QFont, QTextFormat
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeView,
@@ -108,7 +108,8 @@ class CodeEditor(QPlainTextEdit):
 
     def line_number_area_paint_event(self, event):
         painter = QPainter(self.line_number_area)
-        painter.fillRect(event.rect(), self.palette().alternateBase())
+        bg_color = self.palette().color(self.palette().ColorRole.Base)
+        painter.fillRect(event.rect(), bg_color)
 
         block = self.firstVisibleBlock()
         block_number = block.blockNumber()
@@ -360,7 +361,7 @@ class FileTreePage(QWidget):
         self.top_layout.addWidget(self.reload_button)
         self.top_layout.addSpacing(362)
         self.top_layout.addWidget(self.scan_button)
-        self.top_layout.addWidget(self.suggest_button)
+        # self.top_layout.addWidget(self.suggest_button)
         self.top_layout.addStretch()
         self.top_layout.addWidget(self.save_button)
         self.top_layout.addWidget(self.transfer_button)
@@ -1150,7 +1151,7 @@ class FileTreePage(QWidget):
                         background: none;
                     }
                 """)
-        self.editor.line_number_area.setStyleSheet("background-color: #2A2732;")
+        self.editor.line_number_area.setStyleSheet("color: #696262;")
         self.syntax_panel.setStyleSheet("background-color: #2B2630; border-radius: 10px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #C4A3E8; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
