@@ -966,8 +966,8 @@ class FileTreePage(QWidget):
                     }
                 """)
         self.editor_shell.setStyleSheet("background-color: #ffffff; border-radius: 10px;")
-        self.editor.set_line_number_colors("#6E5E77", "#F3EEF8")
-        self.editor.set_current_line_color("#F3EEF8")
+        self.editor.set_line_number_colors("#6E5E77", "#ffffff")
+        self.editor.set_current_line_color("#FFFFFF")
         self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 15px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #6A4A7A; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
@@ -1188,7 +1188,7 @@ class FileTreePage(QWidget):
                     }
                 """)
         self.editor.set_line_number_colors("#8F8699", "#1F1D23")
-        self.editor.set_current_line_color("#2A2730")
+        self.editor.set_current_line_color("#231E23")
         self.syntax_panel.setStyleSheet("background-color: #2B2630; border-radius: 10px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #C4A3E8; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
