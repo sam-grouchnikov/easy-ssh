@@ -12,6 +12,7 @@ Status: Development
 
 import sys
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -87,6 +88,9 @@ class Application(QMainWindow):
 
 
 def run():
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
     app = QApplication(sys.argv)
     window = Application()
 

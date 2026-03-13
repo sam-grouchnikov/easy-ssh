@@ -174,16 +174,16 @@ class SideNavBar(QWidget):
 
         self.light_items_data = [
             ("Terminal", resource_path("gui/icons/terminal_light.png")),
-            ("File Tree", resource_path("gui/icons/code_light.png")),
+            ("File Editor", resource_path("gui/icons/code_light.png")),
             ("Graphs", resource_path("gui/icons/graph_light.png")),
-            ("Project Settings", resource_path("gui/icons/settings_light.png")),
+            ("Settings", resource_path("gui/icons/settings_light.png")),
         ]
 
         self.dark_items_data = [
             ("Terminal", resource_path("gui/icons/terminal_dark.png")),
-            ("File Tree", resource_path("gui/icons/code_dark.png")),
+            ("File Editor", resource_path("gui/icons/code_dark.png")),
             ("Graphs", resource_path("gui/icons/graph-dark.png")),
-            ("Project Settings", resource_path("gui/icons/settings_dark.png")),
+            ("Settings", resource_path("gui/icons/settings_dark.png")),
         ]
 
         self.nav_items = []
