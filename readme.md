@@ -19,6 +19,8 @@ git clone https://github.com/sam-grouchnikov/easy-ssh.git
 python application.py
 ```
 
+Or simply go to the latest release (v1.2.1), download the .exe file, and run it (only Windows support as of now)
+
 ## Features
 * Connect to a specified remote server via SSH
 * View log graphs from the Weights & Biases API
@@ -27,8 +29,5 @@ python application.py
 
 ## Disclaimers/Limitations
 * Only supports/tested on Pytorch Lightning + WandB workflows
-* Still contains minor bugs - not ready for production-level distribution
+* Still contains minor bugs, please contact or create PR if found
 * Terminal experience NOT fully mirrored
-  * When a training loop is ran, only the progress bar is displayed on screen
-  * Not all commands' outputs are fully displayed correctly
-  * Terminal output only shows progress bar for model training loops (will fix soon)
