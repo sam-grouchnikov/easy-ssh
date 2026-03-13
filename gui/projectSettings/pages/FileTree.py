@@ -74,6 +74,7 @@ class CodeEditor(QPlainTextEdit):
         self.line_number_area = LineNumberArea(self)
         self._line_number_text_color = self.palette().mid().color()
         self._line_number_bg_color = self.palette().color(self.palette().ColorRole.Base)
+        self._current_line_color = self.palette().base().color().lighter(104)
 
         self.blockCountChanged.connect(self.update_line_number_area_width)
         self.updateRequest.connect(self.update_line_number_area)
@@ -151,6 +152,10 @@ class CodeEditor(QPlainTextEdit):
         self._line_number_bg_color = QColor(background_color)
         self.line_number_area.update()
 
+    def set_current_line_color(self, color):
+        self._current_line_color = QColor(color)
+        self.highlight_current_line()
+
     def setReadOnly(self, value):
         super().setReadOnly(value)
         self.highlight_current_line()
@@ -162,7 +167,7 @@ class CodeEditor(QPlainTextEdit):
             return
 
         line_selection = QTextEdit.ExtraSelection()
-        line_selection.format.setBackground(self.palette().base().color().lighter(104))
+        line_selection.format.setBackground(self._current_line_color)
         line_selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
         line_selection.cursor = self.textCursor()
         line_selection.cursor.clearSelection()
@@ -962,6 +967,7 @@ class FileTreePage(QWidget):
                 """)
         self.editor_shell.setStyleSheet("background-color: #ffffff; border-radius: 10px;")
         self.editor.set_line_number_colors("#6E5E77", "#F3EEF8")
+        self.editor.set_current_line_color("#F3EEF8")
         self.syntax_panel.setStyleSheet("background-color: #F8F5FB; border-radius: 15px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #6A4A7A; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
@@ -1182,6 +1188,7 @@ class FileTreePage(QWidget):
                     }
                 """)
         self.editor.set_line_number_colors("#8F8699", "#1F1D23")
+        self.editor.set_current_line_color("#2A2730")
         self.syntax_panel.setStyleSheet("background-color: #2B2630; border-radius: 10px;")
         self.syntax_panel_title.setStyleSheet("font-size: 13px; color: #C4A3E8; font-weight: 600;")
         self.syntax_list.setStyleSheet("""
