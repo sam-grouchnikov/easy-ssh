@@ -81,11 +81,19 @@ class CodeEditor(QPlainTextEdit):
         self.highlight_current_line()
 
     def line_number_area_width(self):
+        if self.isReadOnly() or self.blockCount() <= 1 and not self.toPlainText().strip():
+            return 0
+
         digits = len(str(max(1, self.blockCount())))
         return 12 + self.fontMetrics().horizontalAdvance('9') * digits
 
     def update_line_number_area_width(self, _):
+        width = self.line_number_area_width()
         self.setViewportMargins(self.line_number_area_width(), 0, 0, 0)
+        if width == 0:
+            self.line_number_area.hide()
+        else:
+            self.line_number_area.show()
 
     def update_line_number_area(self, rect, dy):
         if dy:
@@ -107,6 +115,9 @@ class CodeEditor(QPlainTextEdit):
         ))
 
     def line_number_area_paint_event(self, event):
+        if self.isReadOnly() and not self.toPlainText().strip():
+            return
+
         painter = QPainter(self.line_number_area)
         bg_color = self.palette().color(self.palette().ColorRole.Base)
         painter.fillRect(event.rect(), bg_color)
@@ -548,7 +559,14 @@ class FileTreePage(QWidget):
         self.file_name_label.setText(last)
 
     def reset_editor_text(self):
-        self.editor.setPlainText("Select a file to view and edit its contents...")
+        self.editor.clear()  # Better than setPlainText("") for resetting
+        self.editor.setPlaceholderText("Select a file to view and edit its contents...")
+        self.editor.setReadOnly(True)
+
+        # This will now trigger the .hide() logic added in Step 1
+        self.editor.update_line_number_area_width(0)
+
+        self.file_name_label.setText("No File Selected")
         self.transfer_button.setEnabled(False)
         self.save_button.setEnabled(False)
         self.current_file_is_python = False
@@ -565,6 +583,7 @@ class FileTreePage(QWidget):
         self.editor.setPlainText(clean_content)
 
         self.editor.setReadOnly(False)
+        self.editor.update_line_number_area_width(0)
         self.save_button.setEnabled(True)
         self.transfer_button.setEnabled(True)
         self.current_file_is_python = bool(self.current_open_path and self.current_open_path.lower().endswith(".py"))
